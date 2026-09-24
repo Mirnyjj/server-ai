@@ -4,49 +4,27 @@
 
 ## Stack
 
-| Role | Provider |
-|------|----------|
-| Brain | GPT-6 Luna |
-| Image | stub \| **http** |
-| Video | stub \| **http** |
-| Storage | local \| s3 \| r2 \| minio |
+Brain: **GPT-6 Luna** · Image/Video: stub|http · Storage: S3/R2/local · **MCP: stdio tools**
 
 ## PROGRESS MAP
 
 | Block | % |
 |-------|---|
-| Instagram API + OAuth + queues | 100 |
+| Instagram + OAuth + queues (9) | 100 |
 | Policy + Telegram + Luna agent | 90 |
-| Webhook → auto agent | 90 |
+| Webhook → agent · pipeline publish | 75–90 |
 | Object Storage | 80 |
-| Pipeline + auto publish | 75 |
-| **HTTP image/video adapters** | **70** |
-| **Content plan slots** | **70** |
-| **Strategy agent** | **70** |
-| Cron schedules per profile | 40 |
+| HTTP generators · plan · strategy | 70 |
+| **MCP server** | **80** |
 
-**Infra ~90% · Product ~75%**
+**Infra ~92% · Product ~78%**
 
-## New
+## MCP
 
-```env
-IMAGE_GENERATOR_PROVIDER=http
-IMAGE_GENERATOR_BASE_URL=https://api.../v1/images/generations
-IMAGE_GENERATOR_API_KEY=
-IMAGE_GENERATOR_MODEL=
-
-VIDEO_GENERATOR_PROVIDER=http
-VIDEO_GENERATOR_BASE_URL=
-VIDEO_GENERATOR_API_KEY=
+```bash
+npm run mcp
 ```
 
-```
-POST /api/ai/plan/run-slot { profileId, autoPublish? }
-POST /api/ai/plan/run-slot/async
-POST /api/ai/strategy/run { profileId }
-POST /api/ai/strategy/run/async
-```
+Tools: system_status, list_profiles, pending_reviews, sync_media, run_pipeline, run_plan_slot, run_strategy, publish_post, process_comment, process_dm, list_references, add_reference
 
-Strategy updates **contentStrategy only** (not Policy flags).
-
-Queues: **9** (+ content-plan)
+See `src/mcp/CLAUDE.md`
