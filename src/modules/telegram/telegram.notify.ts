@@ -2,8 +2,8 @@ import {
   env,
   getTelegramAllowedChatIds,
   isTelegramEnabled,
-} from "../../config/env";
-import { sendTelegramMessage } from "./telegram.client";
+} from "../../config/env.js";
+import { sendTelegramMessage } from "./telegram.client.js";
 
 function targetChats(): (number | string)[] {
   const allowed = getTelegramAllowedChatIds();
@@ -12,9 +12,12 @@ function targetChats(): (number | string)[] {
   return [];
 }
 
-async function broadcast(text: string, replyMarkup?: {
-  inline_keyboard: Array<Array<{ text: string; callback_data: string }>>;
-}) {
+async function broadcast(
+  text: string,
+  replyMarkup?: {
+    inline_keyboard: Array<Array<{ text: string; callback_data: string }>>;
+  },
+) {
   if (!isTelegramEnabled()) return { sent: 0 };
 
   const chats = targetChats();
@@ -150,10 +153,7 @@ function isOAuthHint(): string {
 }
 
 function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 function truncate(s: string, n: number): string {

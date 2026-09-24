@@ -4,8 +4,12 @@
  *
  *   npm run worker
  */
-import { startWorkers, stopWorkers, closeAllQueues } from "./infrastructure/queue";
-import { closeRedisConnection } from "./infrastructure/redis";
+import {
+  startWorkers,
+  stopWorkers,
+  closeAllQueues,
+} from "./infrastructure/queue/index.js";
+import { closeRedisConnection } from "./infrastructure/redis.js";
 
 console.log("[worker] starting BullMQ workers…");
 

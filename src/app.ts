@@ -15,6 +15,7 @@ import { registerAiContentRoutes } from "./modules/ai/content/content.routes";
 import { registerPipelineRoutes } from "./modules/ai/pipeline/pipeline.routes";
 import { registerStorageRoutes } from "./infrastructure/storage/storage.routes";
 import { registerPlanRoutes } from "./modules/ai/plan/plan.routes";
+import { registerMcpRoutes } from "./mcp/mcp.routes";
 
 export async function createApp() {
   const app = Fastify({
@@ -42,6 +43,6 @@ export async function createApp() {
   await registerPipelineRoutes(app);
   await registerStorageRoutes(app);
   await registerPlanRoutes(app);
-
+  await registerMcpRoutes(app);
   return app;
 }

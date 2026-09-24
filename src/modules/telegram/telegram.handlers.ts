@@ -1,19 +1,25 @@
-import { prisma } from "../../../prisma/prisma";
+import { prisma } from "../../../prisma/prisma.js";
 import {
   env,
   getTelegramAllowedChatIds,
   isInstagramDevMode,
   isOAuthEnabled,
   isTelegramEnabled,
-} from "../../config/env";
-import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver";
-import { createInstagramClient } from "../instagram/client/instagram.client";
-import { createInstagramCommentsService } from "../instagram/comments/comments.service";
+} from "../../config/env.js";
+import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver.js";
+import { createInstagramClient } from "../instagram/client/instagram.client.js";
+import { createInstagramCommentsService } from "../instagram/comments/comments.service.js";
 import {
   answerCallbackQuery,
   editMessageText,
   sendTelegramMessage,
-} from "./telegram.client";
+} from "./telegram.client.js";
+import {
+  askTelegramAi,
+  getTelegramActiveProfileId,
+  setTelegramActiveProfile,
+} from "./telegram.chat.js";
+import { AiProfile } from "../../generated/prisma/client.js";
 
 export type TelegramUpdate = {
   update_id: number;
@@ -107,6 +113,13 @@ export async function handleTelegramUpdate(
     case "/connect":
       await cmdConnect(chatId, args[0]);
       break;
+    case "/use":
+      await cmdUse(chatId, args[0]);
+      break;
+
+    case "/ask":
+      await cmdAsk(chatId, text.slice(cmd.length).trim());
+      break;
 
     default:
       if (command.startsWith("/")) {
@@ -114,7 +127,10 @@ export async function handleTelegramUpdate(
           chatId,
           "Неизвестная команда. Используйте /help для просмотра списка команд.",
         );
+        break;
       }
+
+      await handlePlainText(chatId, text);
   }
 }
 
@@ -128,8 +144,85 @@ const HELP_TEXT = [
   `/connect &lt;profileId&gt; — подключение Instagram`,
   `/help — список доступных команд`,
   ``,
+  `/use &lt;profileId&gt; — выбрать AI-профиль для чата`,
+  `/ask &lt;текст&gt; — задать вопрос AI`,
+  `Обычный текст после /use отправляется выбранному AI-профилю.`,
+  ``,
   `Важные комментарии и сообщения поступают отдельными уведомлениями с кнопками для действий.`,
 ].join("\n");
+
+async function cmdUse(chatId: number, profileId?: string): Promise<void> {
+  if (!profileId) {
+    await sendTelegramMessage(chatId, "Использование: /use &lt;profileId&gt;");
+    return;
+  }
+
+  const profile = await prisma.aiProfile.findUnique({
+    where: {
+      id: profileId,
+    },
+  });
+
+  if (!profile) {
+    await sendTelegramMessage(chatId, "❌ AI-профиль не найден.");
+    return;
+  }
+
+  await setTelegramActiveProfile(chatId, profile.id);
+
+  await sendTelegramMessage(
+    chatId,
+    [
+      "<b>AI-профиль выбран</b>",
+      "",
+      "Профиль: <b>" + escape(profile.name) + "</b>",
+      "ID: <code>" + profile.id + "</code>",
+      "",
+      "Теперь можно писать обычным текстом.",
+    ].join("\n"),
+  );
+}
+
+async function cmdAsk(chatId: number, message: string): Promise<void> {
+  if (!message) {
+    await sendTelegramMessage(chatId, "Использование: /ask &lt;текст&gt;");
+    return;
+  }
+
+  await handlePlainText(chatId, message);
+}
+
+async function handlePlainText(chatId: number, message: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(
+      chatId,
+      "Сначала выберите AI-профиль: /use &lt;profileId&gt;",
+    );
+    return;
+  }
+
+  try {
+    const answer = await askTelegramAi({
+      chatId,
+      profileId,
+      message,
+    });
+
+    await sendTelegramMessage(chatId, escapeTelegramHtml(answer));
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ Ошибка AI: " +
+        escape(error instanceof Error ? error.message : "неизвестная ошибка"),
+    );
+  }
+}
+
+function escapeTelegramHtml(s: string): string {
+  return escape(s).slice(0, 3900);
+}
 
 async function cmdStatus(chatId: number): Promise<void> {
   const accounts = await prisma.instagramAccount.count({
@@ -252,7 +345,7 @@ async function cmdProfiles(chatId: number): Promise<void> {
     return;
   }
 
-  const lines = profiles.map((profile) => {
+  const lines = profiles.map((profile: AiProfile) => {
     const instagram = profile.instagramAccounts[0];
 
     return [
@@ -276,7 +369,8 @@ async function cmdSync(chatId: number, profileId?: string): Promise<void> {
   }
 
   try {
-    const { enqueueMediaSync } = await import("../../infrastructure/queue");
+    const { enqueueMediaSync } =
+      await import("../../infrastructure/queue/index.js");
 
     const job = await enqueueMediaSync({
       profileId,

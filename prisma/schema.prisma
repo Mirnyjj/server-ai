@@ -65,22 +65,21 @@ model InstagramConnection {
 }
 
 model MediaAsset {
-  id              String           @id @default(cuid())
-  profileId       String
-  type            MediaAssetType
-  status          MediaAssetStatus @default(PROCESSING)
-  url             String
-  storageKey      String?
-  mimeType        String?
-  width           Int?
-  height          Int?
-  durationMs      Int?
-  sizeBytes       BigInt?
-  metadata        Json?
-  instagramMediaId String?         @unique
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-
+  id               String           @id @default(cuid())
+  profileId        String
+  type             MediaAssetType
+  status           MediaAssetStatus @default(PROCESSING)
+  url              String
+  storageKey       String?
+  mimeType         String?
+  width            Int?
+  height           Int?
+  durationMs       Int?
+  sizeBytes        BigInt?
+  metadata         Json?
+  instagramMediaId String?          @unique
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   profile          AiProfile        @relation(fields: [profileId], references: [id])
   mediaReferences  MediaReference[]
   postMedia        PostMedia[]

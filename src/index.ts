@@ -1,21 +1,21 @@
-import { createApp } from "./app";
+import { createApp } from "./app.js";
 import {
   env,
   isInstagramDevMode,
   isOAuthEnabled,
   isTelegramEnabled,
   isWebhooksEnabled,
-} from "./config/env";
+} from "./config/env.js";
 import {
   startWorkers,
   stopWorkers,
   closeAllQueues,
-} from "./infrastructure/queue";
-import { closeRedisConnection } from "./infrastructure/redis";
+} from "./infrastructure/queue/index.js";
+import { closeRedisConnection } from "./infrastructure/redis.js";
 import {
   startTelegramPolling,
   stopTelegramPolling,
-} from "./modules/telegram/telegram.polling";
+} from "./modules/telegram/telegram.polling.js";
 
 const app = await createApp();
 

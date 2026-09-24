@@ -1,4 +1,4 @@
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 
 const BASE = () => `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}`;
 
@@ -82,7 +82,10 @@ export async function editMessageText(
 }
 
 export async function setTelegramWebhook(url: string) {
-  return tgRequest("setWebhook", { url, allowed_updates: ["message", "callback_query"] });
+  return tgRequest("setWebhook", {
+    url,
+    allowed_updates: ["message", "callback_query"],
+  });
 }
 
 export async function deleteTelegramWebhook() {

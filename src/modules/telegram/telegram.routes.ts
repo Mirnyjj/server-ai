@@ -4,17 +4,20 @@ import {
   env,
   getTelegramAllowedChatIds,
   isTelegramEnabled,
-} from "../../config/env";
+} from "../../config/env.js";
 
 import {
   getTelegramMe,
   setTelegramWebhook,
   deleteTelegramWebhook,
-} from "./telegram.client";
+} from "./telegram.client.js";
 
-import { handleTelegramUpdate, type TelegramUpdate } from "./telegram.handlers";
+import {
+  handleTelegramUpdate,
+  type TelegramUpdate,
+} from "./telegram.handlers.js";
 
-import { notifyInfo } from "./telegram.notify";
+import { notifyInfo } from "./telegram.notify.js";
 
 export async function registerTelegramRoutes(app: FastifyInstance) {
   /** Incoming updates from Telegram (set webhook to this URL) */

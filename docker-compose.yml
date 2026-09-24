@@ -1,13 +1,36 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ig-agent-api
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    depends_on:
+      redis:
+        condition: service_started
+
+    ports:
+      - "8000:8000"
+
   redis:
     image: redis:7-alpine
     container_name: ig-agent-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+
+    ports:
+      - "6379:6379"
 
 volumes:
   redis_data:

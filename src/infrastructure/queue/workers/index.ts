@@ -31,20 +31,23 @@ export function startWorkers(): Worker[] {
   return workers;
 }
 
-async function registerRepeatableJobs() {
+async function registerRepeatableJobs(): Promise<void> {
   try {
     const { tokenRefreshQueue } = await import("../queues");
     const { JOB_NAMES } = await import("../types");
 
-    await tokenRefreshQueue.add(
-      JOB_NAMES.REFRESH_ALL_EXPIRING,
-      { withinHours: 48 },
+    await tokenRefreshQueue.upsertJobScheduler(
+      "refresh-all-expiring",
       {
-        repeat: { every: 6 * 60 * 60 * 1000 },
-        jobId: "repeatable-refresh-all-expiring",
+        every: 6 * 60 * 60 * 1000,
+      },
+      {
+        name: JOB_NAMES.REFRESH_ALL_EXPIRING,
+        data: { withinHours: 48 },
       },
     );
-    console.log("[queues] registered repeatable token-refresh (6h)");
+
+    console.log("[queues] registered token-refresh scheduler (6h)");
   } catch (error) {
     console.error("[queues] failed to register repeatable jobs:", error);
   }

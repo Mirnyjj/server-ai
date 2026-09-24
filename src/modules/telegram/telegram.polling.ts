@@ -1,5 +1,8 @@
-import { env, isTelegramEnabled } from "../../config/env";
-import { handleTelegramUpdate, type TelegramUpdate } from "./telegram.handlers";
+import { env, isTelegramEnabled } from "../../config/env.js";
+import {
+  handleTelegramUpdate,
+  type TelegramUpdate,
+} from "./telegram.handlers.js";
 
 const TELEGRAM_API_URL = "https://api.telegram.org";
 

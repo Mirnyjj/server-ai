@@ -74,7 +74,9 @@ export function createLunaProvider(): LlmProvider {
   return {
     name: `luna:${model}`,
 
-    async completeJson<T>(request: LlmJsonRequest): Promise<LlmJsonResponse<T>> {
+    async completeJson<T>(
+      request: LlmJsonRequest,
+    ): Promise<LlmJsonResponse<T>> {
       const systemHint: LlmMessage = {
         role: "system",
         content:
@@ -91,7 +93,9 @@ export function createLunaProvider(): LlmProvider {
       try {
         data = JSON.parse(result.content) as T;
       } catch {
-        throw new Error(`Luna returned non-JSON: ${result.content.slice(0, 200)}`);
+        throw new Error(
+          `Luna returned non-JSON: ${result.content.slice(0, 200)}`,
+        );
       }
 
       return {
@@ -116,18 +120,23 @@ export function createLunaProvider(): LlmProvider {
         body: JSON.stringify({
           model,
           messages: request.messages,
-          temperature: request.temperature ?? 0.5,
-          max_tokens: request.maxTokens ?? 1024,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`Luna API error ${response.status}`);
+        const text = await response.text();
+
+        throw new Error(`Luna API error ${response.status}: ${text}`);
       }
 
       const json = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
+        choices?: Array<{
+          message?: {
+            content?: string;
+          };
+        }>;
       };
+
       return json.choices?.[0]?.message?.content ?? "";
     },
   };

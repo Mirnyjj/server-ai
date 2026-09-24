@@ -6,7 +6,10 @@ import {
   isLunaEnabled,
   isWebhooksEnabled,
 } from "../config/env";
-import { isObjectStorageConfigured, getObjectStorage } from "../infrastructure/storage";
+import {
+  isObjectStorageConfigured,
+  getObjectStorage,
+} from "../infrastructure/storage";
 import {
   enqueueMediaSync,
   enqueueContentPlanSlot,
@@ -142,7 +145,9 @@ export async function toolRunPipeline(input: {
     topicHint: input.topicHint,
   });
 
-  let publishJob = null;
+  let publishJob: Awaited<ReturnType<typeof enqueuePublishReadyPost>> | null =
+    null;
+
   if (input.autoPublish && result.publishReady) {
     publishJob = await enqueuePublishReadyPost(result.postId);
   }
