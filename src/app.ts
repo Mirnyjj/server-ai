@@ -7,6 +7,7 @@ import { registerInstagramMediaRoutes } from "./modules/instagram/media/media.ro
 import { registerInstagramMessagesRoutes } from "./modules/instagram/messages/messages.routes";
 import { registerInstagramWebhookRoutes } from "./modules/instagram/webhooks/webhook.routes";
 import { registerInstagramProfileRoutes } from "./modules/instagram/profile/profile.routes";
+import { registerInstagramInsightsRoutes } from "./modules/instagram/insights/insights.routes";
 
 export async function createApp() {
   const app = Fastify({
@@ -28,6 +29,7 @@ export async function createApp() {
   await registerInstagramMessagesRoutes(app);
   await registerInstagramWebhookRoutes(app);
   await registerInstagramProfileRoutes(app);
+  await registerInstagramInsightsRoutes(app);
 
   return app;
 }
