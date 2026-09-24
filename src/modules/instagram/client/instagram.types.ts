@@ -8,6 +8,7 @@ export type InstagramApiErrorResponse = {
     message?: string;
     type?: string;
     code?: number;
+    error_subcode?: number;
     fbtrace_id?: string;
   };
 };
@@ -29,6 +30,10 @@ export type InstagramComment = {
   text?: string;
   timestamp?: string;
   username?: string;
+  from?: {
+    id?: string;
+    username?: string;
+  };
   hidden?: boolean;
   like_count?: number;
   parent_id?: string;
@@ -70,6 +75,7 @@ export interface InstagramMedia {
   thumbnail_url?: string;
   permalink?: string;
   timestamp?: string;
+  username?: string;
   children?: {
     data: InstagramMediaChild[];
   };
@@ -89,74 +95,4 @@ export interface InstagramMediaListResponse {
 
 export interface InstagramMediaResponse extends InstagramMedia {
   username?: string;
-}
-
-export interface InstagramMediaListResponse {
-  data: InstagramMedia[];
-  paging?: {
-    cursors?: {
-      before?: string;
-      after?: string;
-    };
-    next?: string;
-    previous?: string;
-  };
-}
-
-export interface InstagramMedia {
-  id: string;
-  caption?: string;
-  media_type: string;
-  media_url?: string;
-  thumbnail_url?: string;
-  permalink?: string;
-  timestamp?: string;
-}
-
-export interface InstagramMediaChild {
-  id: string;
-  media_type: string;
-  media_url?: string;
-  thumbnail_url?: string;
-}
-
-export interface InstagramMedia {
-  id: string;
-  caption?: string;
-  media_type: string;
-  media_url?: string;
-  thumbnail_url?: string;
-  permalink?: string;
-  timestamp?: string;
-
-  children?: {
-    data: InstagramMediaChild[];
-  };
-}
-
-export interface InstagramMediaListResponse {
-  data: InstagramMedia[];
-
-  paging?: {
-    cursors?: {
-      before?: string;
-      after?: string;
-    };
-    next?: string;
-    previous?: string;
-  };
-}
-
-export interface InstagramMediaResponse {
-  id: string;
-  caption?: string;
-  media_type: string;
-  media_url?: string;
-  thumbnail_url?: string;
-  permalink?: string;
-  timestamp?: string;
-  username?: string;
-  children?: {
-    data: InstagramMediaChild[];
-  };
 }
