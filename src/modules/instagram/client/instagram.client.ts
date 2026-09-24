@@ -10,6 +10,7 @@ import type {
   InstagramCommentReplyResponse,
   InstagramCommentsResponse,
   InstagramMediaListResponse,
+  InstagramMediaResponse,
   InstagramProfile,
   InstagramSendMessageResponse,
 } from "./instagram.types";
@@ -72,8 +73,32 @@ export function createInstagramClient(config: InstagramClientConfig) {
 
   async function listMedia(
     instagramUserId: string,
+    options: { after?: string; limit?: number } = {},
   ): Promise<InstagramMediaListResponse> {
-    return request<InstagramMediaListResponse>(`/${instagramUserId}/media`);
+    const params = new URLSearchParams({
+      fields: [
+        "id",
+        "caption",
+        "media_type",
+        "media_url",
+        "thumbnail_url",
+        "permalink",
+        "timestamp",
+        "children{id,media_type,media_url,thumbnail_url}",
+      ].join(","),
+    });
+
+    if (options.after) {
+      params.set("after", options.after);
+    }
+
+    if (options.limit) {
+      params.set("limit", String(options.limit));
+    }
+
+    return request<InstagramMediaListResponse>(
+      `/${instagramUserId}/media?${params.toString()}`,
+    );
   }
 
   async function listComments(
@@ -413,10 +438,29 @@ export function createInstagramClient(config: InstagramClientConfig) {
     );
   }
 
+  async function getMedia(mediaId: string) {
+    const params = new URLSearchParams({
+      fields: [
+        "id",
+        "caption",
+        "media_type",
+        "media_url",
+        "thumbnail_url",
+        "permalink",
+        "timestamp",
+        "username",
+        "children{id,media_type,media_url,thumbnail_url}",
+      ].join(","),
+    });
+
+    return request<InstagramMediaResponse>(`/${mediaId}?${params.toString()}`);
+  }
+
   return {
     request,
     getProfile,
     listMedia,
+    getMedia,
 
     listComments,
     listCommentReplies,

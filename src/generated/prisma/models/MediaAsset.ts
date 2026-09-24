@@ -52,6 +52,7 @@ export type MediaAssetMinAggregateOutputType = {
   height: number | null
   durationMs: number | null
   sizeBytes: bigint | null
+  instagramMediaId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,6 +69,7 @@ export type MediaAssetMaxAggregateOutputType = {
   height: number | null
   durationMs: number | null
   sizeBytes: bigint | null
+  instagramMediaId: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -85,6 +87,7 @@ export type MediaAssetCountAggregateOutputType = {
   durationMs: number
   sizeBytes: number
   metadata: number
+  instagramMediaId: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -117,6 +120,7 @@ export type MediaAssetMinAggregateInputType = {
   height?: true
   durationMs?: true
   sizeBytes?: true
+  instagramMediaId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -133,6 +137,7 @@ export type MediaAssetMaxAggregateInputType = {
   height?: true
   durationMs?: true
   sizeBytes?: true
+  instagramMediaId?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -150,6 +155,7 @@ export type MediaAssetCountAggregateInputType = {
   durationMs?: true
   sizeBytes?: true
   metadata?: true
+  instagramMediaId?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -254,6 +260,7 @@ export type MediaAssetGroupByOutputType = {
   durationMs: number | null
   sizeBytes: bigint | null
   metadata: runtime.JsonValue | null
+  instagramMediaId: string | null
   createdAt: Date
   updatedAt: Date
   _count: MediaAssetCountAggregateOutputType | null
@@ -294,6 +301,7 @@ export type MediaAssetWhereInput = {
   durationMs?: Prisma.IntNullableFilter<"MediaAsset"> | number | null
   sizeBytes?: Prisma.BigIntNullableFilter<"MediaAsset"> | bigint | number | null
   metadata?: Prisma.JsonNullableFilter<"MediaAsset">
+  instagramMediaId?: Prisma.StringNullableFilter<"MediaAsset"> | string | null
   createdAt?: Prisma.DateTimeFilter<"MediaAsset"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MediaAsset"> | Date | string
   profile?: Prisma.XOR<Prisma.AiProfileScalarRelationFilter, Prisma.AiProfileWhereInput>
@@ -314,6 +322,7 @@ export type MediaAssetOrderByWithRelationInput = {
   durationMs?: Prisma.SortOrderInput | Prisma.SortOrder
   sizeBytes?: Prisma.SortOrderInput | Prisma.SortOrder
   metadata?: Prisma.SortOrderInput | Prisma.SortOrder
+  instagramMediaId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   profile?: Prisma.AiProfileOrderByWithRelationInput
@@ -323,6 +332,7 @@ export type MediaAssetOrderByWithRelationInput = {
 
 export type MediaAssetWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  instagramMediaId?: string
   AND?: Prisma.MediaAssetWhereInput | Prisma.MediaAssetWhereInput[]
   OR?: Prisma.MediaAssetWhereInput[]
   NOT?: Prisma.MediaAssetWhereInput | Prisma.MediaAssetWhereInput[]
@@ -342,7 +352,7 @@ export type MediaAssetWhereUniqueInput = Prisma.AtLeast<{
   profile?: Prisma.XOR<Prisma.AiProfileScalarRelationFilter, Prisma.AiProfileWhereInput>
   mediaReferences?: Prisma.MediaReferenceListRelationFilter
   postMedia?: Prisma.PostMediaListRelationFilter
-}, "id">
+}, "id" | "instagramMediaId">
 
 export type MediaAssetOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -357,6 +367,7 @@ export type MediaAssetOrderByWithAggregationInput = {
   durationMs?: Prisma.SortOrderInput | Prisma.SortOrder
   sizeBytes?: Prisma.SortOrderInput | Prisma.SortOrder
   metadata?: Prisma.SortOrderInput | Prisma.SortOrder
+  instagramMediaId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.MediaAssetCountOrderByAggregateInput
@@ -382,6 +393,7 @@ export type MediaAssetScalarWhereWithAggregatesInput = {
   durationMs?: Prisma.IntNullableWithAggregatesFilter<"MediaAsset"> | number | null
   sizeBytes?: Prisma.BigIntNullableWithAggregatesFilter<"MediaAsset"> | bigint | number | null
   metadata?: Prisma.JsonNullableWithAggregatesFilter<"MediaAsset">
+  instagramMediaId?: Prisma.StringNullableWithAggregatesFilter<"MediaAsset"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"MediaAsset"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"MediaAsset"> | Date | string
 }
@@ -398,6 +410,7 @@ export type MediaAssetCreateInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   profile: Prisma.AiProfileCreateNestedOneWithoutMediaAssetsInput
@@ -418,6 +431,7 @@ export type MediaAssetUncheckedCreateInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutMediaAssetInput
@@ -436,6 +450,7 @@ export type MediaAssetUpdateInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   profile?: Prisma.AiProfileUpdateOneRequiredWithoutMediaAssetsNestedInput
@@ -456,6 +471,7 @@ export type MediaAssetUncheckedUpdateInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutMediaAssetNestedInput
@@ -475,6 +491,7 @@ export type MediaAssetCreateManyInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -491,6 +508,7 @@ export type MediaAssetUpdateManyMutationInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -508,6 +526,7 @@ export type MediaAssetUncheckedUpdateManyInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -535,6 +554,7 @@ export type MediaAssetCountOrderByAggregateInput = {
   durationMs?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
   metadata?: Prisma.SortOrder
+  instagramMediaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -558,6 +578,7 @@ export type MediaAssetMaxOrderByAggregateInput = {
   height?: Prisma.SortOrder
   durationMs?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
+  instagramMediaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -574,6 +595,7 @@ export type MediaAssetMinOrderByAggregateInput = {
   height?: Prisma.SortOrder
   durationMs?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
+  instagramMediaId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -703,6 +725,7 @@ export type MediaAssetCreateWithoutProfileInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutMediaAssetInput
@@ -721,6 +744,7 @@ export type MediaAssetUncheckedCreateWithoutProfileInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutMediaAssetInput
@@ -769,6 +793,7 @@ export type MediaAssetScalarWhereInput = {
   durationMs?: Prisma.IntNullableFilter<"MediaAsset"> | number | null
   sizeBytes?: Prisma.BigIntNullableFilter<"MediaAsset"> | bigint | number | null
   metadata?: Prisma.JsonNullableFilter<"MediaAsset">
+  instagramMediaId?: Prisma.StringNullableFilter<"MediaAsset"> | string | null
   createdAt?: Prisma.DateTimeFilter<"MediaAsset"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"MediaAsset"> | Date | string
 }
@@ -785,6 +810,7 @@ export type MediaAssetCreateWithoutMediaReferencesInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   profile: Prisma.AiProfileCreateNestedOneWithoutMediaAssetsInput
@@ -804,6 +830,7 @@ export type MediaAssetUncheckedCreateWithoutMediaReferencesInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   postMedia?: Prisma.PostMediaUncheckedCreateNestedManyWithoutMediaAssetInput
@@ -837,6 +864,7 @@ export type MediaAssetUpdateWithoutMediaReferencesInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   profile?: Prisma.AiProfileUpdateOneRequiredWithoutMediaAssetsNestedInput
@@ -856,6 +884,7 @@ export type MediaAssetUncheckedUpdateWithoutMediaReferencesInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   postMedia?: Prisma.PostMediaUncheckedUpdateManyWithoutMediaAssetNestedInput
@@ -873,6 +902,7 @@ export type MediaAssetCreateWithoutPostMediaInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   profile: Prisma.AiProfileCreateNestedOneWithoutMediaAssetsInput
@@ -892,6 +922,7 @@ export type MediaAssetUncheckedCreateWithoutPostMediaInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutMediaAssetInput
@@ -925,6 +956,7 @@ export type MediaAssetUpdateWithoutPostMediaInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   profile?: Prisma.AiProfileUpdateOneRequiredWithoutMediaAssetsNestedInput
@@ -944,6 +976,7 @@ export type MediaAssetUncheckedUpdateWithoutPostMediaInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutMediaAssetNestedInput
@@ -961,6 +994,7 @@ export type MediaAssetCreateManyProfileInput = {
   durationMs?: number | null
   sizeBytes?: bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -977,6 +1011,7 @@ export type MediaAssetUpdateWithoutProfileInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutMediaAssetNestedInput
@@ -995,6 +1030,7 @@ export type MediaAssetUncheckedUpdateWithoutProfileInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutMediaAssetNestedInput
@@ -1013,6 +1049,7 @@ export type MediaAssetUncheckedUpdateManyWithoutProfileInput = {
   durationMs?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   sizeBytes?: Prisma.NullableBigIntFieldUpdateOperationsInput | bigint | number | null
   metadata?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  instagramMediaId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1070,6 +1107,7 @@ export type MediaAssetSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   durationMs?: boolean
   sizeBytes?: boolean
   metadata?: boolean
+  instagramMediaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   profile?: boolean | Prisma.AiProfileDefaultArgs<ExtArgs>
@@ -1091,6 +1129,7 @@ export type MediaAssetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   durationMs?: boolean
   sizeBytes?: boolean
   metadata?: boolean
+  instagramMediaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   profile?: boolean | Prisma.AiProfileDefaultArgs<ExtArgs>
@@ -1109,6 +1148,7 @@ export type MediaAssetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   durationMs?: boolean
   sizeBytes?: boolean
   metadata?: boolean
+  instagramMediaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   profile?: boolean | Prisma.AiProfileDefaultArgs<ExtArgs>
@@ -1127,11 +1167,12 @@ export type MediaAssetSelectScalar = {
   durationMs?: boolean
   sizeBytes?: boolean
   metadata?: boolean
+  instagramMediaId?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type MediaAssetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "profileId" | "type" | "status" | "url" | "storageKey" | "mimeType" | "width" | "height" | "durationMs" | "sizeBytes" | "metadata" | "createdAt" | "updatedAt", ExtArgs["result"]["mediaAsset"]>
+export type MediaAssetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "profileId" | "type" | "status" | "url" | "storageKey" | "mimeType" | "width" | "height" | "durationMs" | "sizeBytes" | "metadata" | "instagramMediaId" | "createdAt" | "updatedAt", ExtArgs["result"]["mediaAsset"]>
 export type MediaAssetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   profile?: boolean | Prisma.AiProfileDefaultArgs<ExtArgs>
   mediaReferences?: boolean | Prisma.MediaAsset$mediaReferencesArgs<ExtArgs>
@@ -1165,6 +1206,7 @@ export type $MediaAssetPayload<ExtArgs extends runtime.Types.Extensions.Internal
     durationMs: number | null
     sizeBytes: bigint | null
     metadata: runtime.JsonValue | null
+    instagramMediaId: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["mediaAsset"]>
@@ -1605,6 +1647,7 @@ export interface MediaAssetFieldRefs {
   readonly durationMs: Prisma.FieldRef<"MediaAsset", 'Int'>
   readonly sizeBytes: Prisma.FieldRef<"MediaAsset", 'BigInt'>
   readonly metadata: Prisma.FieldRef<"MediaAsset", 'Json'>
+  readonly instagramMediaId: Prisma.FieldRef<"MediaAsset", 'String'>
   readonly createdAt: Prisma.FieldRef<"MediaAsset", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"MediaAsset", 'DateTime'>
 }

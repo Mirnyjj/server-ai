@@ -24,22 +24,6 @@ export type InstagramProfile = {
   media_count?: number;
 };
 
-export type InstagramMedia = {
-  id: string;
-};
-
-export type InstagramMediaListResponse = {
-  data: InstagramMedia[];
-  paging?: {
-    cursors?: {
-      before?: string;
-      after?: string;
-    };
-    next?: string;
-    previous?: string;
-  };
-};
-
 export type InstagramComment = {
   id: string;
   text?: string;
@@ -70,3 +54,109 @@ export type InstagramSendMessageResponse = {
   recipient_id?: string;
   message_id?: string;
 };
+
+export interface InstagramMediaChild {
+  id: string;
+  media_type: string;
+  media_url?: string;
+  thumbnail_url?: string;
+}
+
+export interface InstagramMedia {
+  id: string;
+  caption?: string;
+  media_type: string;
+  media_url?: string;
+  thumbnail_url?: string;
+  permalink?: string;
+  timestamp?: string;
+  children?: {
+    data: InstagramMediaChild[];
+  };
+}
+
+export interface InstagramMediaListResponse {
+  data: InstagramMedia[];
+  paging?: {
+    cursors?: {
+      before?: string;
+      after?: string;
+    };
+    next?: string;
+    previous?: string;
+  };
+}
+
+export interface InstagramMediaResponse extends InstagramMedia {
+  username?: string;
+}
+
+export interface InstagramMediaListResponse {
+  data: InstagramMedia[];
+  paging?: {
+    cursors?: {
+      before?: string;
+      after?: string;
+    };
+    next?: string;
+    previous?: string;
+  };
+}
+
+export interface InstagramMedia {
+  id: string;
+  caption?: string;
+  media_type: string;
+  media_url?: string;
+  thumbnail_url?: string;
+  permalink?: string;
+  timestamp?: string;
+}
+
+export interface InstagramMediaChild {
+  id: string;
+  media_type: string;
+  media_url?: string;
+  thumbnail_url?: string;
+}
+
+export interface InstagramMedia {
+  id: string;
+  caption?: string;
+  media_type: string;
+  media_url?: string;
+  thumbnail_url?: string;
+  permalink?: string;
+  timestamp?: string;
+
+  children?: {
+    data: InstagramMediaChild[];
+  };
+}
+
+export interface InstagramMediaListResponse {
+  data: InstagramMedia[];
+
+  paging?: {
+    cursors?: {
+      before?: string;
+      after?: string;
+    };
+    next?: string;
+    previous?: string;
+  };
+}
+
+export interface InstagramMediaResponse {
+  id: string;
+  caption?: string;
+  media_type: string;
+  media_url?: string;
+  thumbnail_url?: string;
+  permalink?: string;
+  timestamp?: string;
+  username?: string;
+  children?: {
+    data: InstagramMediaChild[];
+  };
+}

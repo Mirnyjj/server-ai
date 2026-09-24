@@ -290,7 +290,7 @@ MCP не должен дублировать Instagram API client.
 INSTAGRAM_MARKER используется только временно для локального тестирования.
 ```
 
-1. Сохранение Instagram-аккаунта в PostgreSQL
+1. Сохранение Instagram-аккаунта в PostgreSQL (выполнено)
 
 Подключить syncInstagramAccount() к route, проверить, что InstagramAccount.upsert() создаёт или обновляет запись. Токен пока берём из INSTAGRAM_MARKER.
 

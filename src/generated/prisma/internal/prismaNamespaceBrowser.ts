@@ -149,6 +149,7 @@ export const MediaAssetScalarFieldEnum = {
   durationMs: 'durationMs',
   sizeBytes: 'sizeBytes',
   metadata: 'metadata',
+  instagramMediaId: 'instagramMediaId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
