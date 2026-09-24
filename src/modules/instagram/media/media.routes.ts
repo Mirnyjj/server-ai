@@ -1,6 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { resolveAccessToken, resolveAccessTokenByProfileId } from "../auth/token.resolver";
+import {
+  resolveAccessToken,
+  resolveAccessTokenByProfileId,
+} from "../auth/token.resolver";
 import { createInstagramMediaService } from "./media.service";
+import { enqueueMediaSync } from "../../../infrastructure/queue";
 
 export async function registerInstagramMediaRoutes(app: FastifyInstance) {
   app.get("/api/instagram/media", async (request, reply) => {
@@ -46,6 +50,7 @@ export async function registerInstagramMediaRoutes(app: FastifyInstance) {
     }
   });
 
+  /** Synchronous media sync (blocking) */
   app.post("/api/instagram/media/sync", async (request, reply) => {
     const body = request.body as {
       profileId?: string;
@@ -85,13 +90,43 @@ export async function registerInstagramMediaRoutes(app: FastifyInstance) {
     }
   });
 
+  /** Async media sync via BullMQ */
+  app.post("/api/instagram/media/sync/async", async (request, reply) => {
+    const body = request.body as {
+      profileId?: string;
+    };
+
+    if (!body.profileId) {
+      return reply.code(400).send({
+        error: "profileId is required",
+      });
+    }
+
+    try {
+      const job = await enqueueMediaSync({ profileId: body.profileId });
+
+      return reply.code(202).send({
+        success: true,
+        jobId: job.id,
+        queue: "media-sync",
+      });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to enqueue media sync",
+      });
+    }
+  });
+
   app.get("/api/instagram/media/:mediaId", async (request, reply) => {
     const { mediaId } = request.params as {
       mediaId: string;
     };
 
     try {
-      // Token resolution without account context — falls back to MARKER
       const accessToken = await resolveAccessToken();
       const mediaService = createInstagramMediaService(accessToken);
       const media = await mediaService.getMedia(mediaId);

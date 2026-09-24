@@ -5,10 +5,6 @@ import { createInstagramWebhookService } from "./webhook.service";
 export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
   const webhookService = createInstagramWebhookService(env.INSTAGRAM_MARKER);
 
-  /**
-   * Meta webhook verification handshake.
-   * GET /api/instagram/webhook?hub.mode=subscribe&hub.verify_token=...&hub.challenge=...
-   */
   app.get("/api/instagram/webhook", async (request, reply) => {
     const query = request.query as {
       "hub.mode"?: string;
@@ -26,7 +22,9 @@ export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
       request.log.error(
         "INSTAGRAM_WEBHOOK_VERIFY_TOKEN is not configured — cannot verify webhook",
       );
-      return reply.code(500).send({ error: "Webhook verify token not configured" });
+      return reply
+        .code(500)
+        .send({ error: "Webhook verify token not configured" });
     }
 
     if (mode === "subscribe" && verifyToken === expectedToken && challenge) {
@@ -36,17 +34,11 @@ export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
     return reply.code(403).send({ error: "Forbidden" });
   });
 
-  /**
-   * Incoming Meta webhook events.
-   * Signature is verified when X-Hub-Signature-256 is present.
-   */
   app.post("/api/instagram/webhook", async (request, reply) => {
     const signature = request.headers["x-hub-signature-256"] as
       | string
       | undefined;
 
-    // Prefer raw body if available (for signature verification).
-    // Fastify may have already parsed JSON; we re-stringify for HMAC when needed.
     const rawBody =
       typeof request.body === "string"
         ? request.body
@@ -60,7 +52,7 @@ export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
 
       return reply.code(200).send({
         received: true,
-        processed: result.processed,
+        enqueued: result.enqueued,
       });
     } catch (error) {
       request.log.error(error);
@@ -72,9 +64,7 @@ export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
         return reply.code(403).send({ error: "Invalid signature" });
       }
 
-      // Always return 200 to Meta to avoid retries storm for transient errors
-      // after we have persisted the event. For signature failures we already
-      // returned 403.
+      // Acknowledge to Meta to avoid retry storms; event may still be lost
       return reply.code(200).send({
         received: true,
         error: error instanceof Error ? error.message : "processing failed",
