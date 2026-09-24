@@ -16,6 +16,8 @@ export {
   type ReconcilePostCommentsJobData,
   type ProcessCommentJobData,
   type ProcessDirectMessageJobData,
+  type ContentPlanSlotJobData,
+  type StrategyRunJobData,
 } from "./types";
 
 export {
@@ -27,6 +29,7 @@ export {
   insightsQueue,
   commentReconcileQueue,
   agentQueue,
+  contentPlanQueue,
   enqueueTokenRefresh,
   enqueueRefreshAllExpiring,
   enqueueWebhookEvent,
@@ -40,6 +43,8 @@ export {
   enqueuePostCommentReconciliation,
   enqueueProcessComment,
   enqueueProcessDirectMessage,
+  enqueueContentPlanSlot,
+  enqueueStrategyRun,
   closeAllQueues,
 } from "./queues";
 

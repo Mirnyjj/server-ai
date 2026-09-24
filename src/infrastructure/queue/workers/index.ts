@@ -7,13 +7,12 @@ import { createMediaSyncWorker } from "./media-sync.worker";
 import { createInsightsWorker } from "./insights.worker";
 import { createCommentReconcileWorker } from "./comment-reconcile.worker";
 import { createAgentWorker } from "./agent.worker";
+import { createContentPlanWorker } from "./content-plan.worker";
 
 let workers: Worker[] = [];
 
 export function startWorkers(): Worker[] {
-  if (workers.length > 0) {
-    return workers;
-  }
+  if (workers.length > 0) return workers;
 
   workers = [
     createTokenRefreshWorker(),
@@ -24,11 +23,11 @@ export function startWorkers(): Worker[] {
     createInsightsWorker(),
     createCommentReconcileWorker(),
     createAgentWorker(),
+    createContentPlanWorker(),
   ];
 
   console.log(`[queues] started ${workers.length} workers`);
   void registerRepeatableJobs();
-
   return workers;
 }
 
@@ -41,14 +40,11 @@ async function registerRepeatableJobs() {
       JOB_NAMES.REFRESH_ALL_EXPIRING,
       { withinHours: 48 },
       {
-        repeat: {
-          every: 6 * 60 * 60 * 1000,
-        },
+        repeat: { every: 6 * 60 * 60 * 1000 },
         jobId: "repeatable-refresh-all-expiring",
       },
     );
-
-    console.log("[queues] registered repeatable token-refresh job (every 6h)");
+    console.log("[queues] registered repeatable token-refresh (6h)");
   } catch (error) {
     console.error("[queues] failed to register repeatable jobs:", error);
   }
@@ -59,14 +55,3 @@ export async function stopWorkers(): Promise<void> {
   workers = [];
   console.log("[queues] all workers stopped");
 }
-
-export {
-  createTokenRefreshWorker,
-  createWebhookWorker,
-  createPublishWorker,
-  createContainerStatusWorker,
-  createMediaSyncWorker,
-  createInsightsWorker,
-  createCommentReconcileWorker,
-  createAgentWorker,
-};

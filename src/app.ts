@@ -14,6 +14,7 @@ import { registerReferenceRoutes } from "./modules/ai/references/reference.route
 import { registerAiContentRoutes } from "./modules/ai/content/content.routes";
 import { registerPipelineRoutes } from "./modules/ai/pipeline/pipeline.routes";
 import { registerStorageRoutes } from "./infrastructure/storage/storage.routes";
+import { registerPlanRoutes } from "./modules/ai/plan/plan.routes";
 
 export async function createApp() {
   const app = Fastify({
@@ -22,11 +23,9 @@ export async function createApp() {
 
   await app.register(cors);
 
-  app.get("/health", async () => {
-    return {
-      status: "ok",
-    };
-  });
+  app.get("/health", async () => ({
+    status: "ok",
+  }));
 
   await registerInstagramAuthRoutes(app);
   await registerInstagramCommentsRoutes(app);
@@ -42,6 +41,7 @@ export async function createApp() {
   await registerAiContentRoutes(app);
   await registerPipelineRoutes(app);
   await registerStorageRoutes(app);
+  await registerPlanRoutes(app);
 
   return app;
 }

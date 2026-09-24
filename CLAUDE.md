@@ -2,41 +2,51 @@
 
 > Branch: `fix/instagram-api-db-sync`
 
-## AI stack
+## Stack
 
-Brain: **GPT-6 Luna** · Image/Video: separate providers · Storage: S3/R2/local
+| Role | Provider |
+|------|----------|
+| Brain | GPT-6 Luna |
+| Image | stub \| **http** |
+| Video | stub \| **http** |
+| Storage | local \| s3 \| r2 \| minio |
 
 ## PROGRESS MAP
 
 | Block | % |
 |-------|---|
-| Instagram Graph + OAuth + queues | 100 |
-| Policy + Telegram | 90 |
-| Luna agent decisions | 85 |
-| References + scenarios | 80 |
+| Instagram API + OAuth + queues | 100 |
+| Policy + Telegram + Luna agent | 90 |
+| Webhook → auto agent | 90 |
 | Object Storage | 80 |
-| Content pipeline | 70 |
-| **Webhook → auto agent** | **90** |
-| **Pipeline → auto publish** | **75** |
-| Real image/video models | 40 stub |
+| Pipeline + auto publish | 75 |
+| **HTTP image/video adapters** | **70** |
+| **Content plan slots** | **70** |
+| **Strategy agent** | **70** |
+| Cron schedules per profile | 40 |
 
-**Infra ~88% · Product ~70%**
+**Infra ~90% · Product ~75%**
 
-## Autonomous flows now
+## New
 
-1. **Inbound engagement**  
-   Webhook → DB → agent queue → Luna → Policy → reply | Telegram escalate
+```env
+IMAGE_GENERATOR_PROVIDER=http
+IMAGE_GENERATOR_BASE_URL=https://api.../v1/images/generations
+IMAGE_GENERATOR_API_KEY=
+IMAGE_GENERATOR_MODEL=
 
-2. **Outbound content**  
-   `POST /api/ai/pipeline/run { profileId, autoPublish: true }`  
-   → Luna scenario → gen → storage → publish queue
+VIDEO_GENERATOR_PROVIDER=http
+VIDEO_GENERATOR_BASE_URL=
+VIDEO_GENERATOR_API_KEY=
+```
 
-## Queues: 8
+```
+POST /api/ai/plan/run-slot { profileId, autoPublish? }
+POST /api/ai/plan/run-slot/async
+POST /api/ai/strategy/run { profileId }
+POST /api/ai/strategy/run/async
+```
 
-… + `agent` (process-comment, process-dm)
+Strategy updates **contentStrategy only** (not Policy flags).
 
-## Next
-
-1. Real IMAGE_GENERATOR / VIDEO_GENERATOR adapters
-2. Scheduled content plan (cron)
-3. Strategy agent loop from insights
+Queues: **9** (+ content-plan)

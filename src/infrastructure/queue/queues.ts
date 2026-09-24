@@ -16,15 +16,14 @@ import {
   type ReconcilePostCommentsJobData,
   type ProcessCommentJobData,
   type ProcessDirectMessageJobData,
+  type ContentPlanSlotJobData,
+  type StrategyRunJobData,
 } from "./types";
 
 const connection = getBullMqConnection();
 
 function createQueue(name: string) {
-  return new Queue(name, {
-    connection,
-    defaultJobOptions,
-  });
+  return new Queue(name, { connection, defaultJobOptions });
 }
 
 export const tokenRefreshQueue = createQueue(QUEUE_NAMES.TOKEN_REFRESH);
@@ -35,6 +34,7 @@ export const mediaSyncQueue = createQueue(QUEUE_NAMES.MEDIA_SYNC);
 export const insightsQueue = createQueue(QUEUE_NAMES.INSIGHTS);
 export const commentReconcileQueue = createQueue(QUEUE_NAMES.COMMENT_RECONCILE);
 export const agentQueue = createQueue(QUEUE_NAMES.AGENT);
+export const contentPlanQueue = createQueue(QUEUE_NAMES.CONTENT_PLAN);
 
 export async function enqueueTokenRefresh(
   data: RefreshConnectionJobData,
@@ -112,13 +112,9 @@ export async function enqueueCollectPostInsights(
 export async function enqueueCommentReconciliation(
   data: ReconcileProfileCommentsJobData,
 ) {
-  return commentReconcileQueue.add(
-    JOB_NAMES.RECONCILE_PROFILE_COMMENTS,
-    data,
-    {
-      jobId: `comment-reconcile-${data.profileId}-${Date.now()}`,
-    },
-  );
+  return commentReconcileQueue.add(JOB_NAMES.RECONCILE_PROFILE_COMMENTS, data, {
+    jobId: `comment-reconcile-${data.profileId}-${Date.now()}`,
+  });
 }
 
 export async function enqueuePostCommentReconciliation(
@@ -133,7 +129,6 @@ export async function enqueuePostCommentReconciliation(
 export async function enqueueProcessComment(data: ProcessCommentJobData) {
   return agentQueue.add(JOB_NAMES.PROCESS_COMMENT, data, {
     jobId: `agent-comment-${data.commentId}`,
-    // slight delay so DB commit is visible
     delay: 500,
   });
 }
@@ -147,6 +142,18 @@ export async function enqueueProcessDirectMessage(
   });
 }
 
+export async function enqueueContentPlanSlot(data: ContentPlanSlotJobData) {
+  return contentPlanQueue.add(JOB_NAMES.CONTENT_PLAN_SLOT, data, {
+    jobId: `plan-slot-${data.profileId}-${Date.now()}`,
+  });
+}
+
+export async function enqueueStrategyRun(data: StrategyRunJobData) {
+  return contentPlanQueue.add(JOB_NAMES.STRATEGY_RUN, data, {
+    jobId: `strategy-${data.profileId}-${Date.now()}`,
+  });
+}
+
 export async function closeAllQueues(): Promise<void> {
   await Promise.all([
     tokenRefreshQueue.close(),
@@ -157,5 +164,6 @@ export async function closeAllQueues(): Promise<void> {
     insightsQueue.close(),
     commentReconcileQueue.close(),
     agentQueue.close(),
+    contentPlanQueue.close(),
   ]);
 }
