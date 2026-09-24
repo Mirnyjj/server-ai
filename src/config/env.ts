@@ -24,17 +24,24 @@ const envSchema = z
     INSTAGRAM_WEBHOOK_VERIFY_TOKEN: z.string().min(1).optional(),
     INSTAGRAM_WEBHOOK_APP_SECRET: z.string().optional(),
 
-    /** Telegram Bot API token from @BotFather. Optional — control plane disabled if unset. */
     TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
-
-    /**
-     * Comma-separated chat IDs allowed to control the bot.
-     * If empty, bot accepts any chat (dev only — set in production).
-     */
     TELEGRAM_ALLOWED_CHAT_IDS: z.string().optional(),
-
-    /** Public HTTPS URL for Telegram webhook, e.g. https://api.example.com/api/telegram/webhook */
     TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
+
+    /** GPT-6 Luna — brain (scenarios, analytics, agent). OpenAI-compatible API. */
+    LUNA_API_KEY: z.string().optional(),
+    LUNA_BASE_URL: z.string().url().optional(),
+    LUNA_MODEL: z.string().optional(),
+
+    /** Image generation — separate model from Luna */
+    IMAGE_GENERATOR_PROVIDER: z.string().optional(),
+    IMAGE_GENERATOR_API_KEY: z.string().optional(),
+    IMAGE_GENERATOR_MODEL: z.string().optional(),
+
+    /** Video generation — separate model from Luna & image */
+    VIDEO_GENERATOR_PROVIDER: z.string().optional(),
+    VIDEO_GENERATOR_API_KEY: z.string().optional(),
+    VIDEO_GENERATOR_MODEL: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     const hasHttpsRedirect =
@@ -126,7 +133,6 @@ export function isWebhooksEnabled(): boolean {
   return !!env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
 }
 
-/** Telegram control plane available when bot token is set */
 export function isTelegramEnabled(): boolean {
   return !!env.TELEGRAM_BOT_TOKEN;
 }
@@ -138,4 +144,8 @@ export function getTelegramAllowedChatIds(): number[] {
     .filter(Boolean)
     .map((s) => Number(s))
     .filter((n) => !Number.isNaN(n));
+}
+
+export function isLunaEnabled(): boolean {
+  return !!env.LUNA_API_KEY;
 }

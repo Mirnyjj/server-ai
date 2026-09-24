@@ -2,76 +2,83 @@
 
 > Branch: `fix/instagram-api-db-sync` · Updated: 2026-09-24
 
+## AI stack (актуально)
+
+| Роль | Модель |
+|------|--------|
+| Brain | **GPT-6 Luna** — сценарии, captions, analytics, agent decisions |
+| Image | отдельный provider (`IMAGE_GENERATOR_*`) |
+| Video | отдельный provider (`VIDEO_GENERATOR_*`) |
+
+Anthropic **не** используется как head model.
+
+Character refs: `MediaReference` + description → consistency pack для генерации.
+
 ---
 
-## PROGRESS MAP (ТЗ)
+## PROGRESS MAP
 
-| # | Блок ТЗ | Статус | % |
-|---|---------|--------|---|
-| 1 | Meta Graph API only (no instagrapi) | ✅ | 100 |
-| 2 | OAuth + encrypted tokens + refresh | ✅ | 100 |
-| 3 | Local dev mode (MARKER, no HTTPS) | ✅ | 100 |
-| 4 | Graph client + API version env | ✅ | 100 |
-| 5 | Profile / Account / Media sync → DB | ✅ | 100 |
-| 6 | Publish image/reel/carousel/story | ✅ | 100 |
-| 7 | Container status polling (BullMQ) | ✅ | 100 |
-| 8 | Webhooks (verify, HMAC, idempotency) | ✅ | 100 |
-| 9 | Comments API + reconciliation | ✅ | 100 |
-| 10 | DM send + webhook → DB | ✅ | 100 |
-| 11 | Insights → PostMetric | ✅ | 100 |
-| 12 | BullMQ (7 queues) | ✅ | 100 |
+| # | Блок | Статус | % |
+|---|------|--------|---|
+| 1 | Meta Graph API only | ✅ | 100 |
+| 2 | OAuth + tokens + refresh | ✅ | 100 |
+| 3 | Local dev (MARKER) | ✅ | 100 |
+| 4 | Graph client | ✅ | 100 |
+| 5 | Media sync → DB | ✅ | 100 |
+| 6 | Publish pipeline | ✅ | 100 |
+| 7 | Container polling | ✅ | 100 |
+| 8 | Webhooks | ✅ | 100 |
+| 9 | Comments + reconcile | ✅ | 100 |
+| 10 | DM + webhook DB | ✅ | 100 |
+| 11 | Insights | ✅ | 100 |
+| 12 | BullMQ (7) | ✅ | 100 |
 | 13 | Policy Engine | ✅ | 100 |
-| 14 | Comment / DM Agent pipeline | ✅ | 90 |
-| 15 | **Telegram control plane** | ✅ | **85** |
-| 16 | Claude real Anthropic | ❌ stub | 20 |
-| 17 | Agent auto-trigger from webhook | ❌ | 0 |
-| 18 | InstagramProvider interface | ⚠️ | 40 |
-| 19 | Object Storage (S3/R2) | ❌ | 0 |
-| 20 | Media generators | ❌ | 0 |
-| 21 | Content Plan pipeline | ❌ | 0 |
-| 22 | Strategy Agent | ❌ | 0 |
-| 23 | AccountMetric model | ❌ | 0 |
-| 24 | MCP adapter | ❌ | 0 |
+| 14 | Comment/DM Agent pipeline | ✅ | 90 |
+| 15 | Telegram control plane | ✅ | 85 |
+| 16 | **Luna LLM client + scenarios** | ✅ | **70** |
+| 17 | **Character references API** | ✅ | **80** |
+| 18 | Image generator interface | ✅ stub | 40 |
+| 19 | Video generator interface | ✅ stub | 40 |
+| 20 | Wire agent → Luna (not stub heuristics) | ❌ | 10 |
+| 21 | Full content pipeline (scenario→gen→publish) | ❌ | 15 |
+| 22 | Object Storage | ❌ | 0 |
+| 23 | Auto agent from webhook | ❌ | 0 |
+| 24 | Strategy loop closed | ❌ | 25 |
 
-**Overall MVP infrastructure: ~75%**  
-**Full autonomous product (ТЗ end-to-end): ~55%**
+**MVP infra ~78%** · **Full product ~58%**
 
 ---
 
-## Telegram (только что)
+## Character references — как заводить
 
-```env
-TELEGRAM_BOT_TOKEN=...
-TELEGRAM_ALLOWED_CHAT_IDS=123456789
-TELEGRAM_WEBHOOK_URL=https://your.api/api/telegram/webhook
+```bash
+POST /api/ai/profiles/:profileId/references
+{
+  "url": "https://cdn/.../face.jpg",
+  "type": "FACE",          # FACE | FULL_BODY | STYLE | OUTFIT | LOCATION | LIGHTING | REFERENCE
+  "description": "25y woman, blonde wavy hair, blue eyes, light freckles, soft smile",
+  "priority": 10,
+  "tags": ["primary", "front"],
+  "locks": ["face", "hair"]
+}
 ```
 
-| Feature | Status |
-|---------|--------|
-| Commands /status /pending /profiles /sync /connect | ✅ |
-| Sensitive comment/DM alerts + inline Send/Ignore | ✅ |
-| Agent → notify on escalate | ✅ |
-| Webhook endpoint + setup | ✅ |
-| Long polling (local without HTTPS) | ❌ later |
+Pack для генерации: `GET /api/ai/profiles/:profileId/references/pack`
 
-`GET /api/telegram/status` · `POST /api/telegram/test`
+Рекомендация: 3–5 FACE + 1–2 FULL_BODY + STYLE/OUTFIT — иначе drift.
 
 ---
 
-## Next priorities
+## Luna endpoints
 
-1. Anthropic Claude (SDK already in package.json)
-2. Webhook worker → auto `processComment` / `processDirectMessage`
-3. Telegram long-polling for local dev
-4. Object Storage + generators
-5. Strategy Agent
+- `POST /api/ai/scenarios/generate` `{ profileId, postType?, topicHint? }`
+- `POST /api/ai/analytics/run` `{ profileId }`
 
 ---
 
-## Queues (7)
+## Next
 
-token-refresh · webhook · publish · container-status · media-sync · insights · comment-reconcile
-
-## Modules with CLAUDE.md
-
-`config` · `crypto` · `infrastructure/queue` · `instagram/*` · `agent` · `agent/policy` · `telegram`
+1. Agent decisions через Luna (заменить heuristic stubs)
+2. Pipeline: scenario → image/video gen → MediaAsset → publish
+3. Object Storage
+4. Real image/video provider adapters
