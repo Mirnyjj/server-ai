@@ -9,10 +9,12 @@ import {
   exchangeForLongLivedToken,
 } from "./token.service";
 
+/** CORE MVP scopes from TZ */
 const INSTAGRAM_SCOPES = [
   "instagram_business_basic",
   "instagram_business_content_publish",
   "instagram_business_manage_comments",
+  "instagram_business_manage_insights",
   "instagram_business_manage_messages",
 ];
 
@@ -54,6 +56,10 @@ export function createInstagramAuthService() {
 
     const instagramUserId =
       profile.user_id ?? profile.id ?? shortLivedToken.user_id;
+
+    if (!instagramUserId) {
+      throw new Error("Could not determine Instagram user id after OAuth");
+    }
 
     const instagramAccount = await upsertInstagramAccount({
       profileId,

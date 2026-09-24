@@ -1,15 +1,8 @@
 import type { FastifyInstance } from "fastify";
+import { resolveAccessToken } from "../auth/token.resolver";
 import { createInstagramMessagesService } from "./messages.service";
 
 export async function registerInstagramMessagesRoutes(app: FastifyInstance) {
-  const accessToken = process.env.INSTAGRAM_MARKER;
-
-  if (!accessToken) {
-    throw new Error("INSTAGRAM_MARKER is not configured");
-  }
-
-  const messagesService = createInstagramMessagesService(accessToken);
-
   app.post("/api/instagram/messages/send", async (request, reply) => {
     const body = request.body as {
       instagramUserId?: string;
@@ -35,10 +28,23 @@ export async function registerInstagramMessagesRoutes(app: FastifyInstance) {
       });
     }
 
-    return messagesService.sendMessage(
-      body.instagramUserId,
-      body.recipientId,
-      body.message,
-    );
+    try {
+      const accessToken = await resolveAccessToken({
+        instagramUserId: body.instagramUserId,
+      });
+      const messagesService = createInstagramMessagesService(accessToken);
+
+      return messagesService.sendMessage(
+        body.instagramUserId,
+        body.recipientId,
+        body.message,
+      );
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error ? error.message : "Failed to send message",
+      });
+    }
   });
 }

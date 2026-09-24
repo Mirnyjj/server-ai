@@ -5,8 +5,8 @@ import { registerInstagramCommentsRoutes } from "./modules/instagram/comments/co
 import { registerInstagramContentRoutes } from "./modules/instagram/content/content.routes";
 import { registerInstagramMediaRoutes } from "./modules/instagram/media/media.routes";
 import { registerInstagramMessagesRoutes } from "./modules/instagram/messages/messages.routes";
-import { registerInstagramWebhookRoutes } from "./modules/instagram/webhooks/webhook.routes.ts";
-import { registerInstagramProfileRoutes } from "./modules/instagram/profile/profile.routes.ts";
+import { registerInstagramWebhookRoutes } from "./modules/instagram/webhooks/webhook.routes";
+import { registerInstagramProfileRoutes } from "./modules/instagram/profile/profile.routes";
 
 export async function createApp() {
   const app = Fastify({
@@ -20,6 +20,7 @@ export async function createApp() {
       status: "ok",
     };
   });
+
   await registerInstagramAuthRoutes(app);
   await registerInstagramCommentsRoutes(app);
   await registerInstagramContentRoutes(app);

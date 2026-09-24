@@ -1,19 +1,27 @@
 import type { FastifyInstance } from "fastify";
-
+import { resolveAccessToken, resolveAccessTokenByProfileId } from "../auth/token.resolver";
 import { createInstagramProfileService } from "./profile.service";
 import { syncInstagramAccount } from "../client/instagram.account.service";
 
 export async function registerInstagramProfileRoutes(app: FastifyInstance) {
-  const accessToken = process.env.INSTAGRAM_MARKER;
+  app.get("/api/instagram/profile", async (request, reply) => {
+    const query = request.query as {
+      instagramUserId?: string;
+    };
 
-  if (!accessToken) {
-    throw new Error("INSTAGRAM_MARKER is not configured");
-  }
-
-  const profileService = createInstagramProfileService(accessToken);
-
-  app.get("/api/instagram/profile", async () => {
-    return profileService.getProfile();
+    try {
+      const accessToken = await resolveAccessToken({
+        instagramUserId: query.instagramUserId,
+      });
+      const profileService = createInstagramProfileService(accessToken);
+      return profileService.getProfile();
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error ? error.message : "Failed to get profile",
+      });
+    }
   });
 
   app.post<{
@@ -29,8 +37,19 @@ export async function registerInstagramProfileRoutes(app: FastifyInstance) {
       });
     }
 
-    const account = await syncInstagramAccount(profileId, accessToken);
+    try {
+      const accessToken = await resolveAccessTokenByProfileId(profileId);
+      const account = await syncInstagramAccount(profileId, accessToken);
 
-    return reply.code(200).send(account);
+      return reply.code(200).send(account);
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to sync Instagram account",
+      });
+    }
   });
 }
