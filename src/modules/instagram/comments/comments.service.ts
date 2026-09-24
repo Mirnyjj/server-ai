@@ -7,8 +7,11 @@ export function createInstagramCommentsService(accessToken: string) {
     apiVersion: env.INSTAGRAM_API_VERSION,
   });
 
-  async function listComments(mediaId: string) {
-    return instagramClient.listComments(mediaId);
+  async function listComments(
+    mediaId: string,
+    options?: { after?: string; limit?: number },
+  ) {
+    return instagramClient.listComments(mediaId, options);
   }
 
   async function listReplies(commentId: string) {

@@ -1,15 +1,8 @@
 import type { FastifyInstance } from "fastify";
+import { resolveAccessToken } from "../auth/token.resolver";
 import { createInstagramContentService } from "./content.service";
 
 export async function registerInstagramContentRoutes(app: FastifyInstance) {
-  const accessToken = process.env.INSTAGRAM_MARKER;
-
-  if (!accessToken) {
-    throw new Error("INSTAGRAM_MARKER is not configured");
-  }
-
-  const contentService = createInstagramContentService(accessToken);
-
   app.post("/api/instagram/content/image", async (request, reply) => {
     const body = request.body as {
       instagramUserId?: string;
@@ -31,13 +24,26 @@ export async function registerInstagramContentRoutes(app: FastifyInstance) {
       });
     }
 
-    return contentService.publishImage({
-      instagramUserId: body.instagramUserId,
-      imageUrl: body.imageUrl,
-      caption: body.caption,
-      altText: body.altText,
-      isAiGenerated: body.isAiGenerated,
-    });
+    try {
+      const accessToken = await resolveAccessToken({
+        instagramUserId: body.instagramUserId,
+      });
+      const contentService = createInstagramContentService(accessToken);
+
+      return contentService.publishImage({
+        instagramUserId: body.instagramUserId,
+        imageUrl: body.imageUrl,
+        caption: body.caption,
+        altText: body.altText,
+        isAiGenerated: body.isAiGenerated,
+      });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error ? error.message : "Failed to publish image",
+      });
+    }
   });
 
   app.post("/api/instagram/content/reel", async (request, reply) => {
@@ -54,12 +60,25 @@ export async function registerInstagramContentRoutes(app: FastifyInstance) {
       });
     }
 
-    return contentService.publishReel({
-      instagramUserId: body.instagramUserId,
-      videoUrl: body.videoUrl,
-      caption: body.caption,
-      isAiGenerated: body.isAiGenerated,
-    });
+    try {
+      const accessToken = await resolveAccessToken({
+        instagramUserId: body.instagramUserId,
+      });
+      const contentService = createInstagramContentService(accessToken);
+
+      return contentService.publishReel({
+        instagramUserId: body.instagramUserId,
+        videoUrl: body.videoUrl,
+        caption: body.caption,
+        isAiGenerated: body.isAiGenerated,
+      });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error ? error.message : "Failed to publish reel",
+      });
+    }
   });
 
   app.post("/api/instagram/content/carousel", async (request, reply) => {
@@ -85,13 +104,29 @@ export async function registerInstagramContentRoutes(app: FastifyInstance) {
       });
     }
 
-    return contentService.publishCarousel({
-      instagramUserId: body.instagramUserId,
-      items: body.items,
-      caption: body.caption,
-      isAiGenerated: body.isAiGenerated,
-    });
+    try {
+      const accessToken = await resolveAccessToken({
+        instagramUserId: body.instagramUserId,
+      });
+      const contentService = createInstagramContentService(accessToken);
+
+      return contentService.publishCarousel({
+        instagramUserId: body.instagramUserId,
+        items: body.items,
+        caption: body.caption,
+        isAiGenerated: body.isAiGenerated,
+      });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to publish carousel",
+      });
+    }
   });
+
   app.post("/api/instagram/content/story", async (request, reply) => {
     const body = request.body as {
       instagramUserId?: string;
@@ -100,44 +135,42 @@ export async function registerInstagramContentRoutes(app: FastifyInstance) {
       isAiGenerated?: boolean;
     };
 
-    console.log("STORY BODY:", body);
-    console.log("instagramUserId:", body.instagramUserId);
-    console.log("imageUrl:", body.imageUrl);
-    console.log("videoUrl:", body.videoUrl);
-
     if (!body.instagramUserId) {
-      console.log("FAILED: instagramUserId");
-
       return reply.code(400).send({
         error: "instagramUserId is required",
       });
     }
 
     if (!body.imageUrl && !body.videoUrl) {
-      console.log("FAILED: imageUrl/videoUrl");
-
       return reply.code(400).send({
         error: "imageUrl or videoUrl is required",
       });
     }
 
     if (body.imageUrl && body.videoUrl) {
-      console.log("FAILED: both imageUrl and videoUrl");
-
       return reply.code(400).send({
         error: "Only one of imageUrl or videoUrl can be provided",
       });
     }
 
-    console.log("BODY:", request.body);
-    console.log("BODY TYPE:", typeof request.body);
-    console.log("BODY IS STRING:", typeof request.body === "string");
+    try {
+      const accessToken = await resolveAccessToken({
+        instagramUserId: body.instagramUserId,
+      });
+      const contentService = createInstagramContentService(accessToken);
 
-    return contentService.publishStory({
-      instagramUserId: body.instagramUserId,
-      imageUrl: body.imageUrl,
-      videoUrl: body.videoUrl,
-      isAiGenerated: body.isAiGenerated,
-    });
+      return contentService.publishStory({
+        instagramUserId: body.instagramUserId,
+        imageUrl: body.imageUrl,
+        videoUrl: body.videoUrl,
+        isAiGenerated: body.isAiGenerated,
+      });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error ? error.message : "Failed to publish story",
+      });
+    }
   });
 }

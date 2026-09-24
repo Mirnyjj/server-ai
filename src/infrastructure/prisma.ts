@@ -1,8 +1,5 @@
-import { PrismaClient } from "@prisma/client/extension";
-
-export const prisma = new PrismaClient({
-  log:
-    process.env.NODE_ENV === "development"
-      ? ["query", "warn", "error"]
-      : ["error"],
-});
+/**
+ * Re-export the shared Prisma client used across the application.
+ * The canonical client lives in prisma/prisma.ts (adapter + DIRECT_URL).
+ */
+export { prisma } from "../../prisma/prisma";

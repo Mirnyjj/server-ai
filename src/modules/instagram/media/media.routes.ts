@@ -1,15 +1,8 @@
 import type { FastifyInstance } from "fastify";
+import { resolveAccessToken, resolveAccessTokenByProfileId } from "../auth/token.resolver";
 import { createInstagramMediaService } from "./media.service";
 
 export async function registerInstagramMediaRoutes(app: FastifyInstance) {
-  const accessToken = process.env.INSTAGRAM_MARKER;
-
-  if (!accessToken) {
-    throw new Error("INSTAGRAM_MARKER is not configured");
-  }
-
-  const mediaService = createInstagramMediaService(accessToken);
-
   app.get("/api/instagram/media", async (request, reply) => {
     const query = request.query as {
       instagramUserId?: string;
@@ -34,7 +27,23 @@ export async function registerInstagramMediaRoutes(app: FastifyInstance) {
       });
     }
 
-    return mediaService.listMedia(query.instagramUserId);
+    try {
+      const accessToken = await resolveAccessToken({
+        instagramUserId: query.instagramUserId,
+      });
+      const mediaService = createInstagramMediaService(accessToken);
+
+      return mediaService.listMedia(query.instagramUserId, {
+        after: query.after,
+        limit,
+      });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error ? error.message : "Failed to list media",
+      });
+    }
   });
 
   app.post("/api/instagram/media/sync", async (request, reply) => {
@@ -49,6 +58,8 @@ export async function registerInstagramMediaRoutes(app: FastifyInstance) {
     }
 
     try {
+      const accessToken = await resolveAccessTokenByProfileId(body.profileId);
+      const mediaService = createInstagramMediaService(accessToken);
       const result = await mediaService.syncPosts(body.profileId);
 
       return reply.send({
@@ -80,6 +91,9 @@ export async function registerInstagramMediaRoutes(app: FastifyInstance) {
     };
 
     try {
+      // Token resolution without account context — falls back to MARKER
+      const accessToken = await resolveAccessToken();
+      const mediaService = createInstagramMediaService(accessToken);
       const media = await mediaService.getMedia(mediaId);
 
       return reply.send({

@@ -103,10 +103,19 @@ export function createInstagramClient(config: InstagramClientConfig) {
 
   async function listComments(
     mediaId: string,
+    options: { after?: string; limit?: number } = {},
   ): Promise<InstagramCommentsResponse> {
     const params = new URLSearchParams({
-      fields: "id,text,timestamp,username,hidden,like_count,parent_id",
+      fields: "id,text,timestamp,username,hidden,like_count,parent_id,from",
     });
+
+    if (options.after) {
+      params.set("after", options.after);
+    }
+
+    if (options.limit) {
+      params.set("limit", String(options.limit));
+    }
 
     return request<InstagramCommentsResponse>(
       `/${mediaId}/comments?${params.toString()}`,
@@ -117,7 +126,7 @@ export function createInstagramClient(config: InstagramClientConfig) {
     commentId: string,
   ): Promise<InstagramCommentsResponse> {
     const params = new URLSearchParams({
-      fields: "id,text,timestamp,username,hidden,like_count,parent_id",
+      fields: "id,text,timestamp,username,hidden,like_count,parent_id,from",
     });
 
     return request<InstagramCommentsResponse>(
