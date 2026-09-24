@@ -1,49 +1,48 @@
 # server-ai — Progress
 
-> Branch: `fix/instagram-api-db-sync` · 2026-09-24
+> Branch: `fix/instagram-api-db-sync`
 
 ## AI stack
 
 | Role | Model |
 |------|--------|
-| Brain | **GPT-6 Luna** |
-| Image | `IMAGE_GENERATOR_*` |
-| Video | `VIDEO_GENERATOR_*` |
+| Brain | GPT-6 Luna |
+| Image | IMAGE_GENERATOR_* |
+| Video | VIDEO_GENERATOR_* |
+| Storage | S3 / R2 / MinIO / local |
 
 ## PROGRESS MAP
 
-| # | Block | % |
-|---|-------|---|
-| Instagram Graph + OAuth + dev mode | ✅ | 100 |
-| Media sync / publish / webhooks / queues | ✅ | 100 |
-| Comments reconcile + Insights | ✅ | 100 |
-| Policy Engine | ✅ | 100 |
-| Telegram control plane | ✅ | 85 |
-| Character references API | ✅ | 80 |
-| Luna scenarios + analytics | ✅ | 75 |
-| **Agent → Luna decisions** | ✅ | **85** |
-| **Content pipeline scenario→gen→Post** | ✅ | **60** |
-| Image/Video real providers | stub | 40 |
-| Object Storage | ❌ | 0 |
-| Auto agent from webhook | ❌ | 0 |
-| Publish from pipeline (auto) | ❌ | 20 |
+| Block | % |
+|-------|---|
+| Instagram Graph + OAuth + queues | 100 |
+| Policy + Agent (Luna) + Telegram | 85–100 |
+| References + scenarios + pipeline | 60–80 |
+| **Object Storage** | **80** |
+| Real image/video providers | 40 stub |
+| Auto publish from pipeline | 30 |
+| Webhook → auto agent | 0 |
 
-**Infra ~82% · Product ~62%**
+**Infra ~85% · Product ~65%**
 
-## New endpoints
+## Object Storage
 
-```
-POST /api/ai/pipeline/run
-{ "profileId": "...", "postType": "PHOTO", "topicHint": "morning coffee" }
-
-→ Luna scenario → generator → Post READY + MediaAssets
+```env
+STORAGE_PROVIDER=r2   # local | s3 | r2 | minio
+STORAGE_BUCKET=
+STORAGE_ENDPOINT=https://<ACCOUNT>.r2.cloudflarestorage.com
+STORAGE_ACCESS_KEY_ID=
+STORAGE_SECRET_ACCESS_KEY=
+STORAGE_PUBLIC_BASE_URL=https://cdn.example.com
 ```
 
-Agent comment/DM now call Luna (fallback if no key).
+Local: `STORAGE_PROVIDER=local` + `GET /media/*`  
+Pipeline re-hosts generator output → public URL on our storage.
+
+`GET /api/storage/status` · `POST /api/storage/ingest`
 
 ## Next
 
-1. Object Storage (public URLs for Meta)
-2. Real image/video adapters
-3. pipeline → enqueueCreateAndPublish
-4. Webhook → auto processComment
+1. Real image/video adapters
+2. pipeline → enqueueCreateAndPublish when publishReady
+3. Webhook → processComment auto

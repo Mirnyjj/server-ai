@@ -1,5 +1,6 @@
 import { prisma } from "../../../../prisma/prisma";
 import { PolicyEngine } from "../../agent/policy/policy.engine";
+import { createStorageService } from "../../../infrastructure/storage/storage.service";
 import { getImageGenerator, getVideoGenerator } from "../generators";
 import type { CharacterReferenceInput } from "../generators/types";
 import { createScenarioService } from "../content/scenario.service";
@@ -10,27 +11,23 @@ export type PipelineResult = {
   postId: string;
   status: string;
   scenario: ContentScenario;
-  mediaAssets: Array<{ id: string; url: string; type: string }>;
+  mediaAssets: Array<{ id: string; url: string; type: string; storageKey?: string | null }>;
   publishReady: boolean;
   note?: string;
 };
 
+function isPublicHttps(url: string): boolean {
+  return url.startsWith("https://") && !url.includes("placeholder.local");
+}
+
 /**
- * Full generation pipeline (without Instagram publish):
- *
- * 1. Policy: publishContent allowed?
- * 2. Luna → ContentScenario
- * 3. Reference pack
- * 4. ImageGenerator | VideoGenerator
- * 5. MediaAsset + Post (status READY or GENERATING)
- *
- * Publish is a separate step (content module / queue) once URL is public.
+ * Pipeline:
+ * Policy → Luna scenario → refs → Image/Video gen → Object Storage → Post READY
  */
 export async function runContentPipeline(input: {
   profileId: string;
   postType?: ContentScenario["postType"];
   topicHint?: string;
-  /** If set, skip Luna and use this scenario */
   scenario?: ContentScenario;
 }): Promise<PipelineResult> {
   const policy = await PolicyEngine.forProfile(input.profileId);
@@ -78,10 +75,10 @@ export async function runContentPipeline(input: {
     priority: r.priority,
   }));
 
+  const storageService = createStorageService();
   const postType = scenario.postType;
   const isVideo = postType === "REEL" || postType === "VIDEO";
 
-  // Create Post in GENERATING
   const post = await prisma.post.create({
     data: {
       profileId: input.profileId,
@@ -94,12 +91,12 @@ export async function runContentPipeline(input: {
     },
   });
 
-  const mediaAssets: Array<{ id: string; url: string; type: string }> = [];
+  const mediaAssets: PipelineResult["mediaAssets"] = [];
 
   try {
     if (isVideo) {
       const videoGen = getVideoGenerator();
-      const result = await videoGen.generate({
+      const gen = await videoGen.generate({
         profileId: input.profileId,
         prompt: scenario.visualBrief.prompt,
         aspectRatio:
@@ -110,24 +107,31 @@ export async function runContentPipeline(input: {
         durationSec: scenario.shots?.[0]?.durationSec ?? 10,
       });
 
-      const asset = await prisma.mediaAsset.create({
-        data: {
-          profileId: input.profileId,
-          type: "VIDEO",
-          status: "ACTIVE",
-          url: result.url,
-          storageKey: result.storageKey,
-          mimeType: result.mimeType ?? "video/mp4",
-          width: result.width,
-          height: result.height,
-          durationMs: result.durationMs,
-          metadata: {
-            provider: result.provider,
-            model: result.model,
-            prompt: scenario.visualBrief.prompt,
-          },
+      const { asset } = await storageService.ingestUrl({
+        profileId: input.profileId,
+        sourceUrl: gen.url,
+        mediaType: "VIDEO",
+        kind: "generated",
+        postId: post.id,
+        contentType: gen.mimeType,
+        metadata: {
+          provider: gen.provider,
+          model: gen.model,
+          prompt: scenario.visualBrief.prompt,
         },
       });
+
+      // Update dimensions if known
+      if (gen.width || gen.height || gen.durationMs) {
+        await prisma.mediaAsset.update({
+          where: { id: asset.id },
+          data: {
+            width: gen.width,
+            height: gen.height,
+            durationMs: gen.durationMs,
+          },
+        });
+      }
 
       await prisma.postMedia.create({
         data: {
@@ -138,12 +142,17 @@ export async function runContentPipeline(input: {
         },
       });
 
-      mediaAssets.push({ id: asset.id, url: asset.url, type: "VIDEO" });
+      mediaAssets.push({
+        id: asset.id,
+        url: asset.url,
+        type: "VIDEO",
+        storageKey: asset.storageKey,
+      });
     } else if (postType === "CAROUSEL" && scenario.slides?.length) {
       const imageGen = getImageGenerator();
       let order = 0;
       for (const slide of scenario.slides.slice(0, 10)) {
-        const result = await imageGen.generate({
+        const gen = await imageGen.generate({
           profileId: input.profileId,
           prompt: slide.visualBrief.prompt,
           negativePrompt: slide.visualBrief.negativePrompt,
@@ -152,21 +161,17 @@ export async function runContentPipeline(input: {
           visualIdentity: profile.visualIdentity,
         });
 
-        const asset = await prisma.mediaAsset.create({
-          data: {
-            profileId: input.profileId,
-            type: "IMAGE",
-            status: "ACTIVE",
-            url: result.url,
-            storageKey: result.storageKey,
-            mimeType: result.mimeType ?? "image/jpeg",
-            width: result.width,
-            height: result.height,
-            metadata: {
-              provider: result.provider,
-              model: result.model,
-              prompt: slide.visualBrief.prompt,
-            },
+        const { asset } = await storageService.ingestUrl({
+          profileId: input.profileId,
+          sourceUrl: gen.url,
+          mediaType: "IMAGE",
+          kind: "generated",
+          postId: post.id,
+          contentType: gen.mimeType,
+          metadata: {
+            provider: gen.provider,
+            model: gen.model,
+            prompt: slide.visualBrief.prompt,
           },
         });
 
@@ -179,12 +184,16 @@ export async function runContentPipeline(input: {
           },
         });
 
-        mediaAssets.push({ id: asset.id, url: asset.url, type: "IMAGE" });
+        mediaAssets.push({
+          id: asset.id,
+          url: asset.url,
+          type: "IMAGE",
+          storageKey: asset.storageKey,
+        });
       }
     } else {
-      // PHOTO or STORY image
       const imageGen = getImageGenerator();
-      const result = await imageGen.generate({
+      const gen = await imageGen.generate({
         profileId: input.profileId,
         prompt: scenario.visualBrief.prompt,
         negativePrompt: scenario.visualBrief.negativePrompt,
@@ -193,23 +202,26 @@ export async function runContentPipeline(input: {
         visualIdentity: profile.visualIdentity,
       });
 
-      const asset = await prisma.mediaAsset.create({
-        data: {
-          profileId: input.profileId,
-          type: "IMAGE",
-          status: "ACTIVE",
-          url: result.url,
-          storageKey: result.storageKey,
-          mimeType: result.mimeType ?? "image/jpeg",
-          width: result.width,
-          height: result.height,
-          metadata: {
-            provider: result.provider,
-            model: result.model,
-            prompt: scenario.visualBrief.prompt,
-          },
+      const { asset } = await storageService.ingestUrl({
+        profileId: input.profileId,
+        sourceUrl: gen.url,
+        mediaType: "IMAGE",
+        kind: "generated",
+        postId: post.id,
+        contentType: gen.mimeType,
+        metadata: {
+          provider: gen.provider,
+          model: gen.model,
+          prompt: scenario.visualBrief.prompt,
         },
       });
+
+      if (gen.width || gen.height) {
+        await prisma.mediaAsset.update({
+          where: { id: asset.id },
+          data: { width: gen.width, height: gen.height },
+        });
+      }
 
       await prisma.postMedia.create({
         data: {
@@ -220,18 +232,19 @@ export async function runContentPipeline(input: {
         },
       });
 
-      mediaAssets.push({ id: asset.id, url: asset.url, type: "IMAGE" });
+      mediaAssets.push({
+        id: asset.id,
+        url: asset.url,
+        type: "IMAGE",
+        storageKey: asset.storageKey,
+      });
     }
 
-    const isStubUrl = mediaAssets.some((m) =>
-      m.url.includes("placeholder.local"),
-    );
+    const publishReady = mediaAssets.every((m) => isPublicHttps(m.url));
 
     await prisma.post.update({
       where: { id: post.id },
-      data: {
-        status: isStubUrl ? "READY" : "READY",
-      },
+      data: { status: "READY" },
     });
 
     await prisma.agentAction.create({
@@ -240,7 +253,11 @@ export async function runContentPipeline(input: {
         action: "content.pipeline",
         status: "SUCCESS",
         input: { postType, topicHint: input.topicHint } as object,
-        output: { postId: post.id, mediaCount: mediaAssets.length } as object,
+        output: {
+          postId: post.id,
+          mediaCount: mediaAssets.length,
+          publishReady,
+        } as object,
       },
     });
 
@@ -249,10 +266,10 @@ export async function runContentPipeline(input: {
       status: "READY",
       scenario,
       mediaAssets,
-      publishReady: !isStubUrl,
-      note: isStubUrl
-        ? "Media URLs are stubs — wire IMAGE/VIDEO generator + Object Storage before Instagram publish"
-        : "Media ready — call publish endpoints with asset URLs",
+      publishReady,
+      note: publishReady
+        ? "Media on Object Storage with HTTPS — ready for Instagram publish"
+        : "URLs are not public HTTPS (stub generator or local without tunnel). Meta publish will fail until fixed.",
     };
   } catch (error) {
     await prisma.post.update({

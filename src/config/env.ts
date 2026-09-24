@@ -28,20 +28,30 @@ const envSchema = z
     TELEGRAM_ALLOWED_CHAT_IDS: z.string().optional(),
     TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
 
-    /** GPT-6 Luna — brain (scenarios, analytics, agent). OpenAI-compatible API. */
     LUNA_API_KEY: z.string().optional(),
     LUNA_BASE_URL: z.string().url().optional(),
     LUNA_MODEL: z.string().optional(),
 
-    /** Image generation — separate model from Luna */
     IMAGE_GENERATOR_PROVIDER: z.string().optional(),
     IMAGE_GENERATOR_API_KEY: z.string().optional(),
     IMAGE_GENERATOR_MODEL: z.string().optional(),
 
-    /** Video generation — separate model from Luna & image */
     VIDEO_GENERATOR_PROVIDER: z.string().optional(),
     VIDEO_GENERATOR_API_KEY: z.string().optional(),
     VIDEO_GENERATOR_MODEL: z.string().optional(),
+
+    /** Object Storage: local | s3 | r2 | minio */
+    STORAGE_PROVIDER: z.string().optional(),
+    STORAGE_BUCKET: z.string().optional(),
+    STORAGE_REGION: z.string().optional(),
+    STORAGE_ENDPOINT: z.string().optional(),
+    STORAGE_ACCESS_KEY_ID: z.string().optional(),
+    STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
+    /** Public CDN / bucket URL prefix (no trailing slash) */
+    STORAGE_PUBLIC_BASE_URL: z.string().optional(),
+    STORAGE_FORCE_PATH_STYLE: z.string().optional(),
+    STORAGE_ACL: z.string().optional(),
+    STORAGE_LOCAL_PATH: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     const hasHttpsRedirect =
@@ -70,6 +80,16 @@ const envSchema = z
           code: "custom",
           path: ["INSTAGRAM_APP_SECRET"],
           message: "Required in production",
+        });
+      }
+
+      const storageProvider = (data.STORAGE_PROVIDER ?? "local").toLowerCase();
+      if (storageProvider === "local") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["STORAGE_PROVIDER"],
+          message:
+            "Production should use s3|r2|minio Object Storage (not local)",
         });
       }
       return;
