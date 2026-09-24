@@ -20,18 +20,15 @@ export function createInstagramMediaService(accessToken: string) {
     switch (mediaType) {
       case "IMAGE":
         return PostType.PHOTO;
-
       case "VIDEO":
         return PostType.VIDEO;
-
       case "REELS":
         return PostType.REEL;
-
       case "CAROUSEL_ALBUM":
         return PostType.CAROUSEL;
-
       default:
-        throw new Error(`Unsupported Instagram media type: ${mediaType}`);
+        // Fallback for unknown types — store as PHOTO to avoid hard failure
+        return PostType.PHOTO;
     }
   }
 
@@ -39,13 +36,11 @@ export function createInstagramMediaService(accessToken: string) {
     switch (mediaType) {
       case "IMAGE":
         return MediaAssetType.IMAGE;
-
       case "VIDEO":
       case "REELS":
         return MediaAssetType.VIDEO;
-
       default:
-        throw new Error(`Unsupported Instagram asset type: ${mediaType}`);
+        return MediaAssetType.IMAGE;
     }
   }
 
@@ -53,13 +48,11 @@ export function createInstagramMediaService(accessToken: string) {
     switch (mediaType) {
       case "IMAGE":
         return PostMediaType.IMAGE;
-
       case "VIDEO":
       case "REELS":
         return PostMediaType.VIDEO;
-
       default:
-        throw new Error(`Unsupported PostMedia type: ${mediaType}`);
+        return PostMediaType.IMAGE;
     }
   }
 
@@ -82,9 +75,7 @@ export function createInstagramMediaService(accessToken: string) {
 
   async function syncAccount(profileId: string) {
     const aiProfile = await prisma.aiProfile.findUnique({
-      where: {
-        id: profileId,
-      },
+      where: { id: profileId },
     });
 
     if (!aiProfile) {
@@ -93,25 +84,25 @@ export function createInstagramMediaService(accessToken: string) {
 
     const instagramProfile = await instagramClient.getProfile();
 
-    if (!instagramProfile.user_id) {
+    const instagramUserId =
+      instagramProfile.user_id ?? instagramProfile.id;
+
+    if (!instagramUserId) {
       throw new Error("Instagram API did not return user_id");
     }
 
     return prisma.instagramAccount.upsert({
-      where: {
-        instagramUserId: instagramProfile.user_id,
-      },
-
+      where: { instagramUserId },
       create: {
-        instagramUserId: instagramProfile.user_id,
+        instagramUserId,
         username: instagramProfile.username ?? null,
         name: instagramProfile.name ?? null,
         accountType: instagramProfile.account_type ?? null,
         profilePictureUrl: instagramProfile.profile_picture_url ?? null,
         profileId: aiProfile.id,
         status: "ACTIVE",
+        lastSyncedAt: new Date(),
       },
-
       update: {
         username: instagramProfile.username ?? null,
         name: instagramProfile.name ?? null,
@@ -119,6 +110,7 @@ export function createInstagramMediaService(accessToken: string) {
         profilePictureUrl: instagramProfile.profile_picture_url ?? null,
         profileId: aiProfile.id,
         status: "ACTIVE",
+        lastSyncedAt: new Date(),
         lastError: null,
         lastErrorAt: null,
       },
@@ -146,30 +138,19 @@ export function createInstagramMediaService(accessToken: string) {
     } satisfies Prisma.InputJsonValue;
 
     const existing = await prisma.mediaAsset.findUnique({
-      where: {
-        instagramMediaId: media.id,
-      },
+      where: { instagramMediaId: media.id },
     });
 
     const asset = await prisma.mediaAsset.upsert({
-      where: {
-        instagramMediaId: media.id,
-      },
-
+      where: { instagramMediaId: media.id },
       create: {
         instagramMediaId: media.id,
         profileId,
         type: mapAssetType(media.media_type),
         status: MediaAssetStatus.ACTIVE,
-
-        // Для импортированного Instagram-контента
-        // сохраняем URL Instagram.
-        // storageKey остается null.
         url: mediaUrl,
-
         metadata,
       },
-
       update: {
         profileId,
         type: mapAssetType(media.media_type),
@@ -211,10 +192,7 @@ export function createInstagramMediaService(accessToken: string) {
 
     if (existingPostMedia) {
       const postMedia = await prisma.postMedia.update({
-        where: {
-          id: existingPostMedia.id,
-        },
-
+        where: { id: existingPostMedia.id },
         data: {
           type: mapPostMediaType(media.media_type),
           sortOrder,
@@ -251,141 +229,144 @@ export function createInstagramMediaService(accessToken: string) {
   }
 
   async function syncPosts(profileId: string) {
-    const account = await syncAccount(profileId);
+    let account;
+
+    try {
+      account = await syncAccount(profileId);
+    } catch (error) {
+      // Best-effort: mark account error if we can resolve it
+      throw error;
+    }
 
     let after: string | undefined;
 
     let imported = 0;
-
     let createdPosts = 0;
     let updatedPosts = 0;
-
     let createdMediaAssets = 0;
     let updatedMediaAssets = 0;
-
     let createdPostMedia = 0;
     let updatedPostMedia = 0;
 
-    do {
-      const response = await instagramClient.listMedia(
-        account.instagramUserId,
-        {
-          after,
-          limit: 50,
+    try {
+      do {
+        const response = await instagramClient.listMedia(
+          account.instagramUserId,
+          {
+            after,
+            limit: 50,
+          },
+        );
+
+        for (const media of response.data) {
+          const existingPost = await prisma.post.findUnique({
+            where: { instagramMediaId: media.id },
+          });
+
+          const post = await prisma.post.upsert({
+            where: { instagramMediaId: media.id },
+            create: {
+              instagramMediaId: media.id,
+              type: mapInstagramMediaType(media.media_type),
+              status: PostStatus.PUBLISHED,
+              caption: media.caption ?? null,
+              publishedAt: media.timestamp
+                ? new Date(media.timestamp)
+                : null,
+              profileId: account.profileId,
+              accountId: account.id,
+            },
+            update: {
+              type: mapInstagramMediaType(media.media_type),
+              status: PostStatus.PUBLISHED,
+              caption: media.caption ?? null,
+              publishedAt: media.timestamp
+                ? new Date(media.timestamp)
+                : null,
+              profileId: account.profileId,
+              accountId: account.id,
+            },
+          });
+
+          if (existingPost) {
+            updatedPosts++;
+          } else {
+            createdPosts++;
+          }
+
+          const mediaItems =
+            media.media_type === "CAROUSEL_ALBUM"
+              ? (media.children?.data ?? []).map((child) => ({
+                  id: child.id,
+                  media_type: child.media_type || "IMAGE",
+                  media_url: child.media_url,
+                  thumbnail_url: child.thumbnail_url,
+                }))
+              : [
+                  {
+                    id: media.id,
+                    media_type: media.media_type,
+                    media_url: media.media_url,
+                    thumbnail_url: media.thumbnail_url,
+                  },
+                ];
+
+          for (const [index, mediaItem] of mediaItems.entries()) {
+            const result = await syncPostMedia(
+              post.id,
+              account.profileId,
+              mediaItem,
+              index,
+            );
+
+            if (!result) continue;
+
+            if (result.assetCreated) {
+              createdMediaAssets++;
+            } else {
+              updatedMediaAssets++;
+            }
+
+            if (result.postMediaCreated) {
+              createdPostMedia++;
+            } else {
+              updatedPostMedia++;
+            }
+          }
+
+          imported++;
+        }
+
+        after = response.paging?.cursors?.after;
+      } while (after);
+
+      await prisma.instagramAccount.update({
+        where: { id: account.id },
+        data: {
+          lastSyncedAt: new Date(),
+          lastError: null,
+          lastErrorAt: null,
         },
-      );
-
-      for (const media of response.data) {
-        const existingPost = await prisma.post.findUnique({
-          where: {
-            instagramMediaId: media.id,
-          },
-        });
-
-        const post = await prisma.post.upsert({
-          where: {
-            instagramMediaId: media.id,
-          },
-
-          create: {
-            instagramMediaId: media.id,
-            type: mapInstagramMediaType(media.media_type),
-            status: PostStatus.PUBLISHED,
-            caption: media.caption ?? null,
-            publishedAt: media.timestamp ? new Date(media.timestamp) : null,
-            profileId: account.profileId,
-            accountId: account.id,
-          },
-
-          update: {
-            type: mapInstagramMediaType(media.media_type),
-            status: PostStatus.PUBLISHED,
-            caption: media.caption ?? null,
-            publishedAt: media.timestamp ? new Date(media.timestamp) : null,
-            profileId: account.profileId,
-            accountId: account.id,
-          },
-        });
-
-        if (existingPost) {
-          updatedPosts++;
-        } else {
-          createdPosts++;
-        }
-
-        /*
-         * Для обычного поста:
-         *   один Post -> один MediaAsset -> один PostMedia
-         *
-         * Для carousel:
-         *   один Post -> несколько MediaAsset -> несколько PostMedia
-         */
-        const mediaItems =
-          media.media_type === "CAROUSEL_ALBUM"
-            ? (media.children?.data ?? [])
-            : [
-                {
-                  id: media.id,
-                  media_type: media.media_type,
-                  media_url: media.media_url,
-                  thumbnail_url: media.thumbnail_url,
-                },
-              ];
-
-        for (const [index, mediaItem] of mediaItems.entries()) {
-          const result = await syncPostMedia(
-            post.id,
-            account.profileId,
-            mediaItem,
-            index,
-          );
-
-          if (!result) {
-            continue;
-          }
-
-          if (result.assetCreated) {
-            createdMediaAssets++;
-          } else {
-            updatedMediaAssets++;
-          }
-
-          if (result.postMediaCreated) {
-            createdPostMedia++;
-          } else {
-            updatedPostMedia++;
-          }
-        }
-
-        imported++;
-      }
-
-      after = response.paging?.cursors?.after;
-    } while (after);
-
-    await prisma.instagramAccount.update({
-      where: {
-        id: account.id,
-      },
-
-      data: {
-        lastSyncedAt: new Date(),
-        lastError: null,
-        lastErrorAt: null,
-      },
-    });
+      });
+    } catch (error) {
+      await prisma.instagramAccount.update({
+        where: { id: account.id },
+        data: {
+          lastError:
+            error instanceof Error ? error.message : "Media sync failed",
+          lastErrorAt: new Date(),
+        },
+      });
+      throw error;
+    }
 
     return {
       account,
-
       imported,
-
       createdPosts,
       updatedPosts,
-
       createdMediaAssets,
       updatedMediaAssets,
-
       createdPostMedia,
       updatedPostMedia,
     };
