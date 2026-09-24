@@ -11,14 +11,8 @@ const envSchema = z
     API_HOST: z.string().default("0.0.0.0"),
     API_PORT: z.coerce.number().int().positive().default(8000),
 
-    /** Optional in local dev mode (no HTTPS redirect). Required for production OAuth. */
     INSTAGRAM_APP_ID: z.string().min(1).optional(),
     INSTAGRAM_APP_SECRET: z.string().min(1).optional(),
-
-    /**
-     * OAuth callback URL. Must be public HTTPS for real OAuth + webhooks.
-     * If unset or not HTTPS → local dev mode (INSTAGRAM_MARKER required).
-     */
     INSTAGRAM_REDIRECT_URI: z.string().url().optional(),
 
     DATABASE_URL: z.string().min(1),
@@ -26,12 +20,21 @@ const envSchema = z
     REDIS_URL: z.string().min(1),
 
     INSTAGRAM_API_VERSION: z.string().min(1),
-
-    /** Dev-only long-lived access token. Required when OAuth/webhooks are unavailable. */
     INSTAGRAM_MARKER: z.string().optional(),
-
     INSTAGRAM_WEBHOOK_VERIFY_TOKEN: z.string().min(1).optional(),
     INSTAGRAM_WEBHOOK_APP_SECRET: z.string().optional(),
+
+    /** Telegram Bot API token from @BotFather. Optional — control plane disabled if unset. */
+    TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
+
+    /**
+     * Comma-separated chat IDs allowed to control the bot.
+     * If empty, bot accepts any chat (dev only — set in production).
+     */
+    TELEGRAM_ALLOWED_CHAT_IDS: z.string().optional(),
+
+    /** Public HTTPS URL for Telegram webhook, e.g. https://api.example.com/api/telegram/webhook */
+    TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
   })
   .superRefine((data, ctx) => {
     const hasHttpsRedirect =
@@ -40,14 +43,12 @@ const envSchema = z
 
     const isProd = data.NODE_ENV === "production";
 
-    // Production always requires full OAuth setup
     if (isProd) {
       if (!data.INSTAGRAM_REDIRECT_URI?.startsWith("https://")) {
         ctx.addIssue({
           code: "custom",
           path: ["INSTAGRAM_REDIRECT_URI"],
-          message:
-            "Production requires INSTAGRAM_REDIRECT_URI with https://",
+          message: "Production requires INSTAGRAM_REDIRECT_URI with https://",
         });
       }
       if (!data.INSTAGRAM_APP_ID) {
@@ -67,7 +68,6 @@ const envSchema = z
       return;
     }
 
-    // Non-production without HTTPS redirect → local dev mode
     if (!hasHttpsRedirect) {
       if (!data.INSTAGRAM_MARKER) {
         ctx.addIssue({
@@ -78,7 +78,6 @@ const envSchema = z
         });
       }
     } else {
-      // HTTPS redirect present → OAuth enabled, app id/secret required
       if (!data.INSTAGRAM_APP_ID) {
         ctx.addIssue({
           code: "custom",
@@ -106,33 +105,13 @@ if (!result.success) {
 
 export const env = result.data;
 
-/**
- * Local / tunnel-less development mode.
- *
- * True when:
- * - not production, AND
- * - INSTAGRAM_REDIRECT_URI is missing or not HTTPS
- *
- * In this mode:
- * - OAuth login/callback are disabled (return clear error / status)
- * - Webhooks are soft-disabled (accept but no-op or skip signature)
- * - All API calls use INSTAGRAM_MARKER
- * - Account can be bootstrapped via POST /api/instagram/auth/dev/bootstrap
- */
 export function isInstagramDevMode(): boolean {
-  if (env.NODE_ENV === "production") {
-    return false;
-  }
-
+  if (env.NODE_ENV === "production") return false;
   const uri = env.INSTAGRAM_REDIRECT_URI;
-  if (!uri || !uri.startsWith("https://")) {
-    return true;
-  }
-
+  if (!uri || !uri.startsWith("https://")) return true;
   return false;
 }
 
-/** OAuth is only available with HTTPS redirect + app credentials */
 export function isOAuthEnabled(): boolean {
   return (
     !isInstagramDevMode() &&
@@ -142,10 +121,21 @@ export function isOAuthEnabled(): boolean {
   );
 }
 
-/** Webhooks need public HTTPS endpoint + verify token; disabled in local dev mode */
 export function isWebhooksEnabled(): boolean {
-  if (isInstagramDevMode()) {
-    return false;
-  }
+  if (isInstagramDevMode()) return false;
   return !!env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN;
+}
+
+/** Telegram control plane available when bot token is set */
+export function isTelegramEnabled(): boolean {
+  return !!env.TELEGRAM_BOT_TOKEN;
+}
+
+export function getTelegramAllowedChatIds(): number[] {
+  if (!env.TELEGRAM_ALLOWED_CHAT_IDS) return [];
+  return env.TELEGRAM_ALLOWED_CHAT_IDS.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((s) => Number(s))
+    .filter((n) => !Number.isNaN(n));
 }

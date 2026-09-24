@@ -9,6 +9,7 @@ import { registerInstagramWebhookRoutes } from "./modules/instagram/webhooks/web
 import { registerInstagramProfileRoutes } from "./modules/instagram/profile/profile.routes";
 import { registerInstagramInsightsRoutes } from "./modules/instagram/insights/insights.routes";
 import { registerAgentRoutes } from "./modules/agent/agent.routes";
+import { registerTelegramRoutes } from "./modules/telegram/telegram.routes";
 
 export async function createApp() {
   const app = Fastify({
@@ -32,6 +33,7 @@ export async function createApp() {
   await registerInstagramProfileRoutes(app);
   await registerInstagramInsightsRoutes(app);
   await registerAgentRoutes(app);
+  await registerTelegramRoutes(app);
 
   return app;
 }
