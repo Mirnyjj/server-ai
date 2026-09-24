@@ -10,6 +10,7 @@ const envSchema = z.object({
   API_HOST: z.string().default("0.0.0.0"),
   API_PORT: z.coerce.number().int().positive().default(8000),
   INSTAGRAM_APP_ID: z.string().min(1),
+  INSTAGRAM_MARKER: z.string().min(1),
   INSTAGRAM_APP_SECRET: z.string().min(1),
   INSTAGRAM_REDIRECT_URI: z.string().url(),
   DATABASE_URL: z.string().min(1),
