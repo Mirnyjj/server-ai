@@ -1,0 +1,14 @@
+import { createApp } from "./app";
+import { env } from "./config/env";
+
+const app = await createApp();
+
+try {
+  await app.listen({
+    host: env.API_HOST,
+    port: env.API_PORT,
+  });
+} catch (error) {
+  app.log.error(error);
+  process.exit(1);
+}

@@ -1,0 +1,367 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model AiProfile {
+  id                String             @id @default(cuid())
+  name              String
+  persona           Json
+  visualIdentity    Json
+  writingStyle      Json
+  contentStrategy   Json
+  autonomousMode    Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  actions           AgentAction[]
+  memories          AgentMemory[]
+  instagramAccounts InstagramAccount[]
+  mediaAssets       MediaAsset[]
+  mediaReferences   MediaReference[]
+  posts             Post[]
+}
+
+model InstagramAccount {
+  id                String                 @id @default(cuid())
+  username          String?
+  profileId         String
+  status            InstagramAccountStatus @default(ACTIVE)
+  lastRequestAt     DateTime?
+  lastErrorAt       DateTime?
+  lastError         String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  accountType       String?
+  instagramUserId   String                 @unique
+  lastSyncedAt      DateTime?
+  name              String?
+  profilePictureUrl String?
+  directThreads     DirectThread[]
+  profile           AiProfile              @relation(fields: [profileId], references: [id])
+  connection        InstagramConnection?
+  posts             Post[]
+
+  @@index([profileId])
+  @@index([status])
+}
+
+model InstagramConnection {
+  id                   String                    @id @default(cuid())
+  instagramAccountId   String                    @unique
+  accessTokenEncrypted String
+  tokenExpiresAt       DateTime?
+  scopes               String[]
+  status               InstagramConnectionStatus @default(ACTIVE)
+  lastValidatedAt      DateTime?
+  lastErrorAt          DateTime?
+  lastError            String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  instagramAccount     InstagramAccount          @relation(fields: [instagramAccountId], references: [id], onDelete: Cascade)
+}
+
+model MediaAsset {
+  id              String           @id @default(cuid())
+  profileId       String
+  type            MediaAssetType
+  status          MediaAssetStatus @default(PROCESSING)
+  url             String
+  storageKey      String?
+  mimeType        String?
+  width           Int?
+  height          Int?
+  durationMs      Int?
+  sizeBytes       BigInt?
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  profile         AiProfile        @relation(fields: [profileId], references: [id])
+  mediaReferences MediaReference[]
+  postMedia       PostMedia[]
+
+  @@index([profileId, createdAt])
+  @@index([status])
+}
+
+model MediaReference {
+  id           String             @id @default(cuid())
+  profileId    String
+  type         MediaReferenceType
+  metadata     Json?
+  createdAt    DateTime           @default(now())
+  mediaAssetId String?
+  mediaAsset   MediaAsset?        @relation(fields: [mediaAssetId], references: [id])
+  profile      AiProfile          @relation(fields: [profileId], references: [id])
+
+  @@index([profileId, type])
+}
+
+model Post {
+  id               String                    @id @default(cuid())
+  type             PostType
+  status           PostStatus                @default(DRAFT)
+  caption          String?
+  scheduledAt      DateTime?
+  publishedAt      DateTime?
+  generation       Json?
+  profileId        String
+  accountId        String
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  instagramMediaId String?                   @unique
+  isAiGenerated    Boolean                   @default(false)
+  comments         Comment[]
+  containers       InstagramMediaContainer[]
+  account          InstagramAccount          @relation(fields: [accountId], references: [id])
+  profile          AiProfile                 @relation(fields: [profileId], references: [id])
+  media            PostMedia[]
+  metrics          PostMetric[]
+
+  @@index([accountId, status])
+  @@index([profileId, createdAt])
+  @@index([scheduledAt])
+}
+
+model PostMedia {
+  id           String        @id @default(cuid())
+  postId       String
+  mediaAssetId String
+  type         PostMediaType
+  sortOrder    Int           @default(0)
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  mediaAsset   MediaAsset    @relation(fields: [mediaAssetId], references: [id])
+  post         Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, sortOrder])
+  @@index([mediaAssetId])
+}
+
+model InstagramMediaContainer {
+  id            String                   @id @default(cuid())
+  containerId   String                   @unique
+  postId        String
+  status        InstagramContainerStatus @default(CREATED)
+  mediaType     String
+  error         String?
+  lastCheckedAt DateTime?
+  publishedAt   DateTime?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  post          Post                     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([status])
+}
+
+model Comment {
+  id             String   @id @default(cuid())
+  instagramId    String   @unique
+  username       String?
+  text           String
+  sentiment      String?
+  category       String?
+  aiConfidence   Float?
+  requiresHuman  Boolean  @default(false)
+  suggestedReply String?
+  replied        Boolean  @default(false)
+  replyText      String?
+  postId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  post           Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+}
+
+model DirectThread {
+  id                String           @id @default(cuid())
+  instagramThreadId String           @unique
+  username          String?
+  accountId         String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  messages          DirectMessage[]
+  account           InstagramAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([accountId, updatedAt])
+}
+
+model DirectMessage {
+  id                 String           @id @default(cuid())
+  threadId           String
+  text               String
+  category           String?
+  aiConfidence       Float?
+  requiresHuman      Boolean          @default(false)
+  suggestedReply     String?
+  replied            Boolean          @default(false)
+  createdAt          DateTime         @default(now())
+  instagramMessageId String           @unique
+  direction          MessageDirection
+  thread             DirectThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
+
+model PostMetric {
+  id         String   @id @default(cuid())
+  postId     String
+  recordedAt DateTime @default(now())
+  metrics    Json
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId, recordedAt])
+}
+
+model AgentMemory {
+  id         String          @id @default(cuid())
+  profileId  String
+  type       AgentMemoryType
+  content    Json
+  importance Float           @default(0.5)
+  createdAt  DateTime        @default(now())
+  expiresAt  DateTime?
+  updatedAt  DateTime        @updatedAt
+  profile    AiProfile       @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, type])
+  @@index([profileId, createdAt])
+}
+
+model AgentAction {
+  id        String            @id @default(cuid())
+  profileId String
+  action    String
+  input     Json?
+  output    Json?
+  error     String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  status    AgentActionStatus @default(PENDING)
+  profile   AiProfile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, createdAt])
+  @@index([status, createdAt])
+}
+
+model InstagramWebhookEvent {
+  id          String             @id @default(cuid())
+  eventId     String?
+  objectType  String
+  field       String
+  payload     Json
+  status      WebhookEventStatus @default(RECEIVED)
+  processedAt DateTime?
+  error       String?
+  createdAt   DateTime           @default(now())
+
+  @@index([eventId])
+  @@index([status, createdAt])
+}
+
+enum InstagramAccountStatus {
+  ACTIVE
+  PAUSED
+  AUTH_REQUIRED
+  ERROR
+  DISABLED
+}
+
+enum InstagramConnectionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  ERROR
+}
+
+enum MediaAssetType {
+  IMAGE
+  VIDEO
+}
+
+enum MediaAssetStatus {
+  PROCESSING
+  ACTIVE
+  FAILED
+  DELETED
+}
+
+enum MediaReferenceType {
+  FACE
+  FULL_BODY
+  STYLE
+  OUTFIT
+  LOCATION
+  LIGHTING
+  REFERENCE
+}
+
+enum PostType {
+  PHOTO
+  REEL
+  STORY
+  VIDEO
+  CAROUSEL
+}
+
+enum PostStatus {
+  DRAFT
+  GENERATING
+  READY
+  APPROVED
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  REJECTED
+}
+
+enum PostMediaType {
+  IMAGE
+  VIDEO
+}
+
+enum InstagramContainerStatus {
+  CREATED
+  IN_PROGRESS
+  FINISHED
+  PUBLISHED
+  ERROR
+  EXPIRED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum AgentMemoryType {
+  PERSONA
+  AUDIENCE
+  CONTENT
+  COMMENT
+  DM
+  PERFORMANCE
+  STRATEGY
+  PREFERENCE
+}
+
+enum AgentActionStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+enum WebhookEventStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+}

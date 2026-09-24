@@ -1,0 +1,32 @@
+import { env } from "../../../config/env";
+import { createInstagramClient } from "../client/instagram.client";
+
+export function createInstagramCommentsService(accessToken: string) {
+  const instagramClient = createInstagramClient({
+    accessToken,
+    apiVersion: env.INSTAGRAM_API_VERSION,
+  });
+
+  async function listComments(mediaId: string) {
+    return instagramClient.listComments(mediaId);
+  }
+
+  async function listReplies(commentId: string) {
+    return instagramClient.listCommentReplies(commentId);
+  }
+
+  async function replyToComment(commentId: string, message: string) {
+    return instagramClient.replyToComment(commentId, message);
+  }
+
+  async function deleteComment(commentId: string) {
+    return instagramClient.deleteComment(commentId);
+  }
+
+  return {
+    listComments,
+    listReplies,
+    replyToComment,
+    deleteComment,
+  };
+}
