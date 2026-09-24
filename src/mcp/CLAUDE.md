@@ -1,18 +1,15 @@
 # MCP Server (Model Context Protocol)
 
-Exposes the Instagram AI agent as tools for Claude Desktop, Cursor, and other MCP clients.
+Exposes Instagram AI agent operations as MCP tools.
 
-## Run
+## Transports
+
+### 1. stdio (Claude Desktop / Cursor local)
 
 ```bash
-npm install
 npm run mcp
-# or: npx tsx src/mcp/server.ts
+# tsx src/mcp/server.ts
 ```
-
-Requires same env as API (`DATABASE_URL`, `REDIS_URL`, tokens, etc.).
-
-## Claude Desktop / Cursor config
 
 ```json
 {
@@ -21,52 +18,62 @@ Requires same env as API (`DATABASE_URL`, `REDIS_URL`, tokens, etc.).
       "command": "npx",
       "args": ["tsx", "src/mcp/server.ts"],
       "cwd": "/absolute/path/to/server-ai",
-      "env": {
-        "DATABASE_URL": "...",
-        "REDIS_URL": "...",
-        "INSTAGRAM_TOKEN_ENCRYPTION_KEY": "...",
-        "INSTAGRAM_API_VERSION": "v21.0",
-        "INSTAGRAM_MARKER": "..."
-      }
+      "env": { "DATABASE_URL": "...", "REDIS_URL": "...", "...": "..." }
     }
   }
 }
 ```
 
-After `npm run build`:
+### 2. Streamable HTTP (API process)
 
-```json
-{
-  "command": "node",
-  "args": ["dist/mcp/server.js"],
-  "cwd": "/absolute/path/to/server-ai"
-}
+Registered in `src/app.ts` → `registerMcpRoutes`.
+
+| | |
+|--|--|
+| URL | `/mcp` |
+| Methods | `GET`, `POST`, `DELETE` |
+| Auth | `Authorization: Bearer ${MCP_SERVER_TOKEN}` |
+| Session | header `mcp-session-id` after initialize |
+
+```env
+MCP_SERVER_TOKEN=<at least 32 characters>
 ```
+
+Without token → `503 mcp_disabled`.  
+Wrong/missing Bearer → `401`.
+
+Implementation: `mcp.routes.ts` + `StreamableHTTPServerTransport` + `createMcpServer()` from `server.ts`.
 
 ## Tools
 
 | Tool | Description |
 |------|-------------|
 | `system_status` | Modes + pending counts |
-| `list_profiles` | AI profiles + IG accounts |
-| `pending_reviews` | requiresHuman comments/DMs |
+| `list_profiles` | AI profiles + IG |
+| `pending_reviews` | requiresHuman |
 | `sync_media` | Enqueue media sync |
 | `run_pipeline` | Scenario → gen → storage → optional publish |
 | `run_plan_slot` | Content plan slot |
-| `run_strategy` | Update contentStrategy from metrics |
+| `run_strategy` | Update contentStrategy |
 | `publish_post` | Publish READY post |
 | `process_comment` | Luna comment agent |
 | `process_dm` | Luna DM agent |
-| `list_references` | Character reference pack |
-| `add_reference` | Register face/body/style ref |
+| `list_references` | Character pack |
+| `add_reference` | Register ref photo + description |
 
 ## Architecture
 
 ```
-MCP client (stdio JSON-RPC)
-  → src/mcp/server.ts
-    → src/mcp/tools.ts
-      → same services as REST API / BullMQ
+MCP client
+  → stdio server.ts  OR  HTTP /mcp
+    → tools.ts
+      → same services as REST / BullMQ
 ```
 
-No separate business logic — thin adapter.
+No separate business logic.
+
+## Files
+
+- `server.ts` — MCP server factory + stdio entry
+- `tools.ts` — tool handlers
+- `mcp.routes.ts` — HTTP transport on Fastify
