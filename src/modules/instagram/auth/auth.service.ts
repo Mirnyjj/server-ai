@@ -1,4 +1,4 @@
-import { env } from "../../../config/env";
+import { env, isOAuthEnabled } from "../../../config/env";
 import { encryptSecret } from "../../../lib/crypto/secret.service";
 import { createInstagramClient } from "../client/instagram.client";
 import { upsertInstagramAccount } from "./account.repository";
@@ -20,9 +20,15 @@ const INSTAGRAM_SCOPES = [
 
 export function createInstagramAuthService() {
   function createAuthorizationUrl(state: string): string {
+    if (!isOAuthEnabled()) {
+      throw new Error(
+        "OAuth is disabled: set HTTPS INSTAGRAM_REDIRECT_URI, APP_ID and APP_SECRET",
+      );
+    }
+
     const params = new URLSearchParams({
-      client_id: env.INSTAGRAM_APP_ID,
-      redirect_uri: env.INSTAGRAM_REDIRECT_URI,
+      client_id: env.INSTAGRAM_APP_ID!,
+      redirect_uri: env.INSTAGRAM_REDIRECT_URI!,
       response_type: "code",
       scope: INSTAGRAM_SCOPES.join(","),
       state,
@@ -35,16 +41,20 @@ export function createInstagramAuthService() {
     code: string,
     profileId: string,
   ): Promise<InstagramAuthResult> {
+    if (!isOAuthEnabled()) {
+      throw new Error("OAuth is disabled in current configuration");
+    }
+
     const shortLivedToken = await exchangeCodeForToken({
       code,
-      appId: env.INSTAGRAM_APP_ID,
-      appSecret: env.INSTAGRAM_APP_SECRET,
-      redirectUri: env.INSTAGRAM_REDIRECT_URI,
+      appId: env.INSTAGRAM_APP_ID!,
+      appSecret: env.INSTAGRAM_APP_SECRET!,
+      redirectUri: env.INSTAGRAM_REDIRECT_URI!,
     });
 
     const longLivedToken = await exchangeForLongLivedToken({
       accessToken: shortLivedToken.access_token,
-      appSecret: env.INSTAGRAM_APP_SECRET,
+      appSecret: env.INSTAGRAM_APP_SECRET!,
     });
 
     const instagramClient = createInstagramClient({

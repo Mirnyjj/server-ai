@@ -2,28 +2,55 @@
 
 ## env.ts
 
-Zod-валидация всех env variables при старте. При ошибке — `process.exit(1)`.
+Zod-валидация env при старте. При ошибке — `process.exit(1)`.
 
-### Обязательные
+### Режимы работы Instagram-интеграции
+
+| Условие | Режим | OAuth | Webhooks | Токен |
+|---------|-------|-------|----------|-------|
+| `NODE_ENV=production` + HTTPS redirect | production | ✅ required | ✅ | DB encrypted |
+| HTTPS `INSTAGRAM_REDIRECT_URI` + APP_ID/SECRET | oauth | ✅ | если VERIFY_TOKEN | DB |
+| **нет redirect или не HTTPS** (и не production) | **local dev** | ❌ | ❌ | **INSTAGRAM_MARKER** |
+
+### Helpers
+
+```ts
+isInstagramDevMode()  // true → local, без OAuth/webhooks
+isOAuthEnabled()      // HTTPS redirect + APP_ID + APP_SECRET
+isWebhooksEnabled()   // !devMode && VERIFY_TOKEN set
+```
+
+### Local dev `.env` (минимум)
+
+```env
+NODE_ENV=development
+INSTAGRAM_TOKEN_ENCRYPTION_KEY=at-least-32-characters-long-key!!
+INSTAGRAM_API_VERSION=v22.0
+INSTAGRAM_MARKER=IGQWR...          # long-lived token from Meta
+DATABASE_URL=postgresql://...
+REDIS_URL=redis://127.0.0.1:6379
+# INSTAGRAM_REDIRECT_URI=         # НЕ задавать или http://localhost → dev mode
+# APP_ID / APP_SECRET не обязательны в dev mode
+```
+
+### Production `.env`
+
+```env
+NODE_ENV=production
+INSTAGRAM_REDIRECT_URI=https://api.example.com/api/instagram/auth/callback
+INSTAGRAM_APP_ID=...
+INSTAGRAM_APP_SECRET=...
+INSTAGRAM_WEBHOOK_VERIFY_TOKEN=...
+INSTAGRAM_TOKEN_ENCRYPTION_KEY=...
+# INSTAGRAM_MARKER не использовать
+```
+
+### Dev bootstrap
 
 ```
-INSTAGRAM_TOKEN_ENCRYPTION_KEY  # ≥32 chars
-INSTAGRAM_APP_ID
-INSTAGRAM_APP_SECRET
-INSTAGRAM_REDIRECT_URI          # valid URL
-DATABASE_URL
-REDIS_URL
-INSTAGRAM_API_VERSION           # e.g. v22.0
-```
+POST /api/instagram/auth/dev/bootstrap
+{ "profileId": "cuid-of-ai-profile" }
 
-### Опциональные
-
-```
-NODE_ENV                        # development|test|production
-API_HOST / API_PORT             # default 0.0.0.0:8000
-OAUTH_STATE_TTL_SECONDS         # default 600
-DIRECT_URL                      # Prisma adapter
-INSTAGRAM_MARKER                # dev-only access token
-INSTAGRAM_WEBHOOK_VERIFY_TOKEN  # required for webhook GET
-INSTAGRAM_WEBHOOK_APP_SECRET    # fallback = APP_SECRET
+→ создаёт InstagramAccount + Connection из MARKER
+→ дальше token.resolver читает из DB
 ```

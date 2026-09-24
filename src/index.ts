@@ -1,13 +1,40 @@
 import { createApp } from "./app";
-import { env } from "./config/env";
+import { env, isInstagramDevMode, isOAuthEnabled, isWebhooksEnabled } from "./config/env";
 import { startWorkers, stopWorkers, closeAllQueues } from "./infrastructure/queue";
 import { closeRedisConnection } from "./infrastructure/redis";
 
 const app = await createApp();
 
-// Start BullMQ workers in the same process (simple deployment).
-// For horizontal scaling, run workers in a separate process via `npm run worker`.
 const workers = startWorkers();
+
+if (isInstagramDevMode()) {
+  app.log.warn(
+    "═══════════════════════════════════════════════════════════",
+  );
+  app.log.warn(
+    " Instagram LOCAL DEV MODE — OAuth & webhooks disabled",
+  );
+  app.log.warn(
+    " Reason: INSTAGRAM_REDIRECT_URI is missing or not HTTPS",
+  );
+  app.log.warn(
+    " Using INSTAGRAM_MARKER for all Graph API calls",
+  );
+  app.log.warn(
+    " Bootstrap: POST /api/instagram/auth/dev/bootstrap { profileId }",
+  );
+  app.log.warn(
+    " Status:   GET  /api/instagram/auth/status",
+  );
+  app.log.warn(
+    "═══════════════════════════════════════════════════════════",
+  );
+} else {
+  app.log.info({
+    oauth: isOAuthEnabled(),
+    webhooks: isWebhooksEnabled(),
+  }, "Instagram integration mode");
+}
 
 async function shutdown(signal: string) {
   app.log.info(`Received ${signal}, shutting down…`);
