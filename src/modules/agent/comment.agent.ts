@@ -2,20 +2,11 @@ import { prisma } from "../../../prisma/prisma";
 import { env } from "../../config/env";
 import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver";
 import { createInstagramClient } from "../instagram/client/instagram.client";
+import { notifySensitiveComment } from "../telegram/telegram.notify";
 import { PolicyEngine } from "./policy/policy.engine";
 import type { CommentAgentDecision, AgentRunResult } from "./types";
 import { runClaudeCommentDecision } from "./claude/comment.prompt";
 
-/**
- * Comment Agent pipeline (TZ §18–21):
- *
- * Comment event
- *   → load context (persona, post, history)
- *   → Claude structured JSON
- *   → Policy Engine
- *   → if allowed → reply via Graph API + update Comment row
- *   → if denied → mark requiresHuman / ignore
- */
 export async function processComment(commentId: string): Promise<
   AgentRunResult<CommentAgentDecision>
 > {
@@ -38,7 +29,6 @@ export async function processComment(commentId: string): Promise<
   const profile = comment.post.profile;
   const policy = await PolicyEngine.forProfile(profile.id);
 
-  // Already handled
   if (comment.replied) {
     const decision: CommentAgentDecision = {
       action: "ignore",
@@ -57,7 +47,6 @@ export async function processComment(commentId: string): Promise<
     };
   }
 
-  // Claude decision
   const decision = await runClaudeCommentDecision({
     persona: profile.persona,
     writingStyle: profile.writingStyle,
@@ -67,7 +56,6 @@ export async function processComment(commentId: string): Promise<
     postType: comment.post.type,
   });
 
-  // Persist AI fields
   await prisma.comment.update({
     where: { id: comment.id },
     data: {
@@ -79,7 +67,6 @@ export async function processComment(commentId: string): Promise<
     },
   });
 
-  // Policy gate
   const evaluation = policy.evaluateCommentReply({
     action: decision.action,
     category: decision.category,
@@ -98,6 +85,16 @@ export async function processComment(commentId: string): Promise<
         where: { id: comment.id },
         data: { requiresHuman: true },
       });
+
+      // TZ §25 — Telegram escalate
+      void notifySensitiveComment({
+        commentId: comment.id,
+        username: comment.username,
+        text: comment.text,
+        category: decision.category,
+        suggestedReply: decision.reply,
+        postId: comment.postId,
+      }).catch((err) => console.error("[telegram] notify comment failed", err));
     }
 
     await logAgentAction(profile.id, "comment.decide", {
@@ -115,7 +112,6 @@ export async function processComment(commentId: string): Promise<
     };
   }
 
-  // Execute reply
   if (decision.action === "reply" && decision.reply) {
     try {
       const accessToken = await resolveAccessTokenByProfileId(profile.id);

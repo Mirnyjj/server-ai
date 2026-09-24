@@ -1,5 +1,11 @@
 import { createApp } from "./app";
-import { env, isInstagramDevMode, isOAuthEnabled, isWebhooksEnabled } from "./config/env";
+import {
+  env,
+  isInstagramDevMode,
+  isOAuthEnabled,
+  isTelegramEnabled,
+  isWebhooksEnabled,
+} from "./config/env";
 import { startWorkers, stopWorkers, closeAllQueues } from "./infrastructure/queue";
 import { closeRedisConnection } from "./infrastructure/redis";
 
@@ -15,25 +21,22 @@ if (isInstagramDevMode()) {
     " Instagram LOCAL DEV MODE — OAuth & webhooks disabled",
   );
   app.log.warn(
-    " Reason: INSTAGRAM_REDIRECT_URI is missing or not HTTPS",
-  );
-  app.log.warn(
-    " Using INSTAGRAM_MARKER for all Graph API calls",
-  );
-  app.log.warn(
-    " Bootstrap: POST /api/instagram/auth/dev/bootstrap { profileId }",
-  );
-  app.log.warn(
-    " Status:   GET  /api/instagram/auth/status",
+    " Using INSTAGRAM_MARKER · bootstrap: POST /api/instagram/auth/dev/bootstrap",
   );
   app.log.warn(
     "═══════════════════════════════════════════════════════════",
   );
 } else {
-  app.log.info({
-    oauth: isOAuthEnabled(),
-    webhooks: isWebhooksEnabled(),
-  }, "Instagram integration mode");
+  app.log.info(
+    { oauth: isOAuthEnabled(), webhooks: isWebhooksEnabled() },
+    "Instagram integration mode",
+  );
+}
+
+if (isTelegramEnabled()) {
+  app.log.info("Telegram control plane: ENABLED");
+} else {
+  app.log.info("Telegram control plane: disabled (set TELEGRAM_BOT_TOKEN)");
 }
 
 async function shutdown(signal: string) {

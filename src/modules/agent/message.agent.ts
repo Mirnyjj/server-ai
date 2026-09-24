@@ -2,20 +2,11 @@ import { prisma } from "../../../prisma/prisma";
 import { env } from "../../config/env";
 import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver";
 import { createInstagramClient } from "../instagram/client/instagram.client";
+import { notifySensitiveDm } from "../telegram/telegram.notify";
 import { PolicyEngine } from "./policy/policy.engine";
 import type { MessageAgentDecision, AgentRunResult } from "./types";
 import { runClaudeMessageDecision } from "./claude/message.prompt";
 
-/**
- * DM Agent pipeline (TZ §22–25):
- *
- * inbound message
- *   → context (persona, thread history)
- *   → Claude structured JSON
- *   → Policy (messaging window + sensitive + confidence)
- *   → if allowed → sendMessage
- *   → if sensitive → requiresHuman (Telegram later)
- */
 export async function processDirectMessage(
   messageId: string,
 ): Promise<AgentRunResult<MessageAgentDecision>> {
@@ -65,8 +56,6 @@ export async function processDirectMessage(
     };
   }
 
-  // Messaging window heuristic: last inbound within 24h of now
-  // (Meta standard 24h window for business messaging)
   const lastInbound = message.thread.messages.find(
     (m) => m.direction === "INBOUND",
   );
@@ -120,6 +109,14 @@ export async function processDirectMessage(
         where: { id: message.id },
         data: { requiresHuman: true },
       });
+
+      void notifySensitiveDm({
+        messageId: message.id,
+        username: message.thread.username,
+        text: message.text,
+        category: decision.category,
+        suggestedReply: decision.reply,
+      }).catch((err) => console.error("[telegram] notify dm failed", err));
     }
 
     await logAgentAction(profile.id, "dm.decide", {
@@ -162,7 +159,6 @@ export async function processDirectMessage(
         },
       });
 
-      // Store outbound copy
       if (result.message_id) {
         await prisma.directMessage.create({
           data: {
