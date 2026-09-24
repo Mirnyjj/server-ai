@@ -9,6 +9,7 @@ import type {
   InstagramClientConfig,
   InstagramCommentReplyResponse,
   InstagramCommentsResponse,
+  InstagramInsightsResponse,
   InstagramMediaListResponse,
   InstagramMediaResponse,
   InstagramProfile,
@@ -465,6 +466,50 @@ export function createInstagramClient(config: InstagramClientConfig) {
     return request<InstagramMediaResponse>(`/${mediaId}?${params.toString()}`);
   }
 
+  /**
+   * Media insights (TZ §26).
+   * Metric set depends on media type — unavailable metrics are omitted by API.
+   * @see https://developers.facebook.com/docs/instagram-api/reference/ig-media/insights
+   */
+  async function getMediaInsights(
+    mediaId: string,
+    metrics: string[],
+  ): Promise<InstagramInsightsResponse> {
+    const params = new URLSearchParams({
+      metric: metrics.join(","),
+    });
+
+    return request<InstagramInsightsResponse>(
+      `/${mediaId}/insights?${params.toString()}`,
+    );
+  }
+
+  /**
+   * Account-level insights (TZ §28).
+   * @see https://developers.facebook.com/docs/instagram-api/reference/ig-user/insights
+   */
+  async function getAccountInsights(
+    instagramUserId: string,
+    metrics: string[],
+    options?: { period?: string; since?: number; until?: number },
+  ): Promise<InstagramInsightsResponse> {
+    const params = new URLSearchParams({
+      metric: metrics.join(","),
+      period: options?.period ?? "day",
+    });
+
+    if (options?.since) {
+      params.set("since", String(options.since));
+    }
+    if (options?.until) {
+      params.set("until", String(options.until));
+    }
+
+    return request<InstagramInsightsResponse>(
+      `/${instagramUserId}/insights?${params.toString()}`,
+    );
+  }
+
   return {
     request,
     getProfile,
@@ -489,5 +534,8 @@ export function createInstagramClient(config: InstagramClientConfig) {
     sendMessage,
 
     subscribeToWebhooks,
+
+    getMediaInsights,
+    getAccountInsights,
   };
 }

@@ -96,3 +96,17 @@ export interface InstagramMediaListResponse {
 export interface InstagramMediaResponse extends InstagramMedia {
   username?: string;
 }
+
+/** Single insight metric from Graph API */
+export type InstagramInsightMetric = {
+  name: string;
+  period?: string;
+  values?: Array<{ value: number | Record<string, number>; end_time?: string }>;
+  title?: string;
+  description?: string;
+  id?: string;
+};
+
+export type InstagramInsightsResponse = {
+  data: InstagramInsightMetric[];
+};
