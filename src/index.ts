@@ -6,26 +6,28 @@ import {
   isTelegramEnabled,
   isWebhooksEnabled,
 } from "./config/env";
-import { startWorkers, stopWorkers, closeAllQueues } from "./infrastructure/queue";
+import {
+  startWorkers,
+  stopWorkers,
+  closeAllQueues,
+} from "./infrastructure/queue";
 import { closeRedisConnection } from "./infrastructure/redis";
+import {
+  startTelegramPolling,
+  stopTelegramPolling,
+} from "./modules/telegram/telegram.polling";
 
 const app = await createApp();
 
 const workers = startWorkers();
 
 if (isInstagramDevMode()) {
-  app.log.warn(
-    "═══════════════════════════════════════════════════════════",
-  );
-  app.log.warn(
-    " Instagram LOCAL DEV MODE — OAuth & webhooks disabled",
-  );
+  app.log.warn("═══════════════════════════════════════════════════════════");
+  app.log.warn(" Instagram LOCAL DEV MODE — OAuth & webhooks disabled");
   app.log.warn(
     " Using INSTAGRAM_MARKER · bootstrap: POST /api/instagram/auth/dev/bootstrap",
   );
-  app.log.warn(
-    "═══════════════════════════════════════════════════════════",
-  );
+  app.log.warn("═══════════════════════════════════════════════════════════");
 } else {
   app.log.info(
     { oauth: isOAuthEnabled(), webhooks: isWebhooksEnabled() },
@@ -43,6 +45,7 @@ async function shutdown(signal: string) {
   app.log.info(`Received ${signal}, shutting down…`);
 
   try {
+    stopTelegramPolling();
     await app.close();
     await stopWorkers();
     await closeAllQueues();
@@ -64,6 +67,8 @@ try {
   });
 
   app.log.info(`Workers running: ${workers.length}`);
+
+  void startTelegramPolling();
 } catch (error) {
   app.log.error(error);
   process.exit(1);

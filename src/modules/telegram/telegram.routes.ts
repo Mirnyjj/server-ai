@@ -1,17 +1,19 @@
 import type { FastifyInstance } from "fastify";
+
 import {
   env,
+  getTelegramAllowedChatIds,
   isTelegramEnabled,
 } from "../../config/env";
+
 import {
   getTelegramMe,
   setTelegramWebhook,
   deleteTelegramWebhook,
 } from "./telegram.client";
-import {
-  handleTelegramUpdate,
-  type TelegramUpdate,
-} from "./telegram.handlers";
+
+import { handleTelegramUpdate, type TelegramUpdate } from "./telegram.handlers";
+
 import { notifyInfo } from "./telegram.notify";
 
 export async function registerTelegramRoutes(app: FastifyInstance) {
@@ -23,9 +25,11 @@ export async function registerTelegramRoutes(app: FastifyInstance) {
 
     try {
       await handleTelegramUpdate(request.body as TelegramUpdate);
+
       return reply.code(200).send({ ok: true });
     } catch (error) {
       request.log.error(error);
+
       // Always 200 to Telegram to avoid retry storms
       return reply.code(200).send({ ok: false });
     }
@@ -41,11 +45,12 @@ export async function registerTelegramRoutes(app: FastifyInstance) {
 
     try {
       const me = await getTelegramMe();
+
       return reply.send({
         enabled: true,
         bot: me,
         webhookUrl: env.TELEGRAM_WEBHOOK_URL ?? null,
-        allowlistConfigured: !!env.TELEGRAM_ALLOWED_CHAT_IDS,
+        allowlistConfigured: getTelegramAllowedChatIds().length > 0,
       });
     } catch (error) {
       return reply.code(500).send({
@@ -72,7 +77,11 @@ export async function registerTelegramRoutes(app: FastifyInstance) {
 
     try {
       await setTelegramWebhook(url);
-      return reply.send({ success: true, url });
+
+      return reply.send({
+        success: true,
+        url,
+      });
     } catch (error) {
       return reply.code(500).send({
         error: error instanceof Error ? error.message : "setWebhook failed",
@@ -84,9 +93,13 @@ export async function registerTelegramRoutes(app: FastifyInstance) {
     if (!isTelegramEnabled()) {
       return reply.code(503).send({ error: "telegram_disabled" });
     }
+
     try {
       await deleteTelegramWebhook();
-      return reply.send({ success: true });
+
+      return reply.send({
+        success: true,
+      });
     } catch (error) {
       return reply.code(500).send({
         error: error instanceof Error ? error.message : "deleteWebhook failed",
@@ -99,7 +112,12 @@ export async function registerTelegramRoutes(app: FastifyInstance) {
     if (!isTelegramEnabled()) {
       return reply.code(503).send({ error: "telegram_disabled" });
     }
+
     const result = await notifyInfo("✅ Telegram control plane test OK");
-    return reply.send({ success: true, ...result });
+
+    return reply.send({
+      success: true,
+      ...result,
+    });
   });
 }

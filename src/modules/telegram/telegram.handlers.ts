@@ -20,16 +20,27 @@ export type TelegramUpdate = {
   message?: {
     message_id: number;
     text?: string;
-    chat: { id: number; type: string };
-    from?: { id: number; username?: string };
+    chat: {
+      id: number;
+      type: string;
+    };
+    from?: {
+      id: number;
+      username?: string;
+    };
   };
   callback_query?: {
     id: string;
     data?: string;
-    from: { id: number; username?: string };
+    from: {
+      id: number;
+      username?: string;
+    };
     message?: {
       message_id: number;
-      chat: { id: number };
+      chat: {
+        id: number;
+      };
       text?: string;
     };
   };
@@ -37,14 +48,18 @@ export type TelegramUpdate = {
 
 function isAuthorized(chatId: number): boolean {
   const allowed = getTelegramAllowedChatIds();
+
   if (allowed.length === 0) {
-    // Dev: allow all if no allowlist
+    // В режиме разработки разрешаем доступ, если список чатов не задан.
     return env.NODE_ENV !== "production";
   }
+
   return allowed.includes(chatId);
 }
 
-export async function handleTelegramUpdate(update: TelegramUpdate) {
+export async function handleTelegramUpdate(
+  update: TelegramUpdate,
+): Promise<void> {
   if (!isTelegramEnabled()) return;
 
   if (update.callback_query) {
@@ -53,11 +68,13 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
   }
 
   const msg = update.message;
+
   if (!msg?.text) return;
 
   const chatId = msg.chat.id;
+
   if (!isAuthorized(chatId)) {
-    await sendTelegramMessage(chatId, "⛔ Unauthorized chat.");
+    await sendTelegramMessage(chatId, "⛔ Доступ запрещён.");
     return;
   }
 
@@ -70,187 +87,268 @@ export async function handleTelegramUpdate(update: TelegramUpdate) {
     case "/help":
       await sendTelegramMessage(chatId, HELP_TEXT);
       break;
+
     case "/status":
       await cmdStatus(chatId);
       break;
+
     case "/pending":
       await cmdPending(chatId);
       break;
+
     case "/profiles":
       await cmdProfiles(chatId);
       break;
+
     case "/sync":
       await cmdSync(chatId, args[0]);
       break;
+
     case "/connect":
       await cmdConnect(chatId, args[0]);
       break;
+
     default:
       if (command.startsWith("/")) {
         await sendTelegramMessage(
           chatId,
-          "Unknown command. /help for list.",
+          "Неизвестная команда. Используйте /help для просмотра списка команд.",
         );
       }
   }
 }
 
 const HELP_TEXT = [
-  `<b>AI Instagram Control Plane</b>`,
+  `<b>AI Instagram — управление</b>`,
   ``,
-  `/status — system mode & connections`,
-  `/profiles — list AI profiles`,
-  `/pending — comments/DMs needing human`,
-  `/sync &lt;profileId&gt; — media sync`,
-  `/connect &lt;profileId&gt; — OAuth / bootstrap hint`,
-  `/help — this message`,
+  `/status — состояние системы и подключений`,
+  `/profiles — список AI-профилей и Instagram-аккаунтов`,
+  `/pending — комментарии и сообщения, требующие решения`,
+  `/sync &lt;profileId&gt; — синхронизация публикаций`,
+  `/connect &lt;profileId&gt; — подключение Instagram`,
+  `/help — список доступных команд`,
   ``,
-  `Escalations arrive as alerts with inline buttons.`,
+  `Важные комментарии и сообщения поступают отдельными уведомлениями с кнопками для действий.`,
 ].join("\n");
 
-async function cmdStatus(chatId: number) {
+async function cmdStatus(chatId: number): Promise<void> {
   const accounts = await prisma.instagramAccount.count({
-    where: { status: "ACTIVE" },
+    where: {
+      status: "ACTIVE",
+    },
   });
+
   const pendingComments = await prisma.comment.count({
-    where: { requiresHuman: true, replied: false },
+    where: {
+      requiresHuman: true,
+      replied: false,
+    },
   });
+
   const pendingDms = await prisma.directMessage.count({
-    where: { requiresHuman: true, replied: false, direction: "INBOUND" },
+    where: {
+      requiresHuman: true,
+      replied: false,
+      direction: "INBOUND",
+    },
   });
 
   const text = [
-    `<b>Status</b>`,
-    `Dev mode: <code>${isInstagramDevMode()}</code>`,
-    `OAuth: <code>${isOAuthEnabled()}</code>`,
-    `Telegram: <code>on</code>`,
-    `Active IG accounts: <b>${accounts}</b>`,
-    `Pending comments: <b>${pendingComments}</b>`,
-    `Pending DMs: <b>${pendingDms}</b>`,
+    `<b>Состояние системы</b>`,
+    ``,
+    `Режим разработки: <code>${
+      isInstagramDevMode() ? "включён" : "выключен"
+    }</code>`,
+    `OAuth: <code>${isOAuthEnabled() ? "включён" : "выключен"}</code>`,
+    `Telegram: <code>подключён</code>`,
+    `Активных Instagram-аккаунтов: <b>${accounts}</b>`,
+    `Комментариев требуют решения: <b>${pendingComments}</b>`,
+    `Сообщений требуют решения: <b>${pendingDms}</b>`,
   ].join("\n");
 
   await sendTelegramMessage(chatId, text);
 }
 
-async function cmdPending(chatId: number) {
+async function cmdPending(chatId: number): Promise<void> {
   const comments = await prisma.comment.findMany({
-    where: { requiresHuman: true, replied: false },
-    orderBy: { createdAt: "desc" },
+    where: {
+      requiresHuman: true,
+      replied: false,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
     take: 5,
   });
 
   const dms = await prisma.directMessage.findMany({
-    where: { requiresHuman: true, replied: false, direction: "INBOUND" },
-    orderBy: { createdAt: "desc" },
+    where: {
+      requiresHuman: true,
+      replied: false,
+      direction: "INBOUND",
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
     take: 5,
-    include: { thread: true },
+    include: {
+      thread: true,
+    },
   });
 
   if (comments.length === 0 && dms.length === 0) {
-    await sendTelegramMessage(chatId, "✅ No pending human reviews.");
+    await sendTelegramMessage(
+      chatId,
+      "✅ Нет сообщений и комментариев, требующих решения.",
+    );
     return;
   }
 
-  const lines: string[] = [`<b>Pending review</b>`, ``];
+  const lines: string[] = [`<b>Требуют решения</b>`, ``];
 
-  for (const c of comments) {
+  for (const comment of comments) {
     lines.push(
-      `💬 <b>Comment</b> @${c.username ?? "?"} [${c.category ?? "?"}]`,
+      `💬 <b>Комментарий</b> @${escape(comment.username ?? "?")} [${escape(
+        comment.category ?? "?",
+      )}]`,
     );
-    lines.push(`<i>${escape(c.text.slice(0, 120))}</i>`);
-    lines.push(`<code>${c.id}</code>`);
+    lines.push(`<i>${escape(comment.text.slice(0, 120))}</i>`);
+    lines.push(`<code>${comment.id}</code>`);
     lines.push(``);
   }
 
-  for (const m of dms) {
+  for (const message of dms) {
     lines.push(
-      `✉️ <b>DM</b> @${m.thread.username ?? "?"} [${m.category ?? "?"}]`,
+      `✉️ <b>Сообщение</b> @${escape(
+        message.thread.username ?? "?",
+      )} [${escape(message.category ?? "?")}]`,
     );
-    lines.push(`<i>${escape(m.text.slice(0, 120))}</i>`);
-    lines.push(`<code>${m.id}</code>`);
+    lines.push(`<i>${escape(message.text.slice(0, 120))}</i>`);
+    lines.push(`<code>${message.id}</code>`);
     lines.push(``);
   }
 
   await sendTelegramMessage(chatId, lines.join("\n"));
 }
 
-async function cmdProfiles(chatId: number) {
+async function cmdProfiles(chatId: number): Promise<void> {
   const profiles = await prisma.aiProfile.findMany({
     take: 20,
-    orderBy: { updatedAt: "desc" },
+    orderBy: {
+      updatedAt: "desc",
+    },
     include: {
       instagramAccounts: {
-        where: { status: "ACTIVE" },
+        where: {
+          status: "ACTIVE",
+        },
         take: 1,
       },
     },
   });
 
   if (profiles.length === 0) {
-    await sendTelegramMessage(chatId, "No AI profiles yet.");
+    await sendTelegramMessage(chatId, "Пока нет созданных AI-профилей.");
     return;
   }
 
-  const lines = profiles.map((p) => {
-    const ig = p.instagramAccounts[0];
-    return `• <b>${escape(p.name)}</b>\n  <code>${p.id}</code>\n  IG: @${ig?.username ?? "not connected"} | auto: ${p.autonomousMode}`;
+  const lines = profiles.map((profile) => {
+    const instagram = profile.instagramAccounts[0];
+
+    return [
+      `• <b>${escape(profile.name)}</b>`,
+      `  ID: <code>${profile.id}</code>`,
+      `  Instagram: @${escape(instagram?.username ?? "не подключён")}`,
+      `  Автономный режим: ${profile.autonomousMode ? "включён" : "выключен"}`,
+    ].join("\n");
   });
 
-  await sendTelegramMessage(chatId, `<b>Profiles</b>\n\n${lines.join("\n\n")}`);
+  await sendTelegramMessage(
+    chatId,
+    `<b>AI-профили</b>\n\n${lines.join("\n\n")}`,
+  );
 }
 
-async function cmdSync(chatId: number, profileId?: string) {
+async function cmdSync(chatId: number, profileId?: string): Promise<void> {
   if (!profileId) {
-    await sendTelegramMessage(chatId, "Usage: /sync &lt;profileId&gt;");
+    await sendTelegramMessage(chatId, "Использование: /sync &lt;profileId&gt;");
     return;
   }
 
   try {
     const { enqueueMediaSync } = await import("../../infrastructure/queue");
-    const job = await enqueueMediaSync({ profileId });
+
+    const job = await enqueueMediaSync({
+      profileId,
+    });
+
     await sendTelegramMessage(
       chatId,
-      `✅ Media sync queued\njob: <code>${job.id}</code>`,
+      [
+        `✅ Синхронизация публикаций поставлена в очередь.`,
+        `Задача: <code>${job.id}</code>`,
+      ].join("\n"),
     );
   } catch (error) {
     await sendTelegramMessage(
       chatId,
-      `❌ ${error instanceof Error ? error.message : "sync failed"}`,
+      `❌ Не удалось запустить синхронизацию: ${
+        error instanceof Error ? error.message : "неизвестная ошибка"
+      }`,
     );
   }
 }
 
-async function cmdConnect(chatId: number, profileId?: string) {
+async function cmdConnect(chatId: number, profileId?: string): Promise<void> {
   if (!profileId) {
-    await sendTelegramMessage(chatId, "Usage: /connect &lt;profileId&gt;");
+    await sendTelegramMessage(
+      chatId,
+      "Использование: /connect &lt;profileId&gt;",
+    );
     return;
   }
 
   if (isOAuthEnabled()) {
     const base =
-      env.INSTAGRAM_REDIRECT_URI?.replace(/\/api\/instagram\/auth\/callback.*/, "") ??
-      "";
-    await sendTelegramMessage(
-      chatId,
-      `Open OAuth:\n<code>${base}/api/instagram/auth/login?profileId=${profileId}</code>`,
-    );
-  } else {
+      env.INSTAGRAM_REDIRECT_URI?.replace(
+        /\/api\/instagram\/auth\/callback.*/,
+        "",
+      ) ?? "";
+
     await sendTelegramMessage(
       chatId,
       [
-        `Local dev mode — OAuth disabled.`,
-        `Bootstrap via API:`,
-        `<code>POST /api/instagram/auth/dev/bootstrap</code>`,
-        `Body: {"profileId":"${profileId}"}`,
+        `<b>Подключение Instagram</b>`,
+        ``,
+        `Откройте ссылку для авторизации:`,
+        `<code>${base}/api/instagram/auth/login?profileId=${profileId}</code>`,
       ].join("\n"),
     );
+
+    return;
   }
+
+  await sendTelegramMessage(
+    chatId,
+    [
+      `<b>Локальный режим разработки</b>`,
+      ``,
+      `OAuth отключён.`,
+      `Для подключения используйте API:`,
+      `<code>POST /api/instagram/auth/dev/bootstrap</code>`,
+      ``,
+      `Профиль: <code>${escape(profileId)}</code>`,
+    ].join("\n"),
+  );
 }
 
-async function handleCallback(cq: NonNullable<TelegramUpdate["callback_query"]>) {
+async function handleCallback(
+  cq: NonNullable<TelegramUpdate["callback_query"]>,
+): Promise<void> {
   const chatId = cq.message?.chat.id;
+
   if (!chatId || !isAuthorized(chatId)) {
-    await answerCallbackQuery(cq.id, "Unauthorized");
+    await answerCallbackQuery(cq.id, "Доступ запрещён");
     return;
   }
 
@@ -260,75 +358,107 @@ async function handleCallback(cq: NonNullable<TelegramUpdate["callback_query"]>)
   try {
     if (action === "c_send" && id) {
       await humanSendComment(id);
-      await answerCallbackQuery(cq.id, "Reply sent");
+
+      await answerCallbackQuery(cq.id, "Ответ отправлен");
+
       if (cq.message) {
         await editMessageText(
           chatId,
           cq.message.message_id,
-          (cq.message.text ?? "") + "\n\n✅ <b>Sent</b>",
+          `${cq.message.text ?? ""}\n\n✅ <b>Ответ отправлен</b>`,
         );
       }
     } else if (action === "c_ignore" && id) {
       await prisma.comment.update({
-        where: { id },
-        data: { requiresHuman: false },
+        where: {
+          id,
+        },
+        data: {
+          requiresHuman: false,
+        },
       });
-      await answerCallbackQuery(cq.id, "Ignored");
+
+      await answerCallbackQuery(cq.id, "Комментарий пропущен");
+
       if (cq.message) {
         await editMessageText(
           chatId,
           cq.message.message_id,
-          (cq.message.text ?? "") + "\n\n⏭ <b>Ignored</b>",
+          `${cq.message.text ?? ""}\n\n⏭ <b>Пропущено</b>`,
         );
       }
     } else if (action === "m_send" && id) {
       await humanSendDm(id);
-      await answerCallbackQuery(cq.id, "DM sent");
+
+      await answerCallbackQuery(cq.id, "Сообщение отправлено");
+
       if (cq.message) {
         await editMessageText(
           chatId,
           cq.message.message_id,
-          (cq.message.text ?? "") + "\n\n✅ <b>Sent</b>",
+          `${cq.message.text ?? ""}\n\n✅ <b>Сообщение отправлено</b>`,
         );
       }
     } else if (action === "m_ignore" && id) {
       await prisma.directMessage.update({
-        where: { id },
-        data: { requiresHuman: false },
+        where: {
+          id,
+        },
+        data: {
+          requiresHuman: false,
+        },
       });
-      await answerCallbackQuery(cq.id, "Ignored");
+
+      await answerCallbackQuery(cq.id, "Сообщение пропущено");
+
       if (cq.message) {
         await editMessageText(
           chatId,
           cq.message.message_id,
-          (cq.message.text ?? "") + "\n\n⏭ <b>Ignored</b>",
+          `${cq.message.text ?? ""}\n\n⏭ <b>Пропущено</b>`,
         );
       }
     } else {
-      await answerCallbackQuery(cq.id, "Unknown action");
+      await answerCallbackQuery(cq.id, "Неизвестное действие");
     }
   } catch (error) {
     await answerCallbackQuery(
       cq.id,
-      error instanceof Error ? error.message.slice(0, 180) : "Error",
+      error instanceof Error ? error.message.slice(0, 180) : "Произошла ошибка",
     );
   }
 }
 
-async function humanSendComment(commentId: string) {
+async function humanSendComment(commentId: string): Promise<void> {
   const comment = await prisma.comment.findUnique({
-    where: { id: commentId },
-    include: { post: true },
+    where: {
+      id: commentId,
+    },
+    include: {
+      post: true,
+    },
   });
-  if (!comment) throw new Error("Comment not found");
-  if (!comment.suggestedReply) throw new Error("No suggested reply");
 
-  const accessToken = await resolveAccessTokenByProfileId(comment.post.profileId);
+  if (!comment) {
+    throw new Error("Комментарий не найден");
+  }
+
+  if (!comment.suggestedReply) {
+    throw new Error("Для комментария нет подготовленного ответа");
+  }
+
+  const accessToken = await resolveAccessTokenByProfileId(
+    comment.post.profileId,
+  );
+
   const service = createInstagramCommentsService(accessToken);
+
   await service.replyToComment(comment.instagramId, comment.suggestedReply);
 
   await prisma.comment.update({
-    where: { id: commentId },
+    where: {
+      id: commentId,
+    },
     data: {
       replied: true,
       replyText: comment.suggestedReply,
@@ -337,18 +467,32 @@ async function humanSendComment(commentId: string) {
   });
 }
 
-async function humanSendDm(messageId: string) {
+async function humanSendDm(messageId: string): Promise<void> {
   const message = await prisma.directMessage.findUnique({
-    where: { id: messageId },
+    where: {
+      id: messageId,
+    },
     include: {
-      thread: { include: { account: true } },
+      thread: {
+        include: {
+          account: true,
+        },
+      },
     },
   });
-  if (!message) throw new Error("Message not found");
-  if (!message.suggestedReply) throw new Error("No suggested reply");
+
+  if (!message) {
+    throw new Error("Сообщение не найдено");
+  }
+
+  if (!message.suggestedReply) {
+    throw new Error("Для сообщения нет подготовленного ответа");
+  }
 
   const profileId = message.thread.account.profileId;
+
   const accessToken = await resolveAccessTokenByProfileId(profileId);
+
   const client = createInstagramClient({
     accessToken,
     apiVersion: env.INSTAGRAM_API_VERSION,
@@ -361,8 +505,13 @@ async function humanSendDm(messageId: string) {
   );
 
   await prisma.directMessage.update({
-    where: { id: messageId },
-    data: { replied: true, requiresHuman: false },
+    where: {
+      id: messageId,
+    },
+    data: {
+      replied: true,
+      requiresHuman: false,
+    },
   });
 }
 
