@@ -1,11 +1,14 @@
 import { env } from "../../../config/env";
 import { createInstagramClient } from "../client/instagram.client";
+import { createCommentReconciliationService } from "./comments.reconciliation";
 
 export function createInstagramCommentsService(accessToken: string) {
   const instagramClient = createInstagramClient({
     accessToken,
     apiVersion: env.INSTAGRAM_API_VERSION,
   });
+
+  const reconciliation = createCommentReconciliationService(accessToken);
 
   async function listComments(
     mediaId: string,
@@ -31,5 +34,7 @@ export function createInstagramCommentsService(accessToken: string) {
     listReplies,
     replyToComment,
     deleteComment,
+    reconcilePostComments: reconciliation.reconcilePostComments,
+    reconcileProfileComments: reconciliation.reconcileProfileComments,
   };
 }

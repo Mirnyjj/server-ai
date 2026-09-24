@@ -1,6 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { resolveAccessToken } from "../auth/token.resolver";
+import {
+  resolveAccessToken,
+  resolveAccessTokenByProfileId,
+} from "../auth/token.resolver";
 import { createInstagramCommentsService } from "./comments.service";
+import { enqueueCommentReconciliation } from "../../../infrastructure/queue";
 
 export async function registerInstagramCommentsRoutes(app: FastifyInstance) {
   app.get("/api/instagram/media/:mediaId/comments", async (request, reply) => {
@@ -102,4 +106,108 @@ export async function registerInstagramCommentsRoutes(app: FastifyInstance) {
       });
     }
   });
+
+  /** Reconcile comments for one post → DB (sync) */
+  app.post("/api/instagram/comments/reconcile/post", async (request, reply) => {
+    const body = request.body as {
+      postId?: string;
+      instagramMediaId?: string;
+    };
+
+    if (!body.postId && !body.instagramMediaId) {
+      return reply.code(400).send({
+        error: "postId or instagramMediaId is required",
+      });
+    }
+
+    try {
+      const accessToken = await resolveAccessToken();
+      const service = createInstagramCommentsService(accessToken);
+      const result = await service.reconcilePostComments({
+        postId: body.postId,
+        instagramMediaId: body.instagramMediaId,
+      });
+
+      return reply.send({ success: true, ...result });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Comment reconciliation failed",
+      });
+    }
+  });
+
+  /** Reconcile comments for profile posts → DB (sync) */
+  app.post("/api/instagram/comments/reconcile/profile", async (request, reply) => {
+    const body = request.body as {
+      profileId?: string;
+      limit?: number;
+    };
+
+    if (!body.profileId) {
+      return reply.code(400).send({
+        error: "profileId is required",
+      });
+    }
+
+    try {
+      const accessToken = await resolveAccessTokenByProfileId(body.profileId);
+      const service = createInstagramCommentsService(accessToken);
+      const result = await service.reconcileProfileComments({
+        profileId: body.profileId,
+        limit: body.limit,
+      });
+
+      return reply.send({ success: true, ...result });
+    } catch (error) {
+      request.log.error(error);
+      return reply.code(500).send({
+        error:
+          error instanceof Error
+            ? error.message
+            : "Profile comment reconciliation failed",
+      });
+    }
+  });
+
+  /** Async reconciliation via BullMQ */
+  app.post(
+    "/api/instagram/comments/reconcile/profile/async",
+    async (request, reply) => {
+      const body = request.body as {
+        profileId?: string;
+        limit?: number;
+      };
+
+      if (!body.profileId) {
+        return reply.code(400).send({
+          error: "profileId is required",
+        });
+      }
+
+      try {
+        const job = await enqueueCommentReconciliation({
+          profileId: body.profileId,
+          limit: body.limit,
+        });
+
+        return reply.code(202).send({
+          success: true,
+          jobId: job.id,
+          queue: "comment-reconcile",
+        });
+      } catch (error) {
+        request.log.error(error);
+        return reply.code(500).send({
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to enqueue comment reconciliation",
+        });
+      }
+    },
+  );
 }

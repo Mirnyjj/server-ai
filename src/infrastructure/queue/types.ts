@@ -6,11 +6,11 @@ export const QUEUE_NAMES = {
   CONTAINER_STATUS: "container-status",
   MEDIA_SYNC: "media-sync",
   INSIGHTS: "insights",
+  COMMENT_RECONCILE: "comment-reconcile",
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
 
-/** Job names within each queue */
 export const JOB_NAMES = {
   REFRESH_CONNECTION: "refresh-connection",
   REFRESH_ALL_EXPIRING: "refresh-all-expiring",
@@ -26,6 +26,9 @@ export const JOB_NAMES = {
 
   COLLECT_PROFILE_INSIGHTS: "collect-profile-insights",
   COLLECT_POST_INSIGHTS: "collect-post-insights",
+
+  RECONCILE_PROFILE_COMMENTS: "reconcile-profile-comments",
+  RECONCILE_POST_COMMENTS: "reconcile-post-comments",
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
@@ -77,4 +80,14 @@ export type CollectProfileInsightsJobData = {
 
 export type CollectPostInsightsJobData = {
   postId: string;
+};
+
+export type ReconcileProfileCommentsJobData = {
+  profileId: string;
+  limit?: number;
+};
+
+export type ReconcilePostCommentsJobData = {
+  postId?: string;
+  instagramMediaId?: string;
 };

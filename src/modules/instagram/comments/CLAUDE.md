@@ -2,37 +2,54 @@
 
 ## Что сделано
 
-CRUD-операции с комментариями через Graph API.
-Входящие комментарии из webhook сохраняются в `Comment` (через webhook worker).
+### Graph API
 
-### Endpoints
+| Method | Path |
+|--------|------|
+| GET | `/api/instagram/media/:mediaId/comments` |
+| GET | `/api/instagram/comments/:commentId/replies` |
+| POST | `/api/instagram/comments/:commentId/reply` `{ message }` |
+| DELETE | `/api/instagram/comments/:commentId` |
 
-| Method | Path | Описание |
-|--------|------|----------|
-| GET | `/api/instagram/media/:mediaId/comments?after=&limit=` | List |
-| GET | `/api/instagram/comments/:commentId/replies` | Replies |
-| POST | `/api/instagram/comments/:commentId/reply` | Body `{ message }` |
-| DELETE | `/api/instagram/comments/:commentId` | Delete |
+### Reconciliation (TZ §18 — recovery fallback)
 
-### Файлы
+Webhook даёт near-real-time. Reconciliation — periodic/manual recovery, когда:
+- webhooks недоступны (local dev без HTTPS)
+- событие потеряно
+- post появился в БД после webhook (comment deferred)
+
+| Method | Path |
+|--------|------|
+| POST | `/api/instagram/comments/reconcile/post` `{ postId \| instagramMediaId }` |
+| POST | `/api/instagram/comments/reconcile/profile` `{ profileId, limit? }` |
+| POST | `/api/instagram/comments/reconcile/profile/async` → BullMQ |
+
+### Как работает reconcile
+
+```
+1. Найти Post (status=PUBLISHED, есть instagramMediaId)
+2. listComments(mediaId) с pagination (limit 50, maxPages)
+3. upsert Comment по instagramId (idempotent)
+4. Вернуть { fetched, created, updated }
+```
+
+Profile reconcile: последние N published постов (default 20).
+
+### Входящие через webhook
+
+```
+Meta → webhook → enqueue → worker → upsert Comment
+(если Post ещё нет — comment deferred, появится после media sync + reconcile)
+```
+
+## Файлы
 
 - `comments.routes.ts`
-- `comments.service.ts` → client methods
+- `comments.service.ts` — list/reply/delete + re-export reconcile
+- `comments.reconciliation.ts` — Graph → DB upsert logic
 
-## Как работает входящий комментарий (ТЗ §18)
+## Не сделано
 
-```
-Meta Webhook
-  → POST /api/instagram/webhook
-  → persist InstagramWebhookEvent (idempotent)
-  → enqueueWebhookEvent
-  → webhook worker
-  → upsert Comment (если Post с instagramMediaId найден)
-```
-
-## Не сделано (ТЗ §18–21)
-
-- Periodic reconciliation (polling comments как recovery)
-- Comment Agent (Claude → structured JSON action/reply)
+- Comment Agent (Claude → action/reply JSON)
 - Policy Engine перед reply
 - Auto-reply pipeline

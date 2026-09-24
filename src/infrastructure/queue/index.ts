@@ -12,6 +12,8 @@ export {
   type SyncAccountMediaJobData,
   type CollectProfileInsightsJobData,
   type CollectPostInsightsJobData,
+  type ReconcileProfileCommentsJobData,
+  type ReconcilePostCommentsJobData,
 } from "./types";
 
 export {
@@ -21,6 +23,7 @@ export {
   containerStatusQueue,
   mediaSyncQueue,
   insightsQueue,
+  commentReconcileQueue,
   enqueueTokenRefresh,
   enqueueRefreshAllExpiring,
   enqueueWebhookEvent,
@@ -30,6 +33,8 @@ export {
   enqueueMediaSync,
   enqueueCollectInsights,
   enqueueCollectPostInsights,
+  enqueueCommentReconciliation,
+  enqueuePostCommentReconciliation,
   closeAllQueues,
 } from "./queues";
 

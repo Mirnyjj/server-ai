@@ -12,6 +12,8 @@ import {
   type SyncAccountMediaJobData,
   type CollectProfileInsightsJobData,
   type CollectPostInsightsJobData,
+  type ReconcileProfileCommentsJobData,
+  type ReconcilePostCommentsJobData,
 } from "./types";
 
 const connection = getBullMqConnection();
@@ -29,6 +31,7 @@ export const publishQueue = createQueue(QUEUE_NAMES.PUBLISH);
 export const containerStatusQueue = createQueue(QUEUE_NAMES.CONTAINER_STATUS);
 export const mediaSyncQueue = createQueue(QUEUE_NAMES.MEDIA_SYNC);
 export const insightsQueue = createQueue(QUEUE_NAMES.INSIGHTS);
+export const commentReconcileQueue = createQueue(QUEUE_NAMES.COMMENT_RECONCILE);
 
 export async function enqueueTokenRefresh(
   data: RefreshConnectionJobData,
@@ -103,6 +106,27 @@ export async function enqueueCollectPostInsights(
   });
 }
 
+export async function enqueueCommentReconciliation(
+  data: ReconcileProfileCommentsJobData,
+) {
+  return commentReconcileQueue.add(
+    JOB_NAMES.RECONCILE_PROFILE_COMMENTS,
+    data,
+    {
+      jobId: `comment-reconcile-${data.profileId}-${Date.now()}`,
+    },
+  );
+}
+
+export async function enqueuePostCommentReconciliation(
+  data: ReconcilePostCommentsJobData,
+) {
+  const key = data.postId ?? data.instagramMediaId ?? "unknown";
+  return commentReconcileQueue.add(JOB_NAMES.RECONCILE_POST_COMMENTS, data, {
+    jobId: `comment-reconcile-post-${key}-${Date.now()}`,
+  });
+}
+
 export async function closeAllQueues(): Promise<void> {
   await Promise.all([
     tokenRefreshQueue.close(),
@@ -111,5 +135,6 @@ export async function closeAllQueues(): Promise<void> {
     containerStatusQueue.close(),
     mediaSyncQueue.close(),
     insightsQueue.close(),
+    commentReconcileQueue.close(),
   ]);
 }
