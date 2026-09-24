@@ -32,22 +32,24 @@ const envSchema = z
     LUNA_BASE_URL: z.string().url().optional(),
     LUNA_MODEL: z.string().optional(),
 
+    /** stub | http — http uses OpenAI-compatible or custom generate endpoint */
     IMAGE_GENERATOR_PROVIDER: z.string().optional(),
     IMAGE_GENERATOR_API_KEY: z.string().optional(),
     IMAGE_GENERATOR_MODEL: z.string().optional(),
+    /** e.g. https://api.example.com/v1/images/generations */
+    IMAGE_GENERATOR_BASE_URL: z.string().url().optional(),
 
     VIDEO_GENERATOR_PROVIDER: z.string().optional(),
     VIDEO_GENERATOR_API_KEY: z.string().optional(),
     VIDEO_GENERATOR_MODEL: z.string().optional(),
+    VIDEO_GENERATOR_BASE_URL: z.string().url().optional(),
 
-    /** Object Storage: local | s3 | r2 | minio */
     STORAGE_PROVIDER: z.string().optional(),
     STORAGE_BUCKET: z.string().optional(),
     STORAGE_REGION: z.string().optional(),
     STORAGE_ENDPOINT: z.string().optional(),
     STORAGE_ACCESS_KEY_ID: z.string().optional(),
     STORAGE_SECRET_ACCESS_KEY: z.string().optional(),
-    /** Public CDN / bucket URL prefix (no trailing slash) */
     STORAGE_PUBLIC_BASE_URL: z.string().optional(),
     STORAGE_FORCE_PATH_STYLE: z.string().optional(),
     STORAGE_ACL: z.string().optional(),
