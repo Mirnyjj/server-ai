@@ -1,4 +1,3 @@
-/** Queue names — keep stable; changing them creates new queues in Redis */
 export const QUEUE_NAMES = {
   TOKEN_REFRESH: "token-refresh",
   WEBHOOK: "webhook",
@@ -7,6 +6,7 @@ export const QUEUE_NAMES = {
   MEDIA_SYNC: "media-sync",
   INSIGHTS: "insights",
   COMMENT_RECONCILE: "comment-reconcile",
+  AGENT: "agent",
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -29,6 +29,9 @@ export const JOB_NAMES = {
 
   RECONCILE_PROFILE_COMMENTS: "reconcile-profile-comments",
   RECONCILE_POST_COMMENTS: "reconcile-post-comments",
+
+  PROCESS_COMMENT: "process-comment",
+  PROCESS_DIRECT_MESSAGE: "process-direct-message",
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
@@ -90,4 +93,12 @@ export type ReconcileProfileCommentsJobData = {
 export type ReconcilePostCommentsJobData = {
   postId?: string;
   instagramMediaId?: string;
+};
+
+export type ProcessCommentJobData = {
+  commentId: string;
+};
+
+export type ProcessDirectMessageJobData = {
+  messageId: string;
 };

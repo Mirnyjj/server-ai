@@ -1,38 +1,26 @@
-# BullMQ Queue Infrastructure
+# BullMQ — 8 queues
 
-## Очереди (7)
+| Queue | Jobs |
+|-------|------|
+| token-refresh | refresh tokens |
+| webhook | Meta events → DB + **enqueue agent** |
+| publish | create container + publish |
+| container-status | poll FINISHED |
+| media-sync | Graph → DB |
+| insights | PostMetric |
+| comment-reconcile | Graph comments → DB |
+| **agent** | process-comment, process-direct-message |
 
-| Queue | Jobs | Concurrency |
-|-------|------|-------------|
-| `token-refresh` | refresh-connection, refresh-all-expiring | 2 |
-| `webhook` | process-webhook-event | 5 |
-| `publish` | publish-post, create-and-publish | 3 |
-| `container-status` | poll-container | 5 |
-| `media-sync` | sync-account-media | 2 |
-| `insights` | collect-profile-insights, collect-post-insights | 2 |
-| `comment-reconcile` | reconcile-profile-comments, reconcile-post-comments | 2 |
+## Autonomous loop
 
-## Enqueue API
-
-```ts
-import {
-  enqueueTokenRefresh,
-  enqueueWebhookEvent,
-  enqueueCreateAndPublish,
-  enqueuePollContainer,
-  enqueueMediaSync,
-  enqueueCollectInsights,
-  enqueueCommentReconciliation,
-} from "./infrastructure/queue";
+```
+Meta webhook → webhook worker → upsert Comment/DM
+  → enqueueProcessComment / enqueueProcessDirectMessage
+    → agent worker → Luna → Policy → Graph API | Telegram
 ```
 
-## Workers
-
-`startWorkers()` в `src/index.ts` (или `npm run worker`).
-
-Repeatable: token-refresh every 6h.
-
-## Не сделано
-
-- `agent` queue — processComment / processDM пока только HTTP
-- Repeatable comment-reconcile / insights (можно добавить cron jobs)
+```
+POST /api/ai/pipeline/run { autoPublish: true }
+  → scenario → gen → storage → Post READY
+  → enqueueCreateAndPublish (if HTTPS urls)
+```

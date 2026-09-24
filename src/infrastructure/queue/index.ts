@@ -14,6 +14,8 @@ export {
   type CollectPostInsightsJobData,
   type ReconcileProfileCommentsJobData,
   type ReconcilePostCommentsJobData,
+  type ProcessCommentJobData,
+  type ProcessDirectMessageJobData,
 } from "./types";
 
 export {
@@ -24,6 +26,7 @@ export {
   mediaSyncQueue,
   insightsQueue,
   commentReconcileQueue,
+  agentQueue,
   enqueueTokenRefresh,
   enqueueRefreshAllExpiring,
   enqueueWebhookEvent,
@@ -35,6 +38,8 @@ export {
   enqueueCollectPostInsights,
   enqueueCommentReconciliation,
   enqueuePostCommentReconciliation,
+  enqueueProcessComment,
+  enqueueProcessDirectMessage,
   closeAllQueues,
 } from "./queues";
 

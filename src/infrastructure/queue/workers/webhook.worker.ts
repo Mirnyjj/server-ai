@@ -4,6 +4,10 @@ import { QUEUE_NAMES, JOB_NAMES } from "../types";
 import type { ProcessWebhookEventJobData } from "../types";
 import { prisma } from "../../../../prisma/prisma";
 import { MessageDirection } from "../../../generated/prisma/enums";
+import {
+  enqueueProcessComment,
+  enqueueProcessDirectMessage,
+} from "../queues";
 
 async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
   const { webhookEventId } = job.data;
@@ -38,6 +42,7 @@ async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
     };
 
     const field = event.field;
+    let enqueuedAgent = false;
 
     if (field === "comments") {
       const value =
@@ -64,7 +69,7 @@ async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
         });
 
         if (post) {
-          await prisma.comment.upsert({
+          const comment = await prisma.comment.upsert({
             where: { instagramId: commentId },
             create: {
               instagramId: commentId,
@@ -77,6 +82,11 @@ async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
             update: { text, username },
           });
           job.log(`Upserted comment ${commentId} for post ${post.id}`);
+
+          // Autonomous: Luna agent via queue
+          await enqueueProcessComment({ commentId: comment.id });
+          enqueuedAgent = true;
+          job.log(`Enqueued agent process-comment ${comment.id}`);
         } else {
           job.log(`Post for media ${mediaId} not found — comment deferred`);
         }
@@ -115,7 +125,7 @@ async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
             update: {},
           });
 
-          await prisma.directMessage.upsert({
+          const dm = await prisma.directMessage.upsert({
             where: { instagramMessageId: message.mid },
             create: {
               instagramMessageId: message.mid,
@@ -129,6 +139,10 @@ async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
           });
 
           job.log(`Upserted DM ${message.mid} from ${sender.id}`);
+
+          await enqueueProcessDirectMessage({ messageId: dm.id });
+          enqueuedAgent = true;
+          job.log(`Enqueued agent process-dm ${dm.id}`);
         }
       }
     }
@@ -142,7 +156,7 @@ async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
       },
     });
 
-    return { processed: true, field };
+    return { processed: true, field, enqueuedAgent };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Webhook processing failed";

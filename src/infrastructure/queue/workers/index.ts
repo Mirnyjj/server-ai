@@ -6,6 +6,7 @@ import { createContainerStatusWorker } from "./container-status.worker";
 import { createMediaSyncWorker } from "./media-sync.worker";
 import { createInsightsWorker } from "./insights.worker";
 import { createCommentReconcileWorker } from "./comment-reconcile.worker";
+import { createAgentWorker } from "./agent.worker";
 
 let workers: Worker[] = [];
 
@@ -22,6 +23,7 @@ export function startWorkers(): Worker[] {
     createMediaSyncWorker(),
     createInsightsWorker(),
     createCommentReconcileWorker(),
+    createAgentWorker(),
   ];
 
   console.log(`[queues] started ${workers.length} workers`);
@@ -66,4 +68,5 @@ export {
   createMediaSyncWorker,
   createInsightsWorker,
   createCommentReconcileWorker,
+  createAgentWorker,
 };

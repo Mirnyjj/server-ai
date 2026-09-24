@@ -14,6 +14,8 @@ import {
   type CollectPostInsightsJobData,
   type ReconcileProfileCommentsJobData,
   type ReconcilePostCommentsJobData,
+  type ProcessCommentJobData,
+  type ProcessDirectMessageJobData,
 } from "./types";
 
 const connection = getBullMqConnection();
@@ -32,6 +34,7 @@ export const containerStatusQueue = createQueue(QUEUE_NAMES.CONTAINER_STATUS);
 export const mediaSyncQueue = createQueue(QUEUE_NAMES.MEDIA_SYNC);
 export const insightsQueue = createQueue(QUEUE_NAMES.INSIGHTS);
 export const commentReconcileQueue = createQueue(QUEUE_NAMES.COMMENT_RECONCILE);
+export const agentQueue = createQueue(QUEUE_NAMES.AGENT);
 
 export async function enqueueTokenRefresh(
   data: RefreshConnectionJobData,
@@ -127,6 +130,23 @@ export async function enqueuePostCommentReconciliation(
   });
 }
 
+export async function enqueueProcessComment(data: ProcessCommentJobData) {
+  return agentQueue.add(JOB_NAMES.PROCESS_COMMENT, data, {
+    jobId: `agent-comment-${data.commentId}`,
+    // slight delay so DB commit is visible
+    delay: 500,
+  });
+}
+
+export async function enqueueProcessDirectMessage(
+  data: ProcessDirectMessageJobData,
+) {
+  return agentQueue.add(JOB_NAMES.PROCESS_DIRECT_MESSAGE, data, {
+    jobId: `agent-dm-${data.messageId}`,
+    delay: 500,
+  });
+}
+
 export async function closeAllQueues(): Promise<void> {
   await Promise.all([
     tokenRefreshQueue.close(),
@@ -136,5 +156,6 @@ export async function closeAllQueues(): Promise<void> {
     mediaSyncQueue.close(),
     insightsQueue.close(),
     commentReconcileQueue.close(),
+    agentQueue.close(),
   ]);
 }
