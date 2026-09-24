@@ -5,7 +5,7 @@ import { createInstagramClient } from "../instagram/client/instagram.client";
 import { notifySensitiveComment } from "../telegram/telegram.notify";
 import { PolicyEngine } from "./policy/policy.engine";
 import type { CommentAgentDecision, AgentRunResult } from "./types";
-import { runClaudeCommentDecision } from "./claude/comment.prompt";
+import { runLunaCommentDecision } from "./luna/comment.decision";
 
 export async function processComment(commentId: string): Promise<
   AgentRunResult<CommentAgentDecision>
@@ -30,16 +30,15 @@ export async function processComment(commentId: string): Promise<
   const policy = await PolicyEngine.forProfile(profile.id);
 
   if (comment.replied) {
-    const decision: CommentAgentDecision = {
-      action: "ignore",
-      category: comment.category ?? "unknown",
-      confidence: comment.aiConfidence ?? 1,
-      reply: null,
-      requiresHuman: false,
-      reasoning: "Already replied",
-    };
     return {
-      decision,
+      decision: {
+        action: "ignore",
+        category: comment.category ?? "unknown",
+        confidence: comment.aiConfidence ?? 1,
+        reply: null,
+        requiresHuman: false,
+        reasoning: "Already replied",
+      },
       policyAllowed: false,
       policyReason: "Already replied",
       policyCode: "ALREADY_REPLIED",
@@ -47,7 +46,7 @@ export async function processComment(commentId: string): Promise<
     };
   }
 
-  const decision = await runClaudeCommentDecision({
+  const decision = await runLunaCommentDecision({
     persona: profile.persona,
     writingStyle: profile.writingStyle,
     commentText: comment.text,
@@ -86,7 +85,6 @@ export async function processComment(commentId: string): Promise<
         data: { requiresHuman: true },
       });
 
-      // TZ §25 — Telegram escalate
       void notifySensitiveComment({
         commentId: comment.id,
         username: comment.username,

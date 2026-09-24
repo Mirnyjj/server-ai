@@ -12,6 +12,7 @@ import { registerAgentRoutes } from "./modules/agent/agent.routes";
 import { registerTelegramRoutes } from "./modules/telegram/telegram.routes";
 import { registerReferenceRoutes } from "./modules/ai/references/reference.routes";
 import { registerAiContentRoutes } from "./modules/ai/content/content.routes";
+import { registerPipelineRoutes } from "./modules/ai/pipeline/pipeline.routes";
 
 export async function createApp() {
   const app = Fastify({
@@ -38,6 +39,7 @@ export async function createApp() {
   await registerTelegramRoutes(app);
   await registerReferenceRoutes(app);
   await registerAiContentRoutes(app);
+  await registerPipelineRoutes(app);
 
   return app;
 }

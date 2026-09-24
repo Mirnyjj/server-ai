@@ -5,7 +5,7 @@ import { createInstagramClient } from "../instagram/client/instagram.client";
 import { notifySensitiveDm } from "../telegram/telegram.notify";
 import { PolicyEngine } from "./policy/policy.engine";
 import type { MessageAgentDecision, AgentRunResult } from "./types";
-import { runClaudeMessageDecision } from "./claude/message.prompt";
+import { runLunaMessageDecision } from "./luna/message.decision";
 
 export async function processDirectMessage(
   messageId: string,
@@ -39,16 +39,15 @@ export async function processDirectMessage(
   const policy = await PolicyEngine.forProfile(profile.id);
 
   if (message.replied) {
-    const decision: MessageAgentDecision = {
-      action: "ignore",
-      category: message.category ?? "unknown",
-      confidence: message.aiConfidence ?? 1,
-      reply: null,
-      requiresHuman: false,
-      reasoning: "Already replied",
-    };
     return {
-      decision,
+      decision: {
+        action: "ignore",
+        category: message.category ?? "unknown",
+        confidence: message.aiConfidence ?? 1,
+        reply: null,
+        requiresHuman: false,
+        reasoning: "Already replied",
+      },
       policyAllowed: false,
       policyReason: "Already replied",
       policyCode: "ALREADY_REPLIED",
@@ -71,7 +70,7 @@ export async function processDirectMessage(
       text: m.text,
     }));
 
-  const decision = await runClaudeMessageDecision({
+  const decision = await runLunaMessageDecision({
     persona: profile.persona,
     writingStyle: profile.writingStyle,
     messageText: message.text,
@@ -142,21 +141,15 @@ export async function processDirectMessage(
         apiVersion: env.INSTAGRAM_API_VERSION,
       });
 
-      const recipientId = message.thread.instagramThreadId;
-      const igUserId = message.thread.account.instagramUserId;
-
       const result = await client.sendMessage(
-        igUserId,
-        recipientId,
+        message.thread.account.instagramUserId,
+        message.thread.instagramThreadId,
         decision.reply,
       );
 
       await prisma.directMessage.update({
         where: { id: message.id },
-        data: {
-          replied: true,
-          requiresHuman: false,
-        },
+        data: { replied: true, requiresHuman: false },
       });
 
       if (result.message_id) {
