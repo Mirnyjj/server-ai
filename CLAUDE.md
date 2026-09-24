@@ -3,69 +3,48 @@
 ## Что это
 
 Backend для автономного управления Instagram-профилем AI-персонажа через **официальный Meta Graph API**.
-Управление через Telegram (control plane), autonomous jobs работают без Telegram.
 
 Стек: Node.js · TypeScript · Fastify · Prisma · PostgreSQL · Redis · BullMQ · Anthropic Claude
 
-## Соответствие ТЗ (на момент ветки fix/instagram-api-db-sync)
+## Соответствие ТЗ
 
-| Блок ТЗ | Статус | Где |
-|---------|--------|-----|
-| OAuth Instagram Login | ✅ | `modules/instagram/auth` |
-| Encrypted tokens at rest | ✅ | `lib/crypto` + `InstagramConnection` |
-| Token refresh (periodic) | ✅ | BullMQ `token-refresh` worker |
-| Graph API client | ✅ | `modules/instagram/client` |
-| Profile / Account sync | ✅ | profile + media services |
-| Media list + DB sync | ✅ | `media.service.syncPosts` |
-| Content publish (image/reel/carousel/story) | ✅ | content + publish queue |
-| Container status polling | ✅ | `container-status` queue |
-| Webhooks (verify + signature + idempotency) | ✅ | webhooks + `webhook` queue |
-| Comments API (list/reply/delete) | ✅ | comments module |
-| Comments → DB via webhook | ✅ | webhook worker |
-| DM send | ✅ | messages module |
-| DM → DB via webhook | ✅ | webhook worker |
-| BullMQ infrastructure | ✅ | `infrastructure/queue` |
-| Insights API + storage | ❌ | **следующий приоритет** |
-| Comment Agent (Claude) | ❌ | |
-| DM Agent + messaging window policy | ❌ | |
-| Policy Engine | ❌ | |
-| InstagramProvider abstraction | ⚠️ partial (client only) | |
-| Object Storage (S3/R2) | ❌ | |
-| Media generation | ❌ | |
-| Content strategy agent | ❌ | |
-| Telegram control plane | ❌ | |
-| MCP adapter | ❌ | |
+| Блок ТЗ | Статус |
+|---------|--------|
+| OAuth + encrypted tokens + refresh | ✅ |
+| Local dev mode (без HTTPS redirect) | ✅ |
+| Graph API client | ✅ |
+| Profile / Account / Media sync → DB | ✅ |
+| Publish image/reel/carousel/story | ✅ |
+| Container status polling (BullMQ) | ✅ |
+| Webhooks (verify, signature, idempotency, queue) | ✅ |
+| Comments API + webhook → DB | ✅ |
+| DM send + webhook → DB | ✅ |
+| BullMQ (6 очередей) | ✅ |
+| **Insights** (media + account + PostMetric) | ✅ |
+| Comment reconciliation (periodic) | ❌ next |
+| Comment/DM Agent (Claude) | ❌ |
+| Policy Engine | ❌ |
+| InstagramProvider interface | ⚠️ partial |
+| Object Storage / Media generators | ❌ |
+| Telegram control plane | ❌ |
+| MCP adapter | ❌ |
 
-## Следующие приоритеты (по ТЗ)
+## Следующие приоритеты
 
-1. **Insights module** — Graph API insights + `PostMetric` / AccountMetric, очередь сбора
-2. **Comment reconciliation** — periodic sync комментариев (fallback к webhook)
-3. **Policy Engine** — whitelist действий до любого Meta API call от агента
-4. **Comment / DM Agent** — Claude structured output → policy → API
-5. **InstagramProvider interface** — изоляция Agent от Graph API деталей
-6. **Object Storage** — публичные URL для media containers
-7. **Telegram bot** — control plane (connect, approve, escalate)
+1. **Comment reconciliation** — periodic sync comments as webhook fallback
+2. **Policy Engine** — whitelist before any Meta API call from agent
+3. **Comment / DM Agent** — Claude structured output → policy → API
+4. **InstagramProvider interface**
+5. Object Storage → generators → content plan
+6. Telegram bot
+
+## Local dev
+
+Если `INSTAGRAM_REDIRECT_URI` не задан / не HTTPS → dev mode:
+- OAuth и webhooks отключены
+- Работает через `INSTAGRAM_MARKER`
+- Bootstrap: `POST /api/instagram/auth/dev/bootstrap`
 
 ## Структура
 
-```
-src/
-├── app.ts / index.ts / worker.ts
-├── config/env.ts
-├── infrastructure/
-│   ├── prisma.ts
-│   ├── redis.ts
-│   └── queue/          # BullMQ
-├── lib/crypto/         # AES-256-GCM token encryption
-└── modules/instagram/
-    ├── auth/
-    ├── client/
-    ├── profile/
-    ├── media/
-    ├── content/
-    ├── comments/
-    ├── messages/
-    └── webhooks/
-```
-
-Каждый модуль содержит свой `CLAUDE.md` с описанием «что сделано» и «как работает».
+См. `CLAUDE.md` в каждом модуле.

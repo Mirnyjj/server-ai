@@ -10,6 +10,8 @@ export {
   type CreateAndPublishJobData,
   type PollContainerJobData,
   type SyncAccountMediaJobData,
+  type CollectProfileInsightsJobData,
+  type CollectPostInsightsJobData,
 } from "./types";
 
 export {
@@ -18,6 +20,7 @@ export {
   publishQueue,
   containerStatusQueue,
   mediaSyncQueue,
+  insightsQueue,
   enqueueTokenRefresh,
   enqueueRefreshAllExpiring,
   enqueueWebhookEvent,
@@ -25,6 +28,8 @@ export {
   enqueueCreateAndPublish,
   enqueuePollContainer,
   enqueueMediaSync,
+  enqueueCollectInsights,
+  enqueueCollectPostInsights,
   closeAllQueues,
 } from "./queues";
 

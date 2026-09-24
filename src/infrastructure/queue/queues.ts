@@ -10,6 +10,8 @@ import {
   type CreateAndPublishJobData,
   type PollContainerJobData,
   type SyncAccountMediaJobData,
+  type CollectProfileInsightsJobData,
+  type CollectPostInsightsJobData,
 } from "./types";
 
 const connection = getBullMqConnection();
@@ -26,8 +28,7 @@ export const webhookQueue = createQueue(QUEUE_NAMES.WEBHOOK);
 export const publishQueue = createQueue(QUEUE_NAMES.PUBLISH);
 export const containerStatusQueue = createQueue(QUEUE_NAMES.CONTAINER_STATUS);
 export const mediaSyncQueue = createQueue(QUEUE_NAMES.MEDIA_SYNC);
-
-// ─── Typed enqueue helpers ──────────────────────────────────
+export const insightsQueue = createQueue(QUEUE_NAMES.INSIGHTS);
 
 export async function enqueueTokenRefresh(
   data: RefreshConnectionJobData,
@@ -47,9 +48,7 @@ export async function enqueueRefreshAllExpiring(
   });
 }
 
-export async function enqueueWebhookEvent(
-  data: ProcessWebhookEventJobData,
-) {
+export async function enqueueWebhookEvent(data: ProcessWebhookEventJobData) {
   return webhookQueue.add(JOB_NAMES.PROCESS_WEBHOOK_EVENT, data, {
     jobId: `webhook-${data.webhookEventId}`,
   });
@@ -61,9 +60,7 @@ export async function enqueuePublishPost(data: PublishPostJobData) {
   });
 }
 
-export async function enqueueCreateAndPublish(
-  data: CreateAndPublishJobData,
-) {
+export async function enqueueCreateAndPublish(data: CreateAndPublishJobData) {
   return publishQueue.add(JOB_NAMES.CREATE_AND_PUBLISH, data, {
     jobId: `create-publish-${data.postId}`,
   });
@@ -79,7 +76,7 @@ export async function enqueuePollContainer(
     { ...data, attempt },
     {
       jobId: `poll-${data.containerId}-${attempt}`,
-      delay: opts?.delay ?? 15_000, // first poll after 15s
+      delay: opts?.delay ?? 15_000,
     },
   );
 }
@@ -90,7 +87,22 @@ export async function enqueueMediaSync(data: SyncAccountMediaJobData) {
   });
 }
 
-/** Close all queue connections (graceful shutdown) */
+export async function enqueueCollectInsights(
+  data: CollectProfileInsightsJobData,
+) {
+  return insightsQueue.add(JOB_NAMES.COLLECT_PROFILE_INSIGHTS, data, {
+    jobId: `insights-profile-${data.profileId}-${Date.now()}`,
+  });
+}
+
+export async function enqueueCollectPostInsights(
+  data: CollectPostInsightsJobData,
+) {
+  return insightsQueue.add(JOB_NAMES.COLLECT_POST_INSIGHTS, data, {
+    jobId: `insights-post-${data.postId}-${Date.now()}`,
+  });
+}
+
 export async function closeAllQueues(): Promise<void> {
   await Promise.all([
     tokenRefreshQueue.close(),
@@ -98,5 +110,6 @@ export async function closeAllQueues(): Promise<void> {
     publishQueue.close(),
     containerStatusQueue.close(),
     mediaSyncQueue.close(),
+    insightsQueue.close(),
   ]);
 }

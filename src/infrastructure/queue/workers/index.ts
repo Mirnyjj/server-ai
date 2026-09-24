@@ -4,14 +4,10 @@ import { createWebhookWorker } from "./webhook.worker";
 import { createPublishWorker } from "./publish.worker";
 import { createContainerStatusWorker } from "./container-status.worker";
 import { createMediaSyncWorker } from "./media-sync.worker";
-import { enqueueRefreshAllExpiring } from "../queues";
+import { createInsightsWorker } from "./insights.worker";
 
 let workers: Worker[] = [];
 
-/**
- * Start all BullMQ workers.
- * Call once from the application entrypoint.
- */
 export function startWorkers(): Worker[] {
   if (workers.length > 0) {
     return workers;
@@ -23,14 +19,10 @@ export function startWorkers(): Worker[] {
     createPublishWorker(),
     createContainerStatusWorker(),
     createMediaSyncWorker(),
+    createInsightsWorker(),
   ];
 
   console.log(`[queues] started ${workers.length} workers`);
-
-  // Schedule periodic token refresh check (every 6 hours)
-  // Uses a delayed job that re-enqueues itself conceptually via repeat;
-  // for simplicity we enqueue once on boot and rely on external cron or
-  // a repeatable job registered below.
   void registerRepeatableJobs();
 
   return workers;
@@ -46,7 +38,7 @@ async function registerRepeatableJobs() {
       { withinHours: 48 },
       {
         repeat: {
-          every: 6 * 60 * 60 * 1000, // every 6 hours
+          every: 6 * 60 * 60 * 1000,
         },
         jobId: "repeatable-refresh-all-expiring",
       },
@@ -70,4 +62,5 @@ export {
   createPublishWorker,
   createContainerStatusWorker,
   createMediaSyncWorker,
+  createInsightsWorker,
 };
