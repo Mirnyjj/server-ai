@@ -1,55 +1,58 @@
-# Instagram API — Status (updated)
+# Instagram Module
 
 ## Цель
 
-Backend для AI Instagram-агента на официальном Instagram Graph API.
-Используем Instagram Login / Business Login for Instagram, не `instagrapi` и не Facebook Login.
+Единственная точка интеграции с Instagram через официальный Graph API.
+Не используется instagrapi, username/password, private API.
 
-Архитектура:
+## Архитектура
 
-HTTP route → service → instagram.client → Instagram Graph API
+```
+HTTP route
+  → service
+    → token.resolver (DB encrypted token | INSTAGRAM_MARKER)
+      → instagram.client
+        → graph.instagram.com/{INSTAGRAM_API_VERSION}
+```
 
-Токены: DB (encrypted) → fallback INSTAGRAM_MARKER (dev only).
+Тяжёлая обработка (webhook events, publish, token refresh, media sync) идёт через **BullMQ**.
 
-## Что исправлено в ветке fix/instagram-api-db-sync
+## Подмодули
 
-### 1. Env
-- Добавлены `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`, `INSTAGRAM_MARKER` (optional), `DIRECT_URL` (optional), `INSTAGRAM_WEBHOOK_APP_SECRET`.
+| Папка | Назначение | CLAUDE.md |
+|-------|------------|-----------|
+| `auth/` | OAuth, tokens, connections | да |
+| `client/` | Graph API transport | да |
+| `profile/` | Профиль + account sync | да |
+| `media/` | List / sync media → DB | да |
+| `content/` | Publish image/reel/carousel/story | да |
+| `comments/` | List / reply / delete comments | да |
+| `messages/` | Send DM | да |
+| `webhooks/` | Meta webhook verify + enqueue | да |
 
-### 2. Token resolver
-- `src/modules/instagram/auth/token.resolver.ts`
-- Приоритет: Active InstagramConnection (decrypt) → INSTAGRAM_MARKER
-- Все routes используют resolver вместо хардкода MARKER.
+## Что сделано
 
-### 3. Webhooks (приоритет ТЗ)
-- GET verification исправлен (сравнивает с `INSTAGRAM_WEBHOOK_VERIFY_TOKEN`).
-- POST: проверка `X-Hub-Signature-256` (HMAC-SHA256).
-- Сохранение в `InstagramWebhookEvent` с idempotency по eventId.
-- Обработка comments → upsert `Comment` (если Post уже в БД).
-- Обработка messaging → upsert `DirectThread` + `DirectMessage`.
+- OAuth flow (authorize → callback → long-lived token → encrypted DB)
+- Token resolver для всех routes
+- Full media sync (posts + assets + post_media) с pagination
+- Content publishing pipeline + async container polling через очередь
+- Webhooks: verification, HMAC signature, idempotency, enqueue
+- Comments & DM API + сохранение входящих через webhook worker
+- CORE MVP scopes из ТЗ
 
-### 4. Types
-- Убраны дубликаты в `instagram.types.ts`.
+## Что НЕ сделано (см. корневой CLAUDE.md)
 
-### 5. Pagination
-- `listMedia` / `listComments` принимают `after` + `limit` и прокидывают в client.
+Insights, Comment/DM Agent, Policy Engine, Provider interface, Object Storage, Telegram.
 
-### 6. Scopes
-- CORE MVP: basic, content_publish, manage_comments, manage_insights, manage_messages.
+## Env
 
-### 7. Prisma
-- `src/infrastructure/prisma.ts` реэкспортирует канонический клиент.
-
-### 8. Content / Comments / Messages / Profile / Media routes
-- Переведены на token resolver.
-- Убраны debug console.log.
-- Корректная обработка ошибок (400/500).
-
-## Что осталось (следующие итерации)
-
-1. Comment sync endpoint (listComments → DB upsert).
-2. Insights module.
-3. BullMQ: token refresh, container polling, webhook queue.
-4. Persist Post + InstagramMediaContainer после publish.
-5. Убрать INSTAGRAM_MARKER полностью после стабильного OAuth.
-6. MCP adapter.
+```
+INSTAGRAM_APP_ID=
+INSTAGRAM_APP_SECRET=
+INSTAGRAM_REDIRECT_URI=
+INSTAGRAM_API_VERSION=v22.0   # или актуальная
+INSTAGRAM_TOKEN_ENCRYPTION_KEY=  # min 32 chars
+INSTAGRAM_WEBHOOK_VERIFY_TOKEN=
+INSTAGRAM_MARKER=              # optional, dev only
+INSTAGRAM_WEBHOOK_APP_SECRET=  # optional, fallback APP_SECRET
+```
