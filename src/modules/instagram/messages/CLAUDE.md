@@ -1,36 +1,19 @@
 # Messages Module
 
-## Что сделано
+## Graph API
 
-Отправка Direct Messages через Graph API.
-Входящие DM из webhook → `DirectThread` + `DirectMessage`.
+`POST /api/instagram/messages/send` `{ instagramUserId, recipientId, message }`
 
-### Endpoints
+## Webhook → DB
 
-| Method | Path | Body |
-|--------|------|------|
-| POST | `/api/instagram/messages/send` | instagramUserId, recipientId, message |
+Messaging events → `DirectThread` + `DirectMessage` (INBOUND).
 
-### Файлы
+## Agent
 
-- `messages.routes.ts`
-- `messages.service.ts` → `client.sendMessage`
+`POST /api/agent/messages/:messageId/process` — DM Agent + Policy + 24h window.
 
-## Как работает входящий DM (ТЗ §22)
+## Не сделано
 
-```
-Meta Webhook (messaging)
-  → persist + enqueue
-  → webhook worker
-  → upsert DirectThread (instagramThreadId = sender.id)
-  → upsert DirectMessage (direction=INBOUND)
-```
-
-## Не сделано (ТЗ §22–25)
-
-- DM Agent (Claude)
-- Messaging window / recipient eligibility checks
-- Policy Engine
-- Sensitive message escalation → Telegram
-- Periodic reconciliation conversations
-- Human Agent mode
+- Auto-trigger agent from webhook worker
+- Periodic conversation reconciliation
+- Telegram escalate for requiresHuman

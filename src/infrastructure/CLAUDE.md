@@ -1,28 +1,9 @@
 # Infrastructure
 
-## Что сделано
-
-### prisma.ts
-
-Реэкспорт канонического Prisma client из `prisma/prisma.ts`
-(adapter-pg + DIRECT_URL).
-
-Модули импортируют либо `prisma/prisma`, либо `infrastructure/prisma`.
-
-### redis.ts
-
-- `createRedisConnection()` / `getRedisConnection()` / `closeRedisConnection()`
-- `maxRetriesPerRequest: null` — требование BullMQ
-- Используется также OAuth state (`auth/state.service`)
-
-### queue/
-
-См. `queue/CLAUDE.md`.
-
-## Docker
+- `prisma.ts` — re-export Prisma client
+- `redis.ts` — ioredis for BullMQ + OAuth state
+- `queue/` — 7 BullMQ queues (см. `queue/CLAUDE.md`)
 
 ```bash
-docker compose up -d redis   # port 6379, AOF persistence
+docker compose up -d redis
 ```
-
-PostgreSQL — внешний (DATABASE_URL / DIRECT_URL в env).
