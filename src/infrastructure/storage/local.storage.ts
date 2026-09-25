@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
-
 import { writeFile } from "node:fs/promises";
+
 import { env } from "../../config/env.js";
 import type {
   ObjectStorage,
@@ -13,33 +13,53 @@ import { guessMimeFromUrl } from "./key.js";
 
 /**
  * Local filesystem storage for development.
- * Files under STORAGE_LOCAL_PATH, served via GET /media/* if public base points at API.
  *
- * Meta Graph API needs a real public HTTPS URL — local paths only work behind a tunnel
- * (ngrok/cloudflared) with STORAGE_PUBLIC_BASE_URL set to that tunnel.
+ * Files are stored under STORAGE_LOCAL_PATH and should be exposed
+ * through GET /media/*.
+ *
+ * Meta Graph API requires a real public HTTPS URL.
+ * For local development use a tunnel, for example:
+ *
+ * STORAGE_PUBLIC_BASE_URL=https://example.ngrok.app/media
  */
 export function createLocalStorage(): ObjectStorage {
   const root = env.STORAGE_LOCAL_PATH ?? "./storage-data.js";
+
   const publicBase = (
     env.STORAGE_PUBLIC_BASE_URL ?? `http://127.0.0.1:${env.API_PORT}/media`
-  ).replace(/\/$/, "");
+  ).replace(/\/+$/, "");
 
   if (!existsSync(root)) {
     mkdirSync(root, { recursive: true });
   }
 
+  function normalizeKey(key: string): string {
+    const normalized = key
+      .replace(/\\/g, "/")
+      .replace(/^\/+/, "")
+      .split("/")
+      .filter((part) => part !== "" && part !== "." && part !== "..")
+      .join("/");
+
+    if (!normalized) {
+      throw new Error("Storage object key cannot be empty");
+    }
+
+    return normalized;
+  }
+
   function absPath(key: string): string {
-    // prevent path traversal
-    const safe = key.replace(/\\/g, "/").replace(/\.\./g, "");
-    return join(root, safe);
+    return join(root, normalizeKey(key));
   }
 
   function getPublicUrl(key: string): string {
-    return `${publicBase}/${key}`;
+    return `${publicBase}/${normalizeKey(key)}`;
   }
 
   async function putObject(input: PutObjectInput): Promise<StorageObject> {
-    const path = absPath(input.key);
+    const key = normalizeKey(input.key);
+    const path = absPath(key);
+
     mkdirSync(dirname(path), { recursive: true });
 
     const body =
@@ -50,17 +70,40 @@ export function createLocalStorage(): ObjectStorage {
     await writeFile(path, body);
 
     return {
-      key: input.key,
-      publicUrl: getPublicUrl(input.key),
+      key,
+      publicUrl: getPublicUrl(key),
       sizeBytes: body.byteLength,
       contentType: input.contentType,
     };
   }
 
   async function putFromUrl(input: PutFromUrlInput): Promise<StorageObject> {
-    const response = await fetch(input.sourceUrl);
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 120_000);
+
+    let response: Response;
+
+    try {
+      response = await fetch(input.sourceUrl, {
+        signal: controller.signal,
+      });
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`Timed out while fetching source ${input.sourceUrl}`);
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${input.sourceUrl}: ${response.status}`);
+      throw new Error(
+        `Failed to fetch source ${input.sourceUrl}: ${response.status} ${response.statusText}`,
+      );
     }
 
     const contentType =
@@ -69,26 +112,29 @@ export function createLocalStorage(): ObjectStorage {
       guessMimeFromUrl(input.sourceUrl) ||
       "application/octet-stream";
 
-    const path = absPath(input.key);
-    mkdirSync(dirname(path), { recursive: true });
+    const body = Buffer.from(await response.arrayBuffer());
 
-    if (response.body) {
-      // Node fetch body as web stream → file
-      const buf = Buffer.from(await response.arrayBuffer());
-      await writeFile(path, buf);
-      return {
-        key: input.key,
-        publicUrl: getPublicUrl(input.key),
-        sizeBytes: buf.byteLength,
-        contentType,
-      };
+    if (body.byteLength === 0) {
+      throw new Error(`Empty response body from ${input.sourceUrl}`);
     }
 
-    throw new Error("Empty response body");
+    const key = normalizeKey(input.key);
+    const path = absPath(key);
+
+    mkdirSync(dirname(path), { recursive: true });
+    await writeFile(path, body);
+
+    return {
+      key,
+      publicUrl: getPublicUrl(key),
+      sizeBytes: body.byteLength,
+      contentType,
+    };
   }
 
   async function deleteObject(key: string): Promise<void> {
     const path = absPath(key);
+
     if (existsSync(path)) {
       unlinkSync(path);
     }
@@ -103,11 +149,30 @@ export function createLocalStorage(): ObjectStorage {
   };
 }
 
-/** Resolve absolute path for static file serving */
+/**
+ * Resolve an existing local storage object to an absolute filesystem path.
+ *
+ * Returns null when the object does not exist.
+ */
 export function resolveLocalStoragePath(key: string): string | null {
-  const root = env.STORAGE_LOCAL_PATH ?? "./storage-data.js";
-  const safe = key.replace(/\\/g, "/").replace(/\.\./g, "");
-  const path = join(root, safe);
-  if (!existsSync(path)) return null;
+  const root = env.STORAGE_LOCAL_PATH ?? "./storage-data";
+
+  const normalizedKey = key
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "")
+    .split("/")
+    .filter((part) => part !== "" && part !== "." && part !== "..")
+    .join("/");
+
+  if (!normalizedKey) {
+    return null;
+  }
+
+  const path = join(root, normalizedKey);
+
+  if (!existsSync(path)) {
+    return null;
+  }
+
   return path;
 }
