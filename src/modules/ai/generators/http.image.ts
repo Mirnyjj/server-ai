@@ -6,15 +6,10 @@ import type {
 } from "./types.js";
 
 /**
- * Generic HTTP image generator.
+ * Universal OpenAI-compatible HTTP image generator.
  *
- * Expects OpenAI-compatible images API OR custom JSON:
- * POST { baseUrl }
- * Authorization: Bearer KEY
- * Body: { model, prompt, size?, n: 1, response_format: "url" }
- * Response: { data: [{ url }] }  OR  { url }  OR  { image_url }
- *
- * Reference URLs appended to prompt text (most APIs don't support multi-ref natively).
+ * Uses IMAGE_MODEL_BASE_URL, IMAGE_MODEL_API_KEY and IMAGE_MODEL.
+ * The endpoint is `${IMAGE_MODEL_BASE_URL}/images/generations`.
  */
 export function createHttpImageGenerator(): ImageGenerator {
   const model = env.IMAGE_MODEL ?? "default";
@@ -23,9 +18,11 @@ export function createHttpImageGenerator(): ImageGenerator {
 
   if (!baseUrl || !apiKey) {
     throw new Error(
-      "IMAGE_MODEL_PROVIDER=http requires IMAGE_MODEL_BASE_URL and IMAGE_MODEL_API_KEY",
+      "Image model requires IMAGE_MODEL_BASE_URL and IMAGE_MODEL_API_KEY",
     );
   }
+
+  const endpoint = new URL("images/generations", baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`).toString();
 
   return {
     name: `http:${model}`,
@@ -49,7 +46,7 @@ export function createHttpImageGenerator(): ImageGenerator {
           ? `${request.width}x${request.height}`
           : aspectToSize(request.aspectRatio);
 
-      const response = await fetch(baseUrl, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
@@ -82,9 +79,9 @@ export function createHttpImageGenerator(): ImageGenerator {
 
       return {
         url,
-        provider: "http",
+        provider: "universal",
         model,
-        mimeType: "image/jpeg",
+        mimeType: "image/png",
         width: request.width,
         height: request.height,
         raw: json,
