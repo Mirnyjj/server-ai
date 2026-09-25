@@ -80,8 +80,13 @@ export function createS3Storage(): ObjectStorage {
   async function putFromUrl(input: PutFromUrlInput): Promise<StorageObject> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 120_000);
-    const response = await fetch(input.sourceUrl, { signal: controller.signal });
-    clearTimeout(timeout);
+
+    let response: Response;
+    try {
+      response = await fetch(input.sourceUrl, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
+    }
     if (!response.ok) {
       throw new Error(
         `Failed to fetch source ${input.sourceUrl}: ${response.status}`,
