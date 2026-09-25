@@ -13,6 +13,7 @@ import type {
   StorageObject,
 } from "./types.js";
 import { guessMimeFromUrl } from "./key.js";
+import { buildS3PublicUrl } from "./public-url.js";
 
 /**
  * S3-compatible Object Storage.
@@ -74,21 +75,13 @@ export function createS3Storage(): ObjectStorage {
   });
 
   function getPublicUrl(key: string): string {
-    const normalizedKey = key.replace(/^\/+/, "");
-
-    if (!normalizedKey) {
-      throw new Error("Storage object key cannot be empty");
-    }
-
-    if (publicBase) {
-      return `${publicBase}/${normalizedKey}`;
-    }
-
-    if (endpoint) {
-      return `${endpoint}/${bucket}/${normalizedKey}`;
-    }
-
-    return `https://${bucket}.s3.${region}.amazonaws.com/${normalizedKey}`;
+    return buildS3PublicUrl({
+      key,
+      bucket,
+      endpoint,
+      publicBase,
+      region,
+    });
   }
 
   async function putObject(input: PutObjectInput): Promise<StorageObject> {
