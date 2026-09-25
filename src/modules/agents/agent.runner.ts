@@ -1,5 +1,5 @@
 import { getBrainLlm } from "../ai/llm/provider.js";
-import { prisma } from "../../infrastructure/prisma/client.js";
+import { prisma } from "../../../prisma/prisma.js";
 import {
   executeAgentTool,
   type AgentToolName,
