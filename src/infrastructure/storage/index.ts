@@ -12,7 +12,7 @@ let singleton: ObjectStorage | null = null;
 /**
  * Resolve Object Storage provider.
  *
- * STORAGE_PROVIDER=s3|r2|minio  → S3 client (needs keys + bucket)
+ * STORAGE_PROVIDER=s3|supabase|r2|minio  → S3 client (needs keys + bucket)
  * STORAGE_PROVIDER=local|unset  → filesystem (dev)
  */
 export function getObjectStorage(): ObjectStorage {
@@ -20,7 +20,7 @@ export function getObjectStorage(): ObjectStorage {
 
   const provider = (env.STORAGE_PROVIDER ?? "local").toLowerCase();
 
-  if (provider === "s3" || provider === "r2" || provider === "minio") {
+  if (provider === "s3" || provider === "supabase" || provider === "r2" || provider === "minio") {
     if (
       !env.STORAGE_BUCKET ||
       !env.STORAGE_ACCESS_KEY_ID ||
