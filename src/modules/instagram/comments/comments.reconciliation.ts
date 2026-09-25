@@ -1,7 +1,7 @@
-import { prisma } from "../../../../prisma/prisma";
-import { env } from "../../../config/env";
-import { createInstagramClient } from "../client/instagram.client";
-import type { InstagramComment } from "../client/instagram.types";
+import { prisma } from "../../../../prisma/prisma.js";
+import { env } from "../../../config/env.js";
+import { createInstagramClient } from "../client/instagram.client.js";
+import type { InstagramComment } from "../client/instagram.types.js";
 
 function mapCommentUsername(c: InstagramComment): string | null {
   return c.username ?? c.from?.username ?? null;
