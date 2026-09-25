@@ -7,71 +7,56 @@ export type WebSearchResult = {
   source?: string;
 };
 
-type BraveSearchResponse = {
-  web?: {
-    results?: Array<{
-      title?: string;
-      url?: string;
-      description?: string;
-      profile?: {
-        long_name?: string;
-      };
-    }>;
-  };
+type SearxngSearchResponse = {
+  results?: Array<{
+    title?: string;
+    url?: string;
+    content?: string;
+    engine?: string;
+  }>;
 };
 
 export async function searchWeb(
   query: string,
   options: {
     limit?: number;
-    country?: string;
-    searchLang?: string;
-    freshness?: string;
+    language?: string;
+    timeRange?: "day" | "month" | "year";
   } = {},
 ): Promise<WebSearchResult[]> {
-  const apiKey = env.BRAVE_SEARCH_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("BRAVE_SEARCH_API_KEY не настроен");
-  }
-
   const normalizedQuery = query.trim();
 
   if (!normalizedQuery) {
     throw new Error("Поисковый запрос не может быть пустым");
   }
 
-  const url = new URL("https://api.search.brave.com/res/v1/web/search");
+  const url = new URL("/search", env.SEARXNG_BASE_URL);
   url.searchParams.set("q", normalizedQuery.slice(0, 600));
-  url.searchParams.set("count", String(Math.min(options.limit ?? 6, 20)));
-  url.searchParams.set("country", options.country ?? "RU");
-  url.searchParams.set("search_lang", options.searchLang ?? "ru");
+  url.searchParams.set("format", "json");
+  url.searchParams.set("language", options.language ?? "ru");
+  url.searchParams.set("safesearch", "1");
 
-  if (options.freshness) {
-    url.searchParams.set("freshness", options.freshness);
+  if (options.timeRange) {
+    url.searchParams.set("time_range", options.timeRange);
   }
 
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-      "Accept-Encoding": "gzip",
-      "X-Subscription-Token": apiKey,
-    },
-  });
+  const response = await fetch(url);
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Brave Search API error ${response.status}: ${body.slice(0, 500)}`);
+    throw new Error(
+      `SearXNG search error ${response.status}: ${body.slice(0, 500)}`,
+    );
   }
 
-  const data = (await response.json()) as BraveSearchResponse;
+  const data = (await response.json()) as SearxngSearchResponse;
 
-  return (data.web?.results ?? [])
+  return (data.results ?? [])
     .map((item) => ({
       title: item.title?.trim() ?? "",
       url: item.url?.trim() ?? "",
-      description: item.description?.trim() ?? "",
-      source: item.profile?.long_name?.trim(),
+      description: item.content?.trim() ?? "",
+      source: item.engine?.trim(),
     }))
     .filter((item) => item.title && item.url)
     .slice(0, Math.min(options.limit ?? 6, 20));
