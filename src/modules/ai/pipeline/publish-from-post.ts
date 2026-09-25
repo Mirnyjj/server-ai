@@ -20,8 +20,10 @@ export async function enqueuePublishReadyPost(postId: string) {
     throw new Error(`Post ${postId} not found`);
   }
 
-  if (post.status !== "READY" && post.status !== "APPROVED") {
-    throw new Error(`Post ${postId} status is ${post.status}, expected READY`);
+  if (post.status !== "APPROVED") {
+    throw new Error(
+      `Post ${postId} status is ${post.status}, expected APPROVED`,
+    );
   }
 
   const assets = post.media
