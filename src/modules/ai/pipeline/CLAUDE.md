@@ -14,3 +14,6 @@ POST /api/ai/pipeline/run
 Publish to Instagram — отдельный шаг (`/api/instagram/content/*` или enqueueCreateAndPublish) с публичным URL.
 
 Stub generators → `placeholder.local` URLs → `publishReady: false`.
+
+
+Publishing policy: generated posts remain READY until an explicit human approval changes the post to APPROVED. The publish queue accepts APPROVED posts only; agent and MCP autoPublish requests are rejected deterministically.
