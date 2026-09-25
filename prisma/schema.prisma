@@ -24,6 +24,8 @@ model AiProfile {
   mediaAssets       MediaAsset[]
   mediaReferences   MediaReference[]
   posts             Post[]
+  knowledgeDocuments KnowledgeDocument[]
+  knowledgeChunks   KnowledgeChunk[]
 }
 
 model InstagramAccount {
@@ -366,4 +368,45 @@ enum WebhookEventStatus {
   PROCESSING
   PROCESSED
   FAILED
+}
+
+model KnowledgeDocument {
+  id          String            @id @default(cuid())
+  profileId   String
+  title       String
+  source      String?
+  sourceType  KnowledgeSourceType @default(MANUAL)
+  content     String
+  metadata    Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  profile     AiProfile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  chunks      KnowledgeChunk[]
+
+  @@index([profileId, updatedAt])
+}
+
+model KnowledgeChunk {
+  id         String            @id @default(cuid())
+  documentId String
+  profileId  String
+  chunkIndex Int
+  content    String
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+  document   KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  profile    AiProfile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, chunkIndex])
+  @@index([profileId, createdAt])
+  @@index([documentId, chunkIndex])
+}
+
+enum KnowledgeSourceType {
+  MANUAL
+  FILE
+  URL
+  INSTAGRAM
+  TELEGRAM
+  OTHER
 }
