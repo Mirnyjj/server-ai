@@ -3,8 +3,8 @@ import {
   env,
   isInstagramDevMode,
   isWebhooksEnabled,
-} from "../../../config/env";
-import { createInstagramWebhookService } from "./webhook.service";
+} from "../../../config/env.js";
+import { createInstagramWebhookService } from "./webhook.service.js";
 
 export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
   const webhookService = createInstagramWebhookService(env.INSTAGRAM_MARKER);
