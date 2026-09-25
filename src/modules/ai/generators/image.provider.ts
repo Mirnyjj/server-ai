@@ -5,34 +5,26 @@ import type {
   ImageGenerationResult,
 } from "./types.js";
 import { createHttpImageGenerator } from "./http.image.js";
+import { createOpenAiImageGenerator } from "./openai.image.js";
 
 export function createImageGenerator(): ImageGenerator {
   const provider = (env.IMAGE_GENERATOR_PROVIDER ?? "stub").toLowerCase();
-  const model = env.IMAGE_GENERATOR_MODEL ?? "default-image-model";
+  const model = env.IMAGE_GENERATOR_MODEL ?? "gpt-image-2";
 
-  if (provider === "http") {
-    return createHttpImageGenerator();
-  }
+  if (provider === "openai") return createOpenAiImageGenerator();
+  if (provider === "http") return createHttpImageGenerator();
 
-  // stub (default)
   return {
-    name: `stub:${model}`,
-
-    async generate(
-      request: ImageGenerationRequest,
-    ): Promise<ImageGenerationResult> {
+    name: "stub:" + model,
+    async generate(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
       return {
-        url: `https://placeholder.local/generated/${request.profileId}/${Date.now()}.jpg`,
+        url: "https://placeholder.local/generated/" + request.profileId + "/" + Date.now() + ".jpg",
         provider: "stub",
         model,
         width: request.width ?? 1080,
         height: request.height ?? 1350,
         mimeType: "image/jpeg",
-        raw: {
-          prompt: request.prompt,
-          referencesCount: request.references.length,
-          note: "Set IMAGE_GENERATOR_PROVIDER=http + BASE_URL + API_KEY",
-        },
+        raw: { prompt: request.prompt, referencesCount: request.references.length },
       };
     },
   };
