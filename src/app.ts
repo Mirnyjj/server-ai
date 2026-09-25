@@ -1,4 +1,6 @@
 import Fastify from "fastify";
+import { prisma } from "../prisma/prisma.js";
+import { getRedisConnection } from "./infrastructure/redis.js";
 import cors from "@fastify/cors";
 import { registerInstagramAuthRoutes } from "./modules/instagram/auth/auth.routes.js";
 import { registerInstagramCommentsRoutes } from "./modules/instagram/comments/comments.routes.js";
@@ -28,6 +30,35 @@ export async function createApp() {
   app.get("/health", async () => ({
     status: "ok",
   }));
+
+  app.get("/health/ready", async (_request, reply) => {
+    const checks = {
+      database: false,
+      redis: false,
+    };
+
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+      checks.database = true;
+    } catch (error) {
+      app.log.error(error, "readiness database check failed");
+    }
+
+    try {
+      const redis = getRedisConnection();
+      await redis.ping();
+      checks.redis = true;
+    } catch (error) {
+      app.log.error(error, "readiness redis check failed");
+    }
+
+    const ready = checks.database && checks.redis;
+
+    return reply.code(ready ? 200 : 503).send({
+      status: ready ? "ready" : "not_ready",
+      checks,
+    });
+  });
 
   await registerLandingRoutes(app);
 
