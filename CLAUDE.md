@@ -62,7 +62,7 @@ strategy/topic → Luna scenario → content pipeline
 ```
 Reel сейчас: Luna создаёт shots → image generator создаёт frame → video generator делает image-to-video → FFmpeg объединяет сцены в MP4.
 
-Image generation uses the generic ImageGenerator interface. Provider and model are configured independently through IMAGE_MODEL_PROVIDER and IMAGE_MODEL; fal.ai can route requests to different image model IDs without pipeline changes. OpenAI and generic HTTP adapters remain available. Video generation remains separately configurable. OpenAI Sora/Videos API не использовать.
+Image generation uses the generic ImageGenerator interface and one universal OpenAI-compatible HTTP adapter. IMAGE_MODEL_API_KEY, IMAGE_MODEL_BASE_URL and IMAGE_MODEL select credentials, endpoint and concrete model. The pipeline does not contain provider-specific image routing. Video generation remains separately configurable. OpenAI Sora/Videos API не использовать.
 
 ## LLM
 Consumers работают через `LlmProvider`. Основные операции: `completeText` и `completeJson`. Luna — текущий brain provider. LLM output не является источником истины для БД; structured output валидируется вызывающим кодом.
