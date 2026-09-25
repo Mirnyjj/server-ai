@@ -1,13 +1,13 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
-import type { ProcessWebhookEventJobData } from "../types";
-import { prisma } from "../../../../prisma/prisma";
-import { MessageDirection } from "../../../generated/prisma/enums";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
+import type { ProcessWebhookEventJobData } from "../types.js";
+import { prisma } from "../../../../prisma/prisma.js";
+import { MessageDirection } from "../../../generated/prisma/enums.js";
 import {
   enqueueProcessComment,
   enqueueProcessDirectMessage,
-} from "../queues";
+} from "../queues.js";
 
 async function processWebhookEvent(job: Job<ProcessWebhookEventJobData>) {
   const { webhookEventId } = job.data;
