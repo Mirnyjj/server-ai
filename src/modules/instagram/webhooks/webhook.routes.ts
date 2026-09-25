@@ -21,7 +21,11 @@ export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
     }
 
     (request as RawBodyRequest).rawBody = Buffer.concat(chunks);
-    return Readable.from((request as RawBodyRequest).rawBody);
+    const rawBody = Buffer.concat(chunks);
+
+    (request as RawBodyRequest).rawBody = rawBody;
+
+    return Readable.from(rawBody);
   });
   const webhookService = createInstagramWebhookService(env.INSTAGRAM_MARKER);
 
