@@ -5,9 +5,9 @@ import {
   getObjectStorage,
   isObjectStorageConfigured,
   resolveLocalStoragePath,
-} from "./index";
-import { createStorageService } from "./storage.service";
-import { env } from "../../config/env";
+} from "./index.js";
+import { createStorageService } from "./storage.service.js";
+import { env } from "../../config/env.js";
 
 const MIME: Record<string, string> = {
   ".jpg": "image/jpeg",
