@@ -5,14 +5,34 @@ import type {
   ImageGenerationResult,
 } from "./types.js";
 
+type ResponsesImageGenerationCall = {
+  type?: string;
+  status?: string;
+  result?: string;
+};
+
+type ResponsesResult = {
+  id?: string;
+  output?: ResponsesImageGenerationCall[];
+  error?: {
+    message?: string;
+    code?: string;
+  };
+};
+
 /**
- * Universal OpenAI-compatible HTTP image generator.
+ * Universal Responses API image generator.
  *
- * Uses IMAGE_MODEL_BASE_URL, IMAGE_MODEL_API_KEY and IMAGE_MODEL.
- * The endpoint is `${IMAGE_MODEL_BASE_URL}/images/generations`.
+ * The image model is selected by IMAGE_MODEL.
+ * The top-level Responses model is selected by IMAGE_MAIN_MODEL
+ * and defaults to LUNA_MODEL because Responses image generation
+ * uses a mainline model to invoke the image_generation tool.
+ *
+ * IMAGE_MODEL_BASE_URL must expose the Responses API at /responses.
  */
 export function createHttpImageGenerator(): ImageGenerator {
-  const model = env.IMAGE_MODEL ?? "default";
+  const imageModel = env.IMAGE_MODEL ?? "openai/gpt-image-2";
+  const mainModel = env.IMAGE_MAIN_MODEL ?? env.LUNA_MODEL;
   const baseUrl = env.IMAGE_MODEL_BASE_URL;
   const apiKey = env.IMAGE_MODEL_API_KEY;
 
@@ -22,29 +42,40 @@ export function createHttpImageGenerator(): ImageGenerator {
     );
   }
 
-  const endpoint = new URL("images/generations", baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`).toString();
+  if (!mainModel) {
+    throw new Error(
+      "Image model requires IMAGE_MAIN_MODEL or LUNA_MODEL for Responses API",
+    );
+  }
+
+  const endpoint = new URL(
+    "responses",
+    baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`,
+  ).toString();
 
   return {
-    name: `http:${model}`,
+    name: `responses:${imageModel}`,
 
-    async generate(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
-      const refBlock = request.references
-        .slice(0, 6)
-        .map((r) => `[${r.type}] ${r.description}`)
-        .join("; ");
+    async generate(
+      request: ImageGenerationRequest,
+    ): Promise<ImageGenerationResult> {
+      const prompt = buildPrompt(request);
+      const content: Array<Record<string, unknown>> = [
+        {
+          type: "input_text",
+          text: prompt,
+        },
+      ];
 
-      const prompt = [
-        request.prompt,
-        refBlock ? `Character consistency: ${refBlock}` : "",
-        request.negativePrompt ? `Avoid: ${request.negativePrompt}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
+      for (const reference of request.references.slice(0, 6)) {
+        if (!reference.url.startsWith("https://")) continue;
 
-      const size =
-        request.width && request.height
-          ? `${request.width}x${request.height}`
-          : aspectToSize(request.aspectRatio);
+        content.push({
+          type: "input_image",
+          image_url: reference.url,
+          detail: "auto",
+        });
+      }
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -53,34 +84,55 @@ export function createHttpImageGenerator(): ImageGenerator {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model,
-          prompt,
-          n: 1,
-          size,
-          response_format: "url",
-          // optional fields some providers accept
-          reference_images: request.references.map((r) => r.url),
+          model: mainModel,
+          input: [
+            {
+              role: "user",
+              content,
+            },
+          ],
+          tools: [
+            {
+              type: "image_generation",
+              model: imageModel,
+              action: "generate",
+              size: aspectToSize(request.aspectRatio),
+            },
+          ],
+          tool_choice: {
+            type: "image_generation",
+          },
         }),
       });
 
+      const json = (await response.json()) as ResponsesResult;
+
       if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Image generator HTTP ${response.status}: ${text}`);
+        const providerMessage =
+          json.error?.message ?? JSON.stringify(json).slice(0, 500);
+
+        throw new Error(
+          `Image generator HTTP ${response.status}: ${providerMessage}`,
+        );
       }
 
-      const json = (await response.json()) as Record<string, unknown>;
-      const url = extractImageUrl(json);
+      const imageCall = json.output?.find(
+        (output) =>
+          output.type === "image_generation_call" &&
+          output.status === "completed" &&
+          typeof output.result === "string",
+      );
 
-      if (!url) {
+      if (!imageCall?.result) {
         throw new Error(
-          `Image generator response missing url: ${JSON.stringify(json).slice(0, 300)}`,
+          `Image generator response did not contain a completed image_generation_call: ${JSON.stringify(json).slice(0, 500)}`,
         );
       }
 
       return {
-        url,
-        provider: "universal",
-        model,
+        contentBase64: imageCall.result,
+        provider: "responses",
+        model: imageModel,
         mimeType: "image/png",
         width: request.width,
         height: request.height,
@@ -90,38 +142,43 @@ export function createHttpImageGenerator(): ImageGenerator {
   };
 }
 
-function extractImageUrl(json: Record<string, unknown>): string | null {
-  if (typeof json.url === "string") return json.url;
-  if (typeof json.image_url === "string") return json.image_url;
+function buildPrompt(request: ImageGenerationRequest): string {
+  const parts = [request.prompt];
 
-  const data = json.data;
-  if (Array.isArray(data) && data[0]) {
-    const first = data[0] as Record<string, unknown>;
-    if (typeof first.url === "string") return first.url;
-    if (typeof first.b64_json === "string") {
-      // data URL — storage can still ingest via putObject if we convert later
-      return `data:image/png;base64,${first.b64_json}`;
-    }
+  if (request.negativePrompt) {
+    parts.push(`Avoid: ${request.negativePrompt}`);
   }
 
-  const output = json.output;
-  if (Array.isArray(output) && typeof output[0] === "string") {
-    return output[0];
+  if (request.visualIdentity) {
+    parts.push(
+      `Visual identity: ${JSON.stringify(request.visualIdentity)}`,
+    );
   }
 
-  return null;
+  const referenceDescriptions = request.references
+    .slice(0, 6)
+    .map((reference) => `[${reference.type}] ${reference.description}`)
+    .filter(Boolean);
+
+  if (referenceDescriptions.length > 0) {
+    parts.push(
+      `Reference images are attached. Preserve relevant character/visual consistency. Reference notes: ${referenceDescriptions.join("; ")}`,
+    );
+  }
+
+  return parts.join("\n\n");
 }
 
 function aspectToSize(aspect?: string): string {
   switch (aspect) {
     case "9:16":
-      return "1024x1792";
+      return "1024x1536";
     case "16:9":
-      return "1792x1024";
+      return "1536x1024";
     case "1:1":
       return "1024x1024";
     case "4:5":
     default:
-      return "1024x1280";
+      return "1024x1536";
   }
 }
