@@ -1,9 +1,6 @@
 import { getBrainLlm } from "../ai/llm/provider.js";
 import { prisma } from "../../../prisma/prisma.js";
-import {
-  executeAgentTool,
-  type AgentToolName,
-} from "../../mcp/tools.js";
+import { executeAgentTool, type AgentToolName } from "../../mcp/tools.js";
 import {
   AGENT_ROLE_DESCRIPTIONS,
   AGENT_TOOL_DESCRIPTIONS,
@@ -12,7 +9,11 @@ import {
 } from "./agent.registry.js";
 import type { AgentRole, AgentRunResult } from "./agent.types.js";
 
-function toAuditJson(value: unknown): Record<string, unknown> {
+type AuditJson = Parameters<
+  typeof prisma.agentAction.create
+>[0]["data"]["input"];
+
+function toAuditJson(value: unknown): AuditJson {
   const serialized = JSON.stringify(value, (_key, currentValue: unknown) =>
     typeof currentValue === "bigint" ? currentValue.toString() : currentValue,
   );
@@ -22,9 +23,20 @@ function toAuditJson(value: unknown): Record<string, unknown> {
   }
 
   const parsed: unknown = JSON.parse(serialized);
-  return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
-    ? parsed as Record<string, unknown>
-    : { value: parsed };
+
+  if (parsed === null) {
+    return { value: null };
+  }
+
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if (typeof parsed === "object") {
+    return parsed as AuditJson;
+  }
+
+  return { value: parsed };
 }
 
 export async function runSpecializedAgent(input: {
@@ -93,7 +105,10 @@ export async function runSpecializedAgent(input: {
         data: {
           profileId: input.profileId,
           action: `agent:${input.role}:${call.tool}`,
-          input: toAuditJson({ request: input.request, arguments: call.arguments ?? {} }),
+          input: toAuditJson({
+            request: input.request,
+            arguments: call.arguments ?? {},
+          }),
           error: `Инструмент ${call.tool} запрещён для роли ${input.role}`,
           status: "CANCELLED",
         },
@@ -113,14 +128,12 @@ export async function runSpecializedAgent(input: {
 
     if (
       !("profileId" in args) &&
-      (
-        call.tool === "sync_media" ||
+      (call.tool === "sync_media" ||
         call.tool === "run_pipeline" ||
         call.tool === "run_plan_slot" ||
         call.tool === "run_strategy" ||
         call.tool === "list_references" ||
-        call.tool === "add_reference"
-      )
+        call.tool === "add_reference")
     ) {
       args.profileId = input.profileId;
     }
