@@ -81,7 +81,7 @@ npm run verify:instagram
 
 For marker-only verification:
 
-```npm
+```bash
 INSTAGRAM_MARKER=<production-access-token> npm run verify:instagram
 ```
 
