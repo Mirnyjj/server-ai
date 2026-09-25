@@ -21,7 +21,7 @@ Luna → scenario → pipeline → generators → Object Storage → Post/MediaA
 ```
 Luna не рендерит media. Image и Video — отдельные interfaces.
 
-Image generation uses one universal OpenAI-compatible HTTP adapter. The model is configured independently through IMAGE_MODEL, while IMAGE_MODEL_API_KEY and IMAGE_MODEL_BASE_URL define the credentials and API endpoint. The endpoint must expose /images/generations. This allows changing image models/providers without changing the content pipeline. Video remains separately configurable.
+Image generation uses one universal Responses API HTTP adapter. IMAGE_MODEL selects the concrete image-generation model, while IMAGE_MODEL_API_KEY and IMAGE_MODEL_BASE_URL define credentials and the API endpoint. The adapter calls `${IMAGE_MODEL_BASE_URL}/responses`, uses IMAGE_MAIN_MODEL (or LUNA_MODEL) as the top-level Responses model, and invokes the `image_generation` tool with IMAGE_MODEL. Generated images are returned as base64 and passed directly to Object Storage. Reference images are passed as HTTPS input images. Video remains separately configurable.
 
 Pipeline может использовать system prompt, visual identity, MediaReference, memory, knowledge и web context. Эти источники имеют разную семантику и не должны без необходимости сливаться в один источник истины.
 
