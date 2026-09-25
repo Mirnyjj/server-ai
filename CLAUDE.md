@@ -87,6 +87,8 @@ BullMQ + Redis используются для долгих и фоновых о
 ## Storage
 Object Storage находится в `src/infrastructure/storage`. Внешним AI providers и Telegram нужны реально доступные HTTPS URLs; internal Docker hostname не подходит. Для S3-compatible storage public URL строится через `STORAGE_PUBLIC_BASE_URL`, если он задан; если он совпадает с `STORAGE_ENDPOINT`, он трактуется как S3 API endpoint и bucket добавляется в path. Для Timeweb допустима конфигурация `STORAGE_ENDPOINT=https://s3.twcstorage.ru` и `STORAGE_PUBLIC_BASE_URL=https://s3.twcstorage.ru`, которая даёт URL вида `https://s3.twcstorage.ru/{bucket}/{key}`.
 
+
+Supabase Storage uses the S3-compatible adapter with `STORAGE_PROVIDER=supabase`. S3 uploads use `https://<project-ref>.storage.supabase.co/storage/v1/s3`; public media URLs use `https://<project-ref>.supabase.co/storage/v1/object/public/<bucket>/<key>`. The bucket must be public for unauthenticated media consumers.
 ## ОБЯЗАТЕЛЬНОЕ ПРАВИЛО ДОКУМЕНТАЦИИ
 
 Любой coding agent, человек или автоматизация, которые вносят изменения в репозиторий, ОБЯЗАНЫ одновременно поддерживать документацию в актуальном состоянии.
