@@ -164,6 +164,9 @@ git status
 9. Устаревшую документацию удалять или исправлять, а не оставлять как историческое описание текущего поведения.
 10. Не считать работу завершённой, пока code + docs согласованы.
 
+### Docker build
+Production Docker build использует `npm ci`, поэтому `package-lock.json` должен быть синхронизирован с `package.json`. После добавления или изменения dependency сначала обновлять lockfile локальным `npm install`, затем проверять `npm ci`/Docker build. Не возвращать `npm install` в production Dockerfile.
+
 ## Проверка
 Обычная проверка: `npm run build`. Для Docker: `docker compose config`, `docker compose build`, `docker compose up -d`, `docker compose ps`.
 
