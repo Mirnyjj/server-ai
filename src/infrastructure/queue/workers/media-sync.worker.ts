@@ -1,9 +1,9 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
-import type { SyncAccountMediaJobData } from "../types";
-import { resolveAccessTokenByProfileId } from "../../../modules/instagram/auth/token.resolver";
-import { createInstagramMediaService } from "../../../modules/instagram/media/media.service";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
+import type { SyncAccountMediaJobData } from "../types.js";
+import { resolveAccessTokenByProfileId } from "../../../modules/instagram/auth/token.resolver.js";
+import { createInstagramMediaService } from "../../../modules/instagram/media/media.service.js";
 
 async function processMediaSync(job: Job<SyncAccountMediaJobData>) {
   const { profileId } = job.data;
