@@ -110,6 +110,8 @@ const envSchema = z
         ["TELEGRAM_WEBHOOK_URL", data.TELEGRAM_WEBHOOK_URL, "Required in production"],
         ["TELEGRAM_WEBHOOK_SECRET", data.TELEGRAM_WEBHOOK_SECRET, "Required in production"],
         ["MCP_SERVER_TOKEN", data.MCP_SERVER_TOKEN, "Required in production"],
+        ["IMAGE_MODEL_PROVIDER", data.IMAGE_MODEL_PROVIDER, "Required in production"],
+        ["IMAGE_MODEL", data.IMAGE_MODEL, "Required in production"],
         ["VIDEO_GENERATOR_PROVIDER", data.VIDEO_GENERATOR_PROVIDER, "Required in production"],
         ["VIDEO_GENERATOR_API_KEY", data.VIDEO_GENERATOR_API_KEY, "Required in production"],
       ] as const) {
