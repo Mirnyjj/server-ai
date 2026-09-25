@@ -1,13 +1,13 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
 import type {
   CollectProfileInsightsJobData,
   CollectPostInsightsJobData,
-} from "../types";
-import { resolveAccessTokenByProfileId, resolveAccessToken } from "../../../modules/instagram/auth/token.resolver";
-import { createInstagramInsightsService } from "../../../modules/instagram/insights/insights.service";
-import { prisma } from "../../../../prisma/prisma";
+} from "../types.js";
+import { resolveAccessTokenByProfileId, resolveAccessToken } from "../../../modules/instagram/auth/token.resolver.js";
+import { createInstagramInsightsService } from "../../../modules/instagram/insights/insights.service.js";
+import { prisma } from "../../../../prisma/prisma.js";
 
 async function processProfileInsights(
   job: Job<CollectProfileInsightsJobData>,
