@@ -158,6 +158,11 @@ export async function askTelegramAi(input: {
           .join("\\n")
       : "Подходящих материалов базы знаний не найдено.";
 
+  const webContext =
+    webResults.length > 0
+      ? formatWebSearchContext(webResults)
+      : "Веб-поиск для этого сообщения не выполнялся.";
+
   const systemPrompt = [
     "Ты — AI-персонаж, которым пользователь управляет через приватный Telegram control plane.",
     "Отвечай как выбранный AI-профиль, учитывая его persona и writingStyle.",
