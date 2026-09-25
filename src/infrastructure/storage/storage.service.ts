@@ -1,10 +1,10 @@
-import { prisma } from "../../../prisma/prisma";
+import { prisma } from "../../../prisma/prisma.js";
 import {
   buildMediaKey,
   extensionFromMime,
   getObjectStorage,
   guessMimeFromUrl,
-} from "./index";
+} from "./index.js";
 
 /**
  * High-level storage helpers used by pipeline / references / uploads.
