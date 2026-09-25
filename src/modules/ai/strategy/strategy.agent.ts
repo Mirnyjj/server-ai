@@ -1,7 +1,7 @@
-import { prisma } from "../../../../prisma/prisma";
-import { getBrainLlm } from "../llm/provider";
-import type { AnalyticsInsight } from "../content/scenario.types";
-import { createScenarioService } from "../content/scenario.service";
+import { prisma } from "../../../../prisma/prisma.js";
+import { getBrainLlm } from "../llm/provider.js";
+import type { AnalyticsInsight } from "../content/scenario.types.js";
+import { createScenarioService } from "../content/scenario.service.js";
 
 /**
  * Strategy Agent (TZ §29).
