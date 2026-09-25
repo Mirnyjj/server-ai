@@ -154,6 +154,7 @@ export async function runContentPipeline(input: {
           ];
 
       const scenes: Array<{ url: string; durationSec?: number }> = [];
+      const intermediateAssets: Array<{ id: string; storageKey?: string | null }> = [];
 
       for (let index = 0; index < shots.length; index += 1) {
         const shot = shots[index];
@@ -182,6 +183,11 @@ export async function runContentPipeline(input: {
           },
         });
 
+        intermediateAssets.push({
+          id: frameAsset.id,
+          storageKey: frameAsset.storageKey,
+        });
+
         const scene = await videoGen.generate({
           profileId: input.profileId,
           prompt: shot.visualBrief.prompt,
@@ -204,6 +210,11 @@ export async function runContentPipeline(input: {
             role: "reel-scene-video",
             sceneIndex: index,
           },
+        });
+
+        intermediateAssets.push({
+          id: sceneAsset.id,
+          storageKey: sceneAsset.storageKey,
         });
 
         scenes.push({
@@ -256,6 +267,13 @@ export async function runContentPipeline(input: {
         type: "VIDEO",
         storageKey: asset.storageKey,
       });
+
+      for (const intermediate of intermediateAssets) {
+        if (intermediate.storageKey) {
+          await storageService.storage.deleteObject(intermediate.storageKey);
+        }
+        await prisma.mediaAsset.delete({ where: { id: intermediate.id } });
+      }
     } else if (postType === "CAROUSEL" && scenario.slides?.length) {
       const imageGen = getImageGenerator();
       let order = 0;
