@@ -48,7 +48,6 @@ const envSchema = z
     VIDEO_GENERATOR_API_KEY: z.string().optional(),
     VIDEO_GENERATOR_MODEL: z.string().optional(),
     VIDEO_GENERATOR_BASE_URL: z.string().url().optional(),
-    VIDEO_GENERATOR_POLL_MS: z.coerce.number().int().positive().default(5000),
 
     STORAGE_PROVIDER: z.string().optional(),
     STORAGE_BUCKET: z.string().optional(),
@@ -91,13 +90,84 @@ const envSchema = z
         });
       }
 
-      const storageProvider = (data.STORAGE_PROVIDER ?? "local").toLowerCase();
-      if (storageProvider === "local") {
+      const storageProvider = (data.STORAGE_PROVIDER ?? "").toLowerCase();
+      if (!["s3", "r2", "minio"].includes(storageProvider)) {
         ctx.addIssue({
           code: "custom",
           path: ["STORAGE_PROVIDER"],
-          message:
-            "Production should use s3|r2|minio Object Storage (not local)",
+          message: "Production requires STORAGE_PROVIDER=s3|r2|minio",
+        });
+      }
+      for (const [path, value, message] of [
+        ["STORAGE_BUCKET", data.STORAGE_BUCKET, "Required in production"],
+        ["STORAGE_ACCESS_KEY_ID", data.STORAGE_ACCESS_KEY_ID, "Required in production"],
+        ["STORAGE_SECRET_ACCESS_KEY", data.STORAGE_SECRET_ACCESS_KEY, "Required in production"],
+        ["STORAGE_PUBLIC_BASE_URL", data.STORAGE_PUBLIC_BASE_URL, "Required in production"],
+        ["LUNA_API_KEY", data.LUNA_API_KEY, "Required in production"],
+        ["TELEGRAM_BOT_TOKEN", data.TELEGRAM_BOT_TOKEN, "Required in production"],
+        ["TELEGRAM_ALLOWED_CHAT_IDS", data.TELEGRAM_ALLOWED_CHAT_IDS, "Required in production"],
+        ["TELEGRAM_WEBHOOK_URL", data.TELEGRAM_WEBHOOK_URL, "Required in production"],
+        ["MCP_SERVER_TOKEN", data.MCP_SERVER_TOKEN, "Required in production"],
+        ["VIDEO_GENERATOR_PROVIDER", data.VIDEO_GENERATOR_PROVIDER, "Required in production"],
+        ["VIDEO_GENERATOR_API_KEY", data.VIDEO_GENERATOR_API_KEY, "Required in production"],
+      ] as const) {
+        if (!value) {
+          ctx.addIssue({ code: "custom", path: [path], message });
+        }
+      }
+
+      if (data.STORAGE_PUBLIC_BASE_URL && !data.STORAGE_PUBLIC_BASE_URL.startsWith("https://")) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["STORAGE_PUBLIC_BASE_URL"],
+          message: "Production requires STORAGE_PUBLIC_BASE_URL with https://",
+        });
+      }
+
+      const imageProvider = (data.IMAGE_GENERATOR_PROVIDER ?? "").toLowerCase();
+      if (!["openai", "http"].includes(imageProvider)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["IMAGE_GENERATOR_PROVIDER"],
+          message: "Production requires IMAGE_GENERATOR_PROVIDER=openai|http",
+        });
+      }
+      if (imageProvider === "openai" && !data.IMAGE_GENERATOR_API_KEY) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["IMAGE_GENERATOR_API_KEY"],
+          message: "Required for IMAGE_GENERATOR_PROVIDER=openai",
+        });
+      }
+      if (imageProvider === "http" && !data.IMAGE_GENERATOR_BASE_URL) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["IMAGE_GENERATOR_BASE_URL"],
+          message: "Required for IMAGE_GENERATOR_PROVIDER=http",
+        });
+      }
+
+      const videoProvider = (data.VIDEO_GENERATOR_PROVIDER ?? "").toLowerCase();
+      if (!["fal", "http"].includes(videoProvider)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["VIDEO_GENERATOR_PROVIDER"],
+          message: "Production requires VIDEO_GENERATOR_PROVIDER=fal|http",
+        });
+      }
+      if (videoProvider === "http" && !data.VIDEO_GENERATOR_BASE_URL) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["VIDEO_GENERATOR_BASE_URL"],
+          message: "Required for VIDEO_GENERATOR_PROVIDER=http",
+        });
+      }
+
+      if (!data.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || !data.INSTAGRAM_WEBHOOK_APP_SECRET) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["INSTAGRAM_WEBHOOK_APP_SECRET"],
+          message: "Production Instagram webhooks require verify token and app secret",
         });
       }
       return;
