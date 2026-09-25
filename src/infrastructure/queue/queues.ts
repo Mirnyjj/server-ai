@@ -1,5 +1,5 @@
 import { Queue } from "bullmq";
-import { getBullMqConnection, defaultJobOptions } from "./connection";
+import { getBullMqConnection, defaultJobOptions } from "./connection.js";
 import {
   QUEUE_NAMES,
   JOB_NAMES,
@@ -18,7 +18,7 @@ import {
   type ProcessDirectMessageJobData,
   type ContentPlanSlotJobData,
   type StrategyRunJobData,
-} from "./types";
+} from "./types.js";
 
 const connection = getBullMqConnection();
 
