@@ -1,10 +1,10 @@
 import type { FastifyInstance } from "fastify";
-import { runScheduledContentSlot } from "./content-plan.service";
-import { runStrategyAgent } from "../strategy/strategy.agent";
+import { runScheduledContentSlot } from "./content-plan.service.js";
+import { runStrategyAgent } from "../strategy/strategy.agent.js";
 import {
   enqueueContentPlanSlot,
   enqueueStrategyRun,
-} from "../../../infrastructure/queue";
+} from "../../../infrastructure/queue.js";
 
 export async function registerPlanRoutes(app: FastifyInstance) {
   /** Run one content plan slot now (sync) */
