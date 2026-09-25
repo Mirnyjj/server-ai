@@ -1,12 +1,12 @@
 import {
   decryptSecret,
   encryptSecret,
-} from "../../../lib/crypto/secret.service";
+} from "../../../lib/crypto/secret.service.js";
 import {
   findInstagramConnection,
   updateInstagramConnectionToken,
-} from "./connection.repository";
-import { refreshLongLivedToken } from "./token.service";
+} from "./connection.repository.js";
+import { refreshLongLivedToken } from "./token.service.js";
 
 export async function refreshInstagramConnection(instagramAccountId: string) {
   const connection = await findInstagramConnection(instagramAccountId);
