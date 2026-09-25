@@ -53,7 +53,8 @@ export function createFfmpegVideoComposer(): VideoComposer {
           "-preset", "veryfast",
           "-crf", "20",
           "-movflags", "+faststart",
-          "-an",
+          "-c:a", "aac",
+          "-b:a", "128k",
           "-y", output,
         ]);
 
