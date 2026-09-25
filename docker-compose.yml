@@ -12,6 +12,8 @@ services:
     depends_on:
       redis:
         condition: service_started
+      whisper:
+        condition: service_started
 
     ports:
       - "8000:8000"
@@ -31,6 +33,21 @@ services:
 
     ports:
       - "6379:6379"
+
+  whisper:
+    build:
+      context: ./whisper
+      dockerfile: Dockerfile
+    container_name: ig-agent-whisper
+    restart: unless-stopped
+
+    environment:
+      WHISPER_MODEL: base
+      WHISPER_COMPUTE_TYPE: int8
+      WHISPER_CPU_THREADS: "1"
+
+    mem_limit: 1200m
+    cpus: "0.8"
 
 volumes:
   redis_data:
