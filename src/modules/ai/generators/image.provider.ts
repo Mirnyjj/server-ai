@@ -1,4 +1,3 @@
-import { env } from "../../../config/env.js";
 import type { ImageGenerator } from "./types.js";
 import { createHttpImageGenerator } from "./http.image.js";
 
