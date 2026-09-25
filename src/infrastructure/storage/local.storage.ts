@@ -3,14 +3,14 @@ import { dirname, join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
 import { writeFile } from "node:fs/promises";
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 import type {
   ObjectStorage,
   PutFromUrlInput,
   PutObjectInput,
   StorageObject,
-} from "./types";
-import { guessMimeFromUrl } from "./key";
+} from "./types.js";
+import { guessMimeFromUrl } from "./key.js";
 
 /**
  * Local filesystem storage for development.
@@ -20,7 +20,7 @@ import { guessMimeFromUrl } from "./key";
  * (ngrok/cloudflared) with STORAGE_PUBLIC_BASE_URL set to that tunnel.
  */
 export function createLocalStorage(): ObjectStorage {
-  const root = env.STORAGE_LOCAL_PATH ?? "./storage-data";
+  const root = env.STORAGE_LOCAL_PATH ?? "./storage-data.js";
   const publicBase = (
     env.STORAGE_PUBLIC_BASE_URL ??
     `http://127.0.0.1:${env.API_PORT}/media`
@@ -107,7 +107,7 @@ export function createLocalStorage(): ObjectStorage {
 
 /** Resolve absolute path for static file serving */
 export function resolveLocalStoragePath(key: string): string | null {
-  const root = env.STORAGE_LOCAL_PATH ?? "./storage-data";
+  const root = env.STORAGE_LOCAL_PATH ?? "./storage-data.js";
   const safe = key.replace(/\\/g, "/").replace(/\.\./g, "");
   const path = join(root, safe);
   if (!existsSync(path)) return null;
