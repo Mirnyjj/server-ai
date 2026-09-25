@@ -86,6 +86,50 @@ export async function sendTelegramMessage(
   });
 }
 
+export async function sendTelegramPhoto(
+  chatId: number | string,
+  photo: string,
+  caption?: string,
+  options: SendMessageOptions = {},
+) {
+  return tgRequest<{ message_id: number }>("sendPhoto", {
+    chat_id: chatId,
+    photo,
+    caption,
+    parse_mode: options.parse_mode ?? "HTML",
+    reply_markup: options.reply_markup,
+  });
+}
+
+export async function sendTelegramVideo(
+  chatId: number | string,
+  video: string,
+  caption?: string,
+  options: SendMessageOptions = {},
+) {
+  return tgRequest<{ message_id: number }>("sendVideo", {
+    chat_id: chatId,
+    video,
+    caption,
+    parse_mode: options.parse_mode ?? "HTML",
+    reply_markup: options.reply_markup,
+  });
+}
+
+export type TelegramMediaGroupItem =
+  | { type: "photo"; media: string; caption?: string }
+  | { type: "video"; media: string; caption?: string };
+
+export async function sendTelegramMediaGroup(
+  chatId: number | string,
+  media: TelegramMediaGroupItem[],
+) {
+  return tgRequest<Array<{ message_id: number }>>("sendMediaGroup", {
+    chat_id: chatId,
+    media,
+  });
+}
+
 export async function answerCallbackQuery(
   callbackQueryId: string,
   text?: string,
