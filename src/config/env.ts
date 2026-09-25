@@ -31,6 +31,8 @@ const envSchema = z
     LUNA_API_KEY: z.string().optional(),
     LUNA_BASE_URL: z.string().url().optional(),
     LUNA_MODEL: z.string().optional(),
+    SEARXNG_BASE_URL: z.string().url().default("http://searxng:8080"),
+    SEARXNG_SECRET: z.string().min(16).optional(),
     BRAVE_SEARCH_API_KEY: z.string().min(1).optional(),
 
     WHISPER_BASE_URL: z.string().url().optional(),
