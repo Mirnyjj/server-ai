@@ -45,12 +45,14 @@
   - [ ] reject / regenerate
   - [ ] comment moderation
   - [ ] DM moderation
-- [ ] Queue monitoring
+- [x] Queue monitoring command
+- [x] Database / Redis readiness endpoint
 - [ ] Observability
 
 ## P2 — Release
 
-- [ ] Release checklist
+- [x] Release checklist
+- [ ] CI deployment verification
 - [ ] CI deployment verification
 - [ ] Rollback procedure
 
@@ -62,6 +64,10 @@
 - [ ] Nginx / HTTPS verification
 - [ ] Smoke test against production
 
+## P2 note
+
+- E2E test foundation is intentionally not planned: automated E2E tests were removed by explicit project decision. Production verification remains manual/read-only where external side effects are involved.
+
 ## Current execution
 
 1. Automated E2E tests and scripts have been removed by request.
@@ -71,7 +77,11 @@
 5. The verifier remains read-only. Publish, comment reply, DM and webhook checks are not automated because they create real external side effects.
 6. Instagram read verification is treated as completed for planning purposes; controlled manual write checks remain production work.
 7. Telegram now has a read-only production verifier for Bot API identity, webhook URL, pending updates and webhook errors.
-8. Next task: production-run the Telegram verifier, then implement queue monitoring and release/observability checks.
+8. Telegram read-only verification is implemented; production execution remains to be performed.
+9. Queue monitoring is implemented as `npm run queue:status`.
+10. `/health/ready` now checks PostgreSQL and Redis and returns 503 when either dependency is unavailable.
+11. Release checklist is documented in `docs/RELEASE-CHECKLIST.md`.
+12. Next task: complete production execution of Telegram, queue, readiness, Nginx/HTTPS and smoke checks, then finish CI deployment verification and rollback procedure.
 
 ## Verification commands
 
