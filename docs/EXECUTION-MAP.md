@@ -65,8 +65,8 @@
 
 1. Unit-test coverage was expanded for the HTTP video generator and FFmpeg audio/video preservation.
 2. CI now runs `npm test` and `npm run build` on `main`, `fix/**`, and pull requests.
-3. Next task: run Kling → FFmpeg → Storage E2E against the real Fal/Timeweb environment.
-4. After that: run image → Storage → public HTTPS and Kling → FFmpeg → Storage against the real Timeweb/S3 environment.
+3. CI is green: 16 automated tests pass and the TypeScript build passes. The FFmpeg test verifies video + audio preservation.
+4. Next task: run Kling → FFmpeg → Storage E2E against the real Fal/Timeweb environment, then run image → Storage → public HTTPS against the real Timeweb/S3 environment.
 5. Then move to production Instagram / Telegram verification.
 
 ## Verification commands
