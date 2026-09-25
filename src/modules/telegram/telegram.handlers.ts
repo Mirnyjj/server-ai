@@ -646,6 +646,7 @@ async function cmdAgent(chatId: number, request: string): Promise<void> {
     const result = await runTelegramAgent({
       profileId,
       request: request.trim(),
+      onPostGenerated: (postId) => sendTelegramPostReview(chatId, postId),
     });
     await sendTelegramMessage(chatId, escapeTelegramHtml(result).slice(0, 3900));
   } catch (error) {
