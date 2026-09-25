@@ -11,6 +11,14 @@ import { createInstagramClient } from "../instagram/client/instagram.client.js";
 import { createInstagramCommentsService } from "../instagram/comments/comments.service.js";
 import { transcribeAudio } from "../ai/transcription/transcription.service.js";
 import {
+  addAgentMemory,
+  deleteAgentMemory,
+  getMemoryText,
+  listAgentMemories,
+  searchAgentMemories,
+  type MemoryType,
+} from "../ai/memory/memory.service.js";
+import {
   answerCallbackQuery,
   downloadTelegramFile,
   editMessageText,
@@ -180,6 +188,10 @@ export async function handleTelegramUpdate(
       await cmdPrompt(chatId, text.slice(cmd.length).trim());
       break;
 
+    case "/memory":
+      await cmdMemory(chatId, text.slice(cmd.length).trim());
+      break;
+
     default:
       if (command.startsWith("/")) {
         await sendTelegramMessage(
@@ -209,10 +221,157 @@ const HELP_TEXT = [
   `/prompt set &lt;текст&gt; — заменить системный промпт`,
   `/prompt append &lt;текст&gt; — добавить инструкцию`,
   `/prompt reset — сбросить системный промпт`,
+  `/memory — показать долговременную память`,
+  `/memory add &lt;тип&gt; &lt;текст&gt; — сохранить память`,
+  `/memory search &lt;текст&gt; — найти память`,
+  `/memory forget &lt;id&gt; — удалить память`,
   `Обычный текст после /use отправляется выбранному AI-профилю.`,
   ``,
   `Важные комментарии и сообщения поступают отдельными уведомлениями с кнопками для действий.`,
 ].join("\n");
+
+const MEMORY_TYPES: MemoryType[] = [
+  "PERSONA",
+  "AUDIENCE",
+  "CONTENT",
+  "COMMENT",
+  "DM",
+  "PERFORMANCE",
+  "STRATEGY",
+  "PREFERENCE",
+];
+
+function parseMemoryType(value?: string): MemoryType | null {
+  const normalized = value?.trim().toUpperCase();
+
+  return MEMORY_TYPES.includes(normalized as MemoryType)
+    ? (normalized as MemoryType)
+    : null;
+}
+
+async function cmdMemory(chatId: number, input: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(
+      chatId,
+      "Сначала выберите AI-профиль: /use &lt;profileId&gt;",
+    );
+    return;
+  }
+
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    const memories = await listAgentMemories(profileId, { take: 20 });
+
+    if (memories.length === 0) {
+      await sendTelegramMessage(chatId, "Долговременная память пока пуста.");
+      return;
+    }
+
+    const lines = memories.map(
+      (memory) =>
+        `• [${memory.type}] ${escape(getMemoryText(memory.content))}\n  <code>${memory.id}</code>`,
+    );
+
+    await sendTelegramMessage(
+      chatId,
+      `<b>Долговременная память</b>\n\n${lines.join("\n\n")}`,
+    );
+    return;
+  }
+
+  const [subcommand, ...rest] = trimmed.split(/\\s+/);
+  const value = rest.join(" ").trim();
+
+  if (subcommand.toLowerCase() === "add") {
+    const [typeValue, ...textParts] = value.split(/\\s+/);
+    const type = parseMemoryType(typeValue);
+    const memoryText = textParts.join(" ").trim();
+
+    if (!type || !memoryText) {
+      await sendTelegramMessage(
+        chatId,
+        "Использование: /memory add &lt;тип&gt; &lt;текст&gt;\nТипы: " +
+          MEMORY_TYPES.join(", "),
+      );
+      return;
+    }
+
+    const memory = await addAgentMemory({
+      profileId,
+      type,
+      text: memoryText,
+      importance: 0.9,
+    });
+
+    await sendTelegramMessage(
+      chatId,
+      `✅ Память сохранена.\nТип: <b>${type}</b>\nID: <code>${memory.id}</code>`,
+    );
+    return;
+  }
+
+  if (subcommand.toLowerCase() === "search") {
+    if (!value) {
+      await sendTelegramMessage(chatId, "Использование: /memory search &lt;текст&gt;");
+      return;
+    }
+
+    const memories = await searchAgentMemories(profileId, value, 10);
+
+    if (memories.length === 0) {
+      await sendTelegramMessage(chatId, "Ничего не найдено.");
+      return;
+    }
+
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Результаты поиска</b>",
+        "",
+        ...memories.map(
+          (memory) =>
+            `• [${memory.type}] ${escape(getMemoryText(memory.content))}\n  <code>${memory.id}</code>`,
+        ),
+      ].join("\n"),
+    );
+    return;
+  }
+
+  if (subcommand.toLowerCase() === "forget") {
+    if (!value) {
+      await sendTelegramMessage(chatId, "Использование: /memory forget &lt;id&gt;");
+      return;
+    }
+
+    try {
+      await deleteAgentMemory(profileId, value);
+      await sendTelegramMessage(chatId, "✅ Память удалена.");
+    } catch (error) {
+      await sendTelegramMessage(
+        chatId,
+        "❌ " + escape(error instanceof Error ? error.message : "Ошибка удаления"),
+      );
+    }
+    return;
+  }
+
+  await sendTelegramMessage(
+    chatId,
+    [
+      "<b>Память</b>",
+      "",
+      "<code>/memory</code> — список",
+      "<code>/memory add PREFERENCE ...</code> — добавить",
+      "<code>/memory search ...</code> — поиск",
+      "<code>/memory forget &lt;id&gt;</code> — удалить",
+      "",
+      "Типы: " + MEMORY_TYPES.join(", "),
+    ].join("\n"),
+  );
+}
 
 async function cmdUse(chatId: number, profileId?: string): Promise<void> {
   if (!profileId) {
