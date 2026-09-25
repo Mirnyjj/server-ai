@@ -23,7 +23,8 @@
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
     "verify:instagram": "tsx scripts/verify-instagram-production.ts",
-    "verify:telegram": "tsx scripts/verify-telegram-production.ts"
+    "verify:telegram": "tsx scripts/verify-telegram-production.ts",
+    "queue:status": "tsx scripts/queue-status.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
