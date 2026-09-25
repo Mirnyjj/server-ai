@@ -1,10 +1,10 @@
-import { prisma } from "../../../../prisma/prisma";
-import type { MediaReferenceType } from "../../../generated/prisma/enums";
+import { prisma } from "../../../../prisma/prisma.js";
+import type { MediaReferenceType } from "../../../generated/prisma/enums.js";
 import type {
   CreateReferenceInput,
   ReferenceMetadata,
   ReferencePackItem,
-} from "./reference.types";
+} from "./reference.types.js";
 
 const VALID_TYPES = new Set([
   "FACE",
