@@ -6,14 +6,12 @@ import type {
 } from "./types.js";
 import { createHttpVideoGenerator } from "./http.video.js";
 import { createFalVideoGenerator } from "./fal.video.js";
-import { createOpenAiVideoGenerator } from "./openai.video.js";
 
 export function createVideoGenerator(): VideoGenerator {
   const provider = (env.VIDEO_GENERATOR_PROVIDER ?? "fal").toLowerCase();
   const model = env.VIDEO_GENERATOR_MODEL ?? "fal-ai/kling-video/v3/pro/image-to-video";
 
   if (provider === "fal") return createFalVideoGenerator();
-  if (provider === "openai") return createOpenAiVideoGenerator();
   if (provider === "http") return createHttpVideoGenerator();
 
   return {
