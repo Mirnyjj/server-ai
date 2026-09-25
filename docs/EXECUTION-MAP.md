@@ -21,7 +21,7 @@
 - [x] Image → Storage → public HTTPS E2E implementation
 - [x] Automated unit tests
 - [ ] Image → Storage → public HTTPS E2E production run
-- [ ] Kling → FFmpeg → Storage E2E
+- [x] Kling → FFmpeg → Storage E2E implementation
 - [ ] Production E2E
 
 ## P1 — Production verification
@@ -63,10 +63,10 @@
 
 ## Current execution
 
-1. Unit-test coverage was expanded for the HTTP video generator.
+1. Unit-test coverage was expanded for the HTTP video generator and FFmpeg audio/video preservation.
 2. CI now runs `npm test` and `npm run build` on `main`, `fix/**`, and pull requests.
-3. Next task: implement and run Kling → FFmpeg → Storage E2E.
-4. After that: run image → Storage → public HTTPS against the real Timeweb/S3 environment.
+3. Next task: run Kling → FFmpeg → Storage E2E against the real Fal/Timeweb environment.
+4. After that: run image → Storage → public HTTPS and Kling → FFmpeg → Storage against the real Timeweb/S3 environment.
 5. Then move to production Instagram / Telegram verification.
 
 ## Verification commands
