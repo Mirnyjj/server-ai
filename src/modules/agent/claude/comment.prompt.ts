@@ -1,4 +1,4 @@
-import type { CommentAgentDecision } from "../types";
+import type { CommentAgentDecision } from "../types.js";
 
 /**
  * Claude Comment decision (TZ §20).
