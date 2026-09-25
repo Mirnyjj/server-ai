@@ -1,5 +1,5 @@
 import type { ConnectionOptions } from "bullmq";
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 
 /**
  * BullMQ connection options derived from REDIS_URL.
