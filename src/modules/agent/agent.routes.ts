@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import { processComment } from "./comment.agent";
-import { processDirectMessage } from "./message.agent";
-import { PolicyEngine } from "./policy/policy.engine";
+import { processComment } from "./comment.agent.js";
+import { processDirectMessage } from "./message.agent.js";
+import { PolicyEngine } from "./policy/policy.engine.js";
 
 export async function registerAgentRoutes(app: FastifyInstance) {
   /** Inspect effective policy for a profile */
