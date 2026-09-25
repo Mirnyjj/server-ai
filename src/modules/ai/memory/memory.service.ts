@@ -32,6 +32,38 @@ export async function addAgentMemory(input: {
     throw new Error("Текст памяти не может быть пустым");
   }
 
+  const existing = await prisma.agentMemory.findMany({
+    where: {
+      profileId: input.profileId,
+      type: input.type,
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    take: 100,
+  });
+
+  const duplicate = existing.find(
+    (memory) => getMemoryText(memory.content).trim() === text,
+  );
+
+  if (duplicate) {
+    const updated = await prisma.agentMemory.update({
+      where: {
+        id: duplicate.id,
+      },
+      data: {
+        importance: Math.max(
+          duplicate.importance,
+          Math.min(1, Math.max(0, input.importance ?? 0.7)),
+        ),
+        expiresAt: input.expiresAt ?? duplicate.expiresAt,
+      },
+    });
+
+    return updated as AgentMemoryRecord;
+  }
+
   const memory = await prisma.agentMemory.create({
     data: {
       profileId: input.profileId,
