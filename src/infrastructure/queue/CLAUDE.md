@@ -1,42 +1,15 @@
-# BullMQ — 9 queues
+# BullMQ Queue Infrastructure
 
-| Queue | Jobs |
-|-------|------|
-| token-refresh | refresh connection / all expiring (repeat 6h) |
-| webhook | Meta events → DB → **enqueue agent** |
-| publish | create container + publish |
-| container-status | poll until FINISHED |
-| media-sync | Graph media → DB |
-| insights | PostMetric |
-| comment-reconcile | Graph comments → DB |
-| agent | process-comment, process-direct-message |
-| **content-plan** | content-plan-slot, strategy-run |
+BullMQ через Redis выполняет asynchronous/background jobs.
 
-Workers started via `startWorkers()` from API (`src/index.ts`) or `src/worker.ts`.
+Workers находятся в `src/infrastructure/queue/workers`.
 
-## Autonomous loops
+Правила:
+1. Долгие операции не выполнять внутри HTTP/Telegram request.
+2. Job должна быть retry-safe и idempotent.
+3. Секреты не передавать в payload.
+4. Состояние, необходимое после restart, хранить в БД.
+5. При изменении payload синхронно обновлять producer, worker и TypeScript types.
+6. Publish jobs обязаны проверять актуальный Post status и Instagram connection.
 
-```
-Meta webhook → webhook worker → upsert Comment/DM
-  → enqueueProcessComment / enqueueProcessDirectMessage
-    → agent worker → Luna → Policy → Graph | Telegram
-```
-
-```
-POST /api/ai/pipeline/run { autoPublish: true }
-  OR content-plan-slot job
-  → scenario → gen → storage → Post READY
-  → enqueueCreateAndPublish (HTTPS public URLs only)
-```
-
-```
-strategy-run job
-  → Luna analytics → update AiProfile.contentStrategy only
-```
-
-## Files
-
-- `types.ts` — queue/job names + payloads
-- `queues.ts` — Queue instances + enqueue helpers
-- `workers/*` — one worker per domain
-- `connection.ts` — Redis connection options
+Generation jobs могут занимать минуты; transport layer должен поставить job в очередь и сообщить пользователю о состоянии, а не блокировать request.

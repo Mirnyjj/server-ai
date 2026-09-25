@@ -1,79 +1,17 @@
-# MCP Server (Model Context Protocol)
+# MCP
 
-Exposes Instagram AI agent operations as MCP tools.
+MCP предоставляет операции Instagram AI agent через Model Context Protocol.
 
 ## Transports
-
-### 1. stdio (Claude Desktop / Cursor local)
-
-```bash
-npm run mcp
-# tsx src/mcp/server.ts
-```
-
-```json
-{
-  "mcpServers": {
-    "ig-agent": {
-      "command": "npx",
-      "args": ["tsx", "src/mcp/server.ts"],
-      "cwd": "/absolute/path/to/server-ai",
-      "env": { "DATABASE_URL": "...", "REDIS_URL": "...", "...": "..." }
-    }
-  }
-}
-```
-
-### 2. Streamable HTTP (API process)
-
-Registered in `src/app.ts` → `registerMcpRoutes`.
-
-| | |
-|--|--|
-| URL | `/mcp` |
-| Methods | `GET`, `POST`, `DELETE` |
-| Auth | `Authorization: Bearer ${MCP_SERVER_TOKEN}` |
-| Session | header `mcp-session-id` after initialize |
-
-```env
-MCP_SERVER_TOKEN=<at least 32 characters>
-```
-
-Without token → `503 mcp_disabled`.  
-Wrong/missing Bearer → `401`.
-
-Implementation: `mcp.routes.ts` + `StreamableHTTPServerTransport` + `createMcpServer()` from `server.ts`.
-
-## Tools
-
-| Tool | Description |
-|------|-------------|
-| `system_status` | Modes + pending counts |
-| `list_profiles` | AI profiles + IG |
-| `pending_reviews` | requiresHuman |
-| `sync_media` | Enqueue media sync |
-| `run_pipeline` | Scenario → gen → storage → optional publish |
-| `run_plan_slot` | Content plan slot |
-| `run_strategy` | Update contentStrategy |
-| `publish_post` | Publish READY post |
-| `process_comment` | Luna comment agent |
-| `process_dm` | Luna DM agent |
-| `list_references` | Character pack |
-| `add_reference` | Register ref photo + description |
+- stdio: `npm run mcp`, entrypoint `src/mcp/server.ts`.
+- Streamable HTTP: `src/mcp/mcp.routes.ts`, endpoint `/mcp`, Bearer `MCP_SERVER_TOKEN`.
 
 ## Architecture
-
 ```
-MCP client
-  → stdio server.ts  OR  HTTP /mcp
-    → tools.ts
-      → same services as REST / BullMQ
+MCP transport → mcp/tools.ts → existing services / agents / queues
 ```
+MCP не должен содержать отдельную реализацию бизнес-логики.
 
-No separate business logic.
+Основные tools: system status, profiles, pending reviews, sync media, content pipeline, plan slot, strategy, publish, comment/DM processing, references и web search.
 
-## Files
-
-- `server.ts` — MCP server factory + stdio entry
-- `tools.ts` — tool handlers
-- `mcp.routes.ts` — HTTP transport on Fastify
+При добавлении нового tool сначала проверить, существует ли соответствующий domain service. Tool должен быть тонким adapter.

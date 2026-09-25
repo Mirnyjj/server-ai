@@ -1,74 +1,28 @@
-# AI Layer — Architecture
+# AI Module
 
-## Model roles
+AI module отвечает за reasoning и media generation.
 
-| Role | Model | Responsibility |
-|------|--------|----------------|
-| **Brain** | **GPT-6 Luna** | Scenarios, captions, comment/DM decisions, analytics, strategy |
-| **Image** | `IMAGE_GENERATOR_*` (stub\|http) | PHOTO / CAROUSEL / STORY |
-| **Video** | `VIDEO_GENERATOR_*` (stub\|http) | REEL / VIDEO |
+## Submodules
+- `llm/` — LlmProvider и Luna.
+- `content/` — структурированные content scenarios.
+- `pipeline/` — полный generation flow.
+- `generators/` — image/video providers и FFmpeg.
+- `references/` — character/visual references.
+- `memory/` — durable profile memory.
+- `knowledge/` — documents/chunks.
+- `plan/` — content planning.
+- `strategy/` — strategy agent.
+- `search/` — SearXNG.
+- `transcription/` — Whisper adapter.
 
-Luna does **not** render pixels. Flow:
-
+## Flow
 ```
-Luna (scenario + visualBrief)
-  → ImageGenerator | VideoGenerator
-    → Object Storage (public HTTPS URL)
-      → MediaAsset + Post
-        → [optional] Instagram publish queue
+Luna → scenario → pipeline → generators → Object Storage → Post/MediaAsset
 ```
+Luna не рендерит media. Image и Video — отдельные interfaces.
 
-## Character references
+Current providers: OpenAI Images для image generation; fal.ai Kling V3 Pro для image-to-video; FFmpeg для composition.
 
-`MediaReference` + `MediaAsset` per profile.
+Pipeline может использовать system prompt, visual identity, MediaReference, memory, knowledge и web context. Эти источники имеют разную семантику и не должны без необходимости сливаться в один источник истины.
 
-| type | Meaning |
-|------|--------|
-| FACE | close-up face |
-| FULL_BODY | full body |
-| STYLE / OUTFIT / LOCATION / LIGHTING / REFERENCE | consistency anchors |
-
-`metadata`: `{ description, tags[], priority, notes, locks? }`  
-API: `/api/ai/profiles/:profileId/references` (+ `/pack`).
-
-## Modules
-
-```
-ai/
-  llm/          Luna client + LlmProvider
-  generators/   stub + HTTP image/video
-  references/   character consistency CRUD
-  content/      scenarios + analytics schemas
-  pipeline/     run → gen → storage → Post READY → optional publish
-  plan/         scheduled content slots
-  strategy/     contentStrategy updates (not Policy)
-```
-
-## Key HTTP
-
-| Path | Action |
-|------|--------|
-| `POST /api/ai/scenarios/generate` | Luna scenario |
-| `POST /api/ai/analytics/run` | Luna insights |
-| `POST /api/ai/pipeline/run` | Full pipeline (`autoPublish?`) |
-| `POST /api/ai/pipeline/posts/:id/publish` | Publish READY |
-| `POST /api/ai/plan/run-slot` | One plan slot |
-| `POST /api/ai/strategy/run` | Strategy agent |
-
-## Env
-
-```env
-LUNA_API_KEY=
-LUNA_BASE_URL=
-LUNA_MODEL=
-
-IMAGE_GENERATOR_PROVIDER=stub|http
-IMAGE_GENERATOR_BASE_URL=
-IMAGE_GENERATOR_API_KEY=
-IMAGE_GENERATOR_MODEL=
-
-VIDEO_GENERATOR_PROVIDER=stub|http
-VIDEO_GENERATOR_BASE_URL=
-VIDEO_GENERATOR_API_KEY=
-VIDEO_GENERATOR_MODEL=
-```
+External provider должен получать URL, который реально доступен извне. Private/internal storage URL использовать только если provider имеет к нему доступ.

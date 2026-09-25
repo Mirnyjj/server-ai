@@ -1,109 +1,70 @@
-# server-ai — Progress
+# server-ai — Project Context for Coding Agents
 
-> Branch: `fix/instagram-api-db-sync`  
-> HEAD note: `необходимо доработать импорты и типы не совпадают со схемой`  
-> Docs only — no code changes in this update.
+## Назначение
+Backend AI-агента для управления Instagram: Graph API/OAuth, Luna LLM, генерация изображений и видео, контент-пайплайн, память, Knowledge Base, Telegram control plane, MCP, BullMQ/Redis, PostgreSQL/Prisma, Object Storage, SearXNG и Whisper.
 
-## Stack
+## Source of truth
+Текущий runtime-код находится в `src/`. Главные точки входа: `src/index.ts`, `src/app.ts`, `src/worker.ts`, `src/mcp/server.ts`. Схема БД: `prisma/schema.prisma`. Docker topology: `docker-compose.yml`.
 
-| Role | Provider |
-|------|----------|
-| Brain | **GPT-6 Luna** (OpenAI-compatible) |
-| Image / Video | `stub` \| `http` |
-| Storage | `local` \| `s3` \| `r2` \| `minio` |
-| Queues | BullMQ + Redis (**9** queues) |
-| Control plane | Telegram (webhook + **long polling in non-prod**) |
-| MCP | **stdio** (`npm run mcp`) + **HTTP** `POST/GET/DELETE /mcp` |
-| Deploy | `Dockerfile` + `docker-compose` (api + redis) |
+В репозитории также существуют top-level `modules/`, `infrastructure/` и `lib/`. Это legacy/parallel tree от предыдущей архитектуры. Не переносить код между ним и `src/` автоматически. Перед изменением проверить реальный import path.
 
-## PROGRESS MAP
-
-| Block | % | Notes |
-|-------|---|--------|
-| Instagram Graph + OAuth + dev mode | 100 | MARKER bootstrap when no HTTPS redirect |
-| Webhooks + HMAC + idempotency | 100 | → agent queue |
-| Publish pipeline + container poll | 100 | |
-| Comments reconcile + Insights | 100 | |
-| Policy Engine | 100 | |
-| Luna agent (comment/DM) | 85 | fallback heuristics if no key |
-| Telegram control plane | **95** | polling added (dev); webhook for prod |
-| Object Storage | 80 | |
-| Content pipeline + autoPublish | 75 | |
-| HTTP image/video adapters | 70 | |
-| Content plan + strategy agent | 70 | |
-| MCP stdio | 80 | |
-| **MCP Streamable HTTP `/mcp`** | **75** | Bearer `MCP_SERVER_TOKEN` |
-| Docker compose | 70 | api+redis; DB external via `DATABASE_URL` |
-| Per-profile cron schedules | 40 | |
-| **TypeScript build / import hygiene** | **⚠️ broken** | see Known issues |
-
-**Feature surface ~80% · Build health: needs fix before prod**
-
-## Known issues (do not ignore)
-
-Latest commit message on branch:
-
-> «необходимо доработать импорты и типы не совпадают со схемой»
-
-Observed drift to fix later (code change, not docs):
-
-1. **Mixed import style** — some entrypoints use `.js` suffix (`src/index.ts`), many modules still extensionless; risk under `NodeNext` / Docker `dist/` layout.
-2. **Prisma client path** — generated under `src/generated/prisma`; runtime imports via `prisma/prisma` must stay consistent after `prisma generate`.
-3. **Schema vs application types** — enums/models in code may lag `prisma/schema.prisma` (regenerate + align agent/AI modules).
-4. **Dockerfile CMD** — `node dist/src/index.js` depends on `tsconfig` `outDir`/`rootDir`; verify after `npm run build`.
-5. **App Review / IG link** — product code assumes IG Business linked to Page; Graph tests need `instagram_business_account`.
-
-## Queues (9)
-
-`token-refresh` · `webhook` · `publish` · `container-status` · `media-sync` · `insights` · `comment-reconcile` · `agent` · `content-plan`
-
-## Autonomous loops
-
+## Архитектура
 ```
-Webhook → DB Comment/DM → agent queue → Luna → Policy → reply | Telegram
-
-plan/pipeline → Luna scenario → gen → Object Storage → Post READY
-  → [autoPublish] publish queue
+REST / Telegram / MCP / Instagram Webhooks
+                  ↓
+        services / agents / pipeline
+                  ↓
+ Prisma / Redis / Instagram / LLM / generators / storage
+                  ↓
+              external APIs
 ```
+Transport layer не должен содержать дублирующую бизнес-логику. Telegram и MCP должны переиспользовать существующие services/tool executor.
 
-## MCP
+## Домены
+- `src/modules/ai` — LLM, сценарии, стратегия, память, knowledge, search, генераторы.
+- `src/modules/instagram` — OAuth, Graph API, media, content, comments, DM, insights, webhooks.
+- `src/modules/agent` — decision/policy для comments и DM.
+- `src/modules/telegram` — управление агентом и human approval.
+- `src/mcp` — MCP stdio + Streamable HTTP.
+- `src/infrastructure` — Prisma, Redis, BullMQ, Object Storage.
 
-```bash
-npm run mcp                    # stdio
-# HTTP (API process):
-# Authorization: Bearer $MCP_SERVER_TOKEN
-# POST /mcp  (initialize + tools)
+## Content flow
 ```
-
-Env: `MCP_SERVER_TOKEN` (min 32 chars) enables HTTP MCP.
-
-## Telegram
-
-- **Production:** webhook (`TELEGRAM_WEBHOOK_URL`)
-- **Non-production:** `startTelegramPolling()` from `src/index.ts` (long poll)
-
-## Docker
-
-```bash
-docker compose up --build
-# api :8000  redis :6379
-# PostgreSQL not in compose — set DATABASE_URL in .env
+strategy/topic → Luna scenario → content pipeline
+→ image/video generation → Object Storage → Post READY
+→ Telegram review → APPROVED → publish queue → Instagram
 ```
+Reel сейчас: Luna создаёт shots → image generator создаёт frame → video generator делает image-to-video → FFmpeg объединяет сцены в MP4.
 
-## Module docs
+Текущие media providers: OpenAI Images (`gpt-image-2`) и fal.ai Kling V3 Pro image-to-video. OpenAI Sora/Videos API не использовать.
 
-| Path | Topic |
-|------|--------|
-| `src/infrastructure/queue/CLAUDE.md` | BullMQ |
-| `src/infrastructure/storage/CLAUDE.md` | Object Storage |
-| `src/modules/telegram/CLAUDE.md` | Control plane + polling |
-| `src/modules/ai/CLAUDE.md` | Luna / generators / refs |
-| `src/mcp/CLAUDE.md` | MCP stdio + HTTP |
-| `src/modules/agent/CLAUDE.md` | Policy + agents |
+## LLM
+Consumers работают через `LlmProvider`. Основные операции: `completeText` и `completeJson`. Luna — текущий brain provider. LLM output не является источником истины для БД; structured output валидируется вызывающим кодом.
 
-## Next engineering (when allowed to change code)
+System prompt, AgentMemory и Knowledge Base — разные механизмы: prompt задаёт поведение, memory хранит durable facts/preferences, knowledge хранит source documents/chunks.
 
-1. Fix imports/types vs Prisma schema so `npm run build` passes
-2. Align Docker dist path with tsconfig
-3. Per-profile content cron
-4. Real image/video vendor adapters as needed
+## Queue
+BullMQ + Redis используются для долгих и фоновых операций. HTTP/Telegram не должны ждать тяжёлую генерацию. Jobs должны быть retry-safe и idempotent; секреты нельзя класть в payload.
+
+## Database
+`prisma/schema.prisma` — source of truth. Runtime использует `DATABASE_URL`, migrations — `DIRECT_URL`. Generated Prisma files не редактировать вручную.
+
+После изменения schema: migration → Prisma generate → исправление TypeScript consumers → build.
+
+## Storage
+Object Storage находится в `src/infrastructure/storage`. Внешним AI providers и Telegram нужны реально доступные HTTPS URLs; internal Docker hostname не подходит.
+
+## Правила агента
+1. Перед изменением читать этот файл и ближайший `CLAUDE.md`.
+2. Читать target file и его direct consumers.
+3. Для DB изменений сверяться с Prisma schema.
+4. Для queue изменений сверять producer, worker и payload types.
+5. Не придумывать отсутствующие API, env, модели или функции.
+6. Не использовать `any` для обхода type errors.
+7. Provider-specific код держать за интерфейсами.
+8. При изменении поведения обновлять ближайший `CLAUDE.md`.
+
+## Проверка
+Обычная проверка: `npm run build`. Для Docker: `docker compose config`, `docker compose build`, `docker compose up -d`, `docker compose ps`.
+
+Документация предназначена как persistent context для coding agents и должна описывать фактическое поведение кода, а не желаемую архитектуру.

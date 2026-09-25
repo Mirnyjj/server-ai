@@ -1,35 +1,27 @@
 # Instagram Module
 
-## Архитектура
+Instagram module — единственная application boundary для Graph API.
 
+## Submodules
+- `auth/` — OAuth, state, token exchange/refresh, account connection.
+- `client/` — typed Graph API client.
+- `profile/` — profile operations.
+- `media/` — media synchronization.
+- `content/` — containers и publishing.
+- `comments/` — comments/reconciliation.
+- `messages/` — Direct Messages.
+- `insights/` — metrics.
+- `webhooks/` — verification и event ingestion.
+
+Flow:
 ```
-HTTP route → service → token.resolver → instagram.client → Graph API
-Тяжёлое → BullMQ workers
+route/service → token resolver → instagram.client → Graph API
 ```
 
-## Подмодули
+AI, Telegram и MCP не должны напрямую вызывать Graph API.
 
-| Папка | Статус |
-|-------|--------|
-| `auth/` | ✅ OAuth + dev bootstrap |
-| `client/` | ✅ + insights methods |
-| `profile/` | ✅ |
-| `media/` | ✅ sync → DB |
-| `content/` | ✅ publish pipeline |
-| `comments/` | ✅ API + reconciliation |
-| `messages/` | ✅ send DM |
-| `webhooks/` | ✅ verify + queue |
-| `insights/` | ✅ PostMetric |
+Long-running work выполняется через BullMQ: webhook processing, media sync, container status, publishing, comment reconciliation, token refresh и insights.
 
-## Связь с Agent
+Agent принимает decision; Instagram services выполняют API action. Это предотвращает превращение свободного LLM output в unrestricted API call.
 
-Agent (`modules/agent`) использует client + PolicyEngine.
-Webhook worker **ещё не** вызывает agent автоматически.
-
-## Local dev
-
-`isInstagramDevMode()` → MARKER, без OAuth/webhooks.
-
-## Не в этом модуле (ТЗ)
-
-Object Storage, generators, InstagramProvider interface, Telegram.
+Publishing обычно идёт: Post READY → approval/policy → publish queue → media container → status polling → published.
