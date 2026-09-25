@@ -12,21 +12,47 @@ Backend AI-агента для управления Instagram: Graph API/OAuth, 
 ```
 REST / Telegram / MCP / Instagram Webhooks
                   ↓
-        services / agents / pipeline
+        Agent Orchestrator / domain services
+                  ↓
+        specialized agents / pipelines
                   ↓
  Prisma / Redis / Instagram / LLM / generators / storage
                   ↓
               external APIs
 ```
+
+Специализированные агенты находятся в `src/modules/agents`:
+- `platform` — административная и техническая ответственность.
+- `content` — контент и генерация.
+- `analytics` — аналитика и стратегия.
+- `community` — комментарии и Direct.
+
+Orchestrator маршрутизирует запрос к одной роли. Каждый специализированный агент имеет детерминированный allowlist инструментов. LLM не может расширить собственные полномочия.
+
 Transport layer не должен содержать дублирующую бизнес-логику. Telegram и MCP должны переиспользовать существующие services/tool executor.
 
 ## Домены
 - `src/modules/ai` — LLM, сценарии, стратегия, память, knowledge, search, генераторы.
+- `src/modules/agents` — специализированные AI-агенты и маршрутизация.
 - `src/modules/instagram` — OAuth, Graph API, media, content, comments, DM, insights, webhooks.
 - `src/modules/agent` — decision/policy для comments и DM.
-- `src/modules/telegram` — управление агентом и human approval.
+- `src/modules/telegram` — управление агентами и human approval.
 - `src/mcp` — MCP stdio + Streamable HTTP.
 - `src/infrastructure` — Prisma, Redis, BullMQ, Object Storage.
+
+## Agent responsibilities
+```
+                     Agent Orchestrator
+                              │
+        ┌─────────────┬───────┼────────────┬─────────────┐
+        ▼             ▼       ▼            ▼
+    Platform       Content  Analytics   Community
+        │             │       │            │
+    platform       content  insights     comments/DM
+      tools          tools    tools         tools
+```
+
+Agent boundaries are enforced in code through `AGENT_TOOLSETS` and `isToolAllowed`. Добавление нового tool требует явного определения владельца-роли и обновления документации.
 
 ## Content flow
 ```
@@ -106,6 +132,7 @@ COMPLETE CHANGE
 - Storage → обновить storage documentation.
 - Environment variable → обновить соответствующий `CLAUDE.md` и при необходимости root documentation.
 - Docker/Compose/deployment → обновить infrastructure/deployment documentation.
+- Новый агент/роль/allowlist → обновить `src/modules/agents/CLAUDE.md` и root architecture.
 - Новый модуль → создать `CLAUDE.md` в его директории.
 - Удаление функциональности → удалить соответствующее устаревшее описание из документации.
 
