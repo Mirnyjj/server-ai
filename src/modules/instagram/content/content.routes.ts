@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { resolveAccessToken } from "../auth/token.resolver";
-import { createInstagramContentService } from "./content.service";
+import { resolveAccessToken } from "../auth/token.resolver.js";
+import { createInstagramContentService } from "./content.service.js";
 
 export async function registerInstagramContentRoutes(app: FastifyInstance) {
   app.post("/api/instagram/content/image", async (request, reply) => {
