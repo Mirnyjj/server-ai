@@ -85,7 +85,7 @@ BullMQ + Redis используются для долгих и фоновых о
 `docker-compose.yml` is the production-local topology for API, Redis, Whisper and SearXNG. Redis is internal-only and must not publish port `6379` to the host. API is the only service published directly by Compose on port `8000`; external HTTPS termination belongs to the reverse proxy.
 
 ## Storage
-Object Storage находится в `src/infrastructure/storage`. Внешним AI providers и Telegram нужны реально доступные HTTPS URLs; internal Docker hostname не подходит.
+Object Storage находится в `src/infrastructure/storage`. Внешним AI providers и Telegram нужны реально доступные HTTPS URLs; internal Docker hostname не подходит. Для S3-compatible storage public URL строится через `STORAGE_PUBLIC_BASE_URL`, если он задан; если он совпадает с `STORAGE_ENDPOINT`, он трактуется как S3 API endpoint и bucket добавляется в path. Для Timeweb допустима конфигурация `STORAGE_ENDPOINT=https://s3.twcstorage.ru` и `STORAGE_PUBLIC_BASE_URL=https://s3.twcstorage.ru`, которая даёт URL вида `https://s3.twcstorage.ru/{bucket}/{key}`.
 
 ## ОБЯЗАТЕЛЬНОЕ ПРАВИЛО ДОКУМЕНТАЦИИ
 
