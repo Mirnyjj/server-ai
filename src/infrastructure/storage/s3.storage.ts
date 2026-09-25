@@ -39,11 +39,9 @@ import { buildS3PublicUrl } from "./public-url.js";
  *    https://{bucket}.s3.{region}.amazonaws.com/{key}
  */
 export function createS3Storage(): ObjectStorage {
-  const bucket = env.STORAGE_BUCKET;
-
-  if (!bucket) {
+  const bucket = env.STORAGE_BUCKET ?? (() => {
     throw new Error("STORAGE_BUCKET is required for S3 storage");
-  }
+  })();
 
   const accessKeyId = env.STORAGE_ACCESS_KEY_ID;
 
