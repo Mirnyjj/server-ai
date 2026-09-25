@@ -6,27 +6,28 @@ import { createInstagramClient } from "../src/modules/instagram/client/instagram
 import { env, isOAuthEnabled } from "../src/config/env.js";
 
 const profileId = process.env.IG_VERIFY_PROFILE_ID;
-if (!profileId) {
-  throw new Error("IG_VERIFY_PROFILE_ID is required");
+if (!profileId && !env.INSTAGRAM_MARKER) {
+  throw new Error("IG_VERIFY_PROFILE_ID is required when INSTAGRAM_MARKER is not configured");
 }
 
-const runWriteChecks = process.argv.includes("--write");
-const account = await prisma.instagramAccount.findFirst({
-  where: { profileId, status: "ACTIVE" },
-  include: { connection: true },
-  orderBy: { updatedAt: "desc" },
-});
+const account = profileId
+  ? await prisma.instagramAccount.findFirst({
+      where: { profileId, status: "ACTIVE" },
+      include: { connection: true },
+      orderBy: { updatedAt: "desc" },
+    })
+  : null;
 
-if (!account) {
+if (profileId && !account && !env.INSTAGRAM_MARKER) {
   throw new Error(`No ACTIVE InstagramAccount for profile ${profileId}`);
 }
 
-if (!account.connection || account.connection.status !== "ACTIVE") {
+if (account?.connection?.status !== "ACTIVE" && !env.INSTAGRAM_MARKER) {
   throw new Error(`Instagram connection for account ${account.id} is not ACTIVE`);
 }
 
 if (
-  account.connection.tokenExpiresAt &&
+  account?.connection?.tokenExpiresAt &&
   account.connection.tokenExpiresAt.getTime() <= Date.now()
 ) {
   throw new Error(
@@ -34,29 +35,34 @@ if (
   );
 }
 
-const accessToken = await resolveAccessTokenByProfileId(profileId);
+const accessToken = profileId
+  ? await resolveAccessTokenByProfileId(profileId)
+  : env.INSTAGRAM_MARKER!;
+
 const client = createInstagramClient({
   accessToken,
   apiVersion: env.INSTAGRAM_API_VERSION,
 });
 
 const result: Record<string, unknown> = {
-  profileId,
-  instagramUserId: account.instagramUserId,
-  username: account.username,
+  profileId: profileId ?? null,
+  instagramUserId: account?.instagramUserId ?? null,
+  username: account?.username ?? null,
   apiVersion: env.INSTAGRAM_API_VERSION,
   oauthEnabled: isOAuthEnabled(),
-  connectionStatus: account.connection.status,
-  tokenExpiresAt: account.connection.tokenExpiresAt?.toISOString() ?? null,
+  tokenSource: account?.connection?.status === "ACTIVE" ? "database" : "INSTAGRAM_MARKER",
+  connectionStatus: account?.connection?.status ?? "MARKER",
+  tokenExpiresAt: account?.connection?.tokenExpiresAt?.toISOString() ?? null,
 };
 
-console.log("[1/5] DB connection: PASS");
+console.log("[1/5] Token source: PASS");
 
 const profile = await client.getProfile();
-if (!profile.id && !profile.user_id) {
+const instagramUserId = profile.user_id ?? profile.id;
+if (!instagramUserId) {
   throw new Error("Instagram profile response has no user id");
 }
-if (profile.user_id && profile.user_id !== account.instagramUserId) {
+if (account?.instagramUserId && profile.user_id && profile.user_id !== account.instagramUserId) {
   throw new Error(
     `DB Instagram user id ${account.instagramUserId} does not match API user id ${profile.user_id}`,
   );
@@ -71,7 +77,7 @@ result.profile = {
 };
 console.log("[2/5] Profile API: PASS");
 
-const media = await client.listMedia(account.instagramUserId, { limit: 5 });
+const media = await client.listMedia(instagramUserId, { limit: 5 });
 result.media = {
   count: media.data.length,
   ids: media.data.map((item) => item.id),
@@ -92,7 +98,7 @@ if (media.data[0]) {
 
 try {
   const insights = await client.getAccountInsights(
-    account.instagramUserId,
+    instagramUserId,
     ["reach", "profile_views"],
     { period: "day" },
   );
@@ -105,10 +111,10 @@ try {
     error: error instanceof Error ? error.message : "unknown",
   };
   console.log("[5/5] Account Insights API: FAIL");
-  if (!runWriteChecks) throw error;
+  if (!process.argv.includes("--write")) throw error;
 }
 
-if (runWriteChecks) {
+if (process.argv.includes("--write")) {
   console.log("");
   console.log("WRITE CHECKS are intentionally not automated.");
   console.log(
