@@ -1,8 +1,8 @@
 import type { FastifyInstance } from "fastify";
-import { env, isInstagramDevMode, isOAuthEnabled } from "../../../config/env";
-import { createInstagramAuthService } from "./auth.service";
-import { consumeOAuthState, createOAuthState } from "./state.service";
-import { bootstrapDevAccount } from "./dev-bootstrap.service";
+import { env, isInstagramDevMode, isOAuthEnabled } from "../../../config/env.js";
+import { createInstagramAuthService } from "./auth.service.js";
+import { consumeOAuthState, createOAuthState } from "./state.service.js";
+import { bootstrapDevAccount } from "./dev-bootstrap.service.js";
 
 export async function registerInstagramAuthRoutes(app: FastifyInstance) {
   const authService = createInstagramAuthService();
