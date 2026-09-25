@@ -9,6 +9,8 @@ import {
 import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver.js";
 import { createInstagramClient } from "../instagram/client/instagram.client.js";
 import { createInstagramCommentsService } from "../instagram/comments/comments.service.js";
+import { createInstagramContentService } from "../instagram/content/content.service.js";
+import { createInstagramInsightsService } from "../instagram/insights/insights.service.js";
 import { transcribeAudio } from "../ai/transcription/transcription.service.js";
 import { searchWeb } from "../ai/search/search.service.js";
 import {
@@ -177,6 +179,14 @@ export async function handleTelegramUpdate(
       await cmdSearch(chatId, text.slice(cmd.length).trim());
       break;
 
+    case "/publish":
+      await cmdPublish(chatId, text.slice(cmd.length).trim());
+      break;
+
+    case "/insights":
+      await cmdInsights(chatId);
+      break;
+
     case "/pending":
       await cmdPending(chatId);
       break;
@@ -232,6 +242,11 @@ const HELP_TEXT = [
   `/menu — главное меню управления`,
   `/status — состояние системы и подключений`,
   `/search <запрос> — поиск в интернете`,
+  `/publish image <url> | <caption> — опубликовать фото`,
+  `/publish reel <url> | <caption> — опубликовать Reel`,
+  `/publish story image <url> — опубликовать Story`,
+  `/publish story video <url> — опубликовать Story`,
+  `/insights — получить статистику Instagram`,
   `/profiles — список AI-профилей и Instagram-аккаунтов`,
   `/pending — комментарии и сообщения, требующие решения`,
   `/sync &lt;profileId&gt; — синхронизация публикаций`,
@@ -1022,6 +1037,154 @@ async function cmdSearch(chatId: number, query: string): Promise<void> {
     await sendTelegramMessage(
       chatId,
       "❌ Web Search: " +
+        escape(error instanceof Error ? error.message : "неизвестная ошибка"),
+    );
+  }
+}
+
+async function getActiveInstagramAccount(profileId: string) {
+  const account = await prisma.instagramAccount.findFirst({
+    where: {
+      profileId,
+      status: "ACTIVE",
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  if (!account) {
+    throw new Error("Для выбранного профиля нет активного Instagram-аккаунта");
+  }
+
+  return account;
+}
+
+async function cmdPublish(chatId: number, input: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use <profileId>");
+    return;
+  }
+
+  const separator = input.indexOf("|");
+  const left = (separator >= 0 ? input.slice(0, separator) : input).trim();
+  const caption = separator >= 0 ? input.slice(separator + 1).trim() : "";
+  const parts = left.split(/\s+/);
+  const type = parts[0]?.toLowerCase();
+  const value = parts[1]?.trim();
+
+  if (!type || !value) {
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Публикация</b>",
+        "",
+        "<code>/publish image URL | Caption</code>",
+        "<code>/publish reel URL | Caption</code>",
+        "<code>/publish story image URL</code>",
+        "<code>/publish story video URL</code>",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  try {
+    const account = await getActiveInstagramAccount(profileId);
+    const accessToken = await resolveAccessTokenByProfileId(profileId);
+    const service = createInstagramContentService(accessToken);
+
+    await sendTelegramMessage(chatId, "⏳ Публикую...");
+
+    let result: { id: string };
+
+    if (type === "image") {
+      result = await service.publishImage({
+        instagramUserId: account.instagramUserId,
+        imageUrl: value,
+        caption: caption || undefined,
+      });
+    } else if (type === "reel") {
+      result = await service.publishReel({
+        instagramUserId: account.instagramUserId,
+        videoUrl: value,
+        caption: caption || undefined,
+      });
+    } else if (type === "story") {
+      if (value === "image" || value === "video") {
+        const url = parts[2]?.trim();
+
+        if (!url) {
+          throw new Error("Для Story укажите URL после image/video");
+        }
+
+        result =
+          value === "image"
+            ? await service.publishStory({
+                instagramUserId: account.instagramUserId,
+                imageUrl: url,
+              })
+            : await service.publishStory({
+                instagramUserId: account.instagramUserId,
+                videoUrl: url,
+              });
+      } else {
+        throw new Error("Story должен быть: story image <url> или story video <url>");
+      }
+    } else {
+      throw new Error("Поддерживаются: image, reel, story");
+    }
+
+    await sendTelegramMessage(
+      chatId,
+      [
+        "✅ Публикация завершена.",
+        `Тип: <b>${escape(type)}</b>`,
+        `Instagram: @${escape(account.username ?? account.instagramUserId)}`,
+        `Media ID: <code>${escape(result.id)}</code>`,
+      ].join("\n"),
+    );
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ Публикация: " +
+        escape(error instanceof Error ? error.message : "неизвестная ошибка"),
+    );
+  }
+}
+
+async function cmdInsights(chatId: number): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use <profileId>");
+    return;
+  }
+
+  try {
+    const account = await getActiveInstagramAccount(profileId);
+    const accessToken = await resolveAccessTokenByProfileId(profileId);
+    const service = createInstagramInsightsService(accessToken);
+    const result = await service.fetchAccountInsights(account.instagramUserId);
+
+    const lines = Object.entries(result.metrics).map(
+      ([name, value]) => `• <b>${escape(name)}</b>: <code>${escape(JSON.stringify(value))}</code>`,
+    );
+
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Instagram Insights</b>",
+        `Аккаунт: @${escape(account.username ?? account.instagramUserId)}`,
+        "",
+        ...(lines.length > 0 ? lines : ["Нет доступных метрик."]),
+      ].join("\n").slice(0, 3900),
+    );
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ Insights: " +
         escape(error instanceof Error ? error.message : "неизвестная ошибка"),
     );
   }
