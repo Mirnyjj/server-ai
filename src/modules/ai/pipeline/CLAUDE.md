@@ -17,3 +17,6 @@ Stub generators → `placeholder.local` URLs → `publishReady: false`.
 
 
 Publishing policy: generated posts remain READY until an explicit human approval changes the post to APPROVED. The publish queue accepts APPROVED posts only; agent and MCP autoPublish requests are rejected deterministically.
+
+
+`POST /api/ai/pipeline/run` supports `async: true`, which enqueues generation in BullMQ and returns `202 + jobId`. MCP `run_pipeline` also accepts `async: true`.
