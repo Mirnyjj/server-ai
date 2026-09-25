@@ -1,21 +1,21 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import { registerInstagramAuthRoutes } from "./modules/instagram/auth/auth.routes";
-import { registerInstagramCommentsRoutes } from "./modules/instagram/comments/comments.routes";
-import { registerInstagramContentRoutes } from "./modules/instagram/content/content.routes";
-import { registerInstagramMediaRoutes } from "./modules/instagram/media/media.routes";
-import { registerInstagramMessagesRoutes } from "./modules/instagram/messages/messages.routes";
-import { registerInstagramWebhookRoutes } from "./modules/instagram/webhooks/webhook.routes";
-import { registerInstagramProfileRoutes } from "./modules/instagram/profile/profile.routes";
-import { registerInstagramInsightsRoutes } from "./modules/instagram/insights/insights.routes";
-import { registerAgentRoutes } from "./modules/agent/agent.routes";
-import { registerTelegramRoutes } from "./modules/telegram/telegram.routes";
-import { registerReferenceRoutes } from "./modules/ai/references/reference.routes";
-import { registerAiContentRoutes } from "./modules/ai/content/content.routes";
-import { registerPipelineRoutes } from "./modules/ai/pipeline/pipeline.routes";
-import { registerStorageRoutes } from "./infrastructure/storage/storage.routes";
-import { registerPlanRoutes } from "./modules/ai/plan/plan.routes";
-import { registerMcpRoutes } from "./mcp/mcp.routes";
+import { registerInstagramAuthRoutes } from "./modules/instagram/auth/auth.routes.js";
+import { registerInstagramCommentsRoutes } from "./modules/instagram/comments/comments.routes.js";
+import { registerInstagramContentRoutes } from "./modules/instagram/content/content.routes.js";
+import { registerInstagramMediaRoutes } from "./modules/instagram/media/media.routes.js";
+import { registerInstagramMessagesRoutes } from "./modules/instagram/messages/messages.routes.js";
+import { registerInstagramWebhookRoutes } from "./modules/instagram/webhooks/webhook.routes.js";
+import { registerInstagramProfileRoutes } from "./modules/instagram/profile/profile.routes.js";
+import { registerInstagramInsightsRoutes } from "./modules/instagram/insights/insights.routes.js";
+import { registerAgentRoutes } from "./modules/agent/agent.routes.js";
+import { registerTelegramRoutes } from "./modules/telegram/telegram.routes.js";
+import { registerReferenceRoutes } from "./modules/ai/references/reference.routes.js";
+import { registerAiContentRoutes } from "./modules/ai/content/content.routes.js";
+import { registerPipelineRoutes } from "./modules/ai/pipeline/pipeline.routes.js";
+import { registerStorageRoutes } from "./infrastructure/storage/storage.routes.js";
+import { registerPlanRoutes } from "./modules/ai/plan/plan.routes.js";
+import { registerMcpRoutes } from "./mcp/mcp.routes.js";
 
 export async function createApp() {
   const app = Fastify({
