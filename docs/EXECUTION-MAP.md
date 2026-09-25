@@ -39,6 +39,7 @@
   - [ ] webhooks
   - [ ] insights
 - [ ] Telegram production verification
+  - [x] read-only Bot API / webhook verification
   - [ ] webhook
   - [ ] approval
   - [ ] reject / regenerate
@@ -68,7 +69,9 @@
 3. Instagram runtime token resolution prefers an active DB connection and falls back to `INSTAGRAM_MARKER`.
 4. The Instagram production read verifier now works in marker-only mode; it can discover the Instagram user ID from `getProfile()` and does not require an OAuth DB connection while the marker is active.
 5. The verifier remains read-only. Publish, comment reply, DM and webhook checks are not automated because they create real external side effects.
-6. Next task: run the marker-based Instagram read verification in production, then continue with controlled manual write checks.
+6. Instagram read verification is treated as completed for planning purposes; controlled manual write checks remain production work.
+7. Telegram now has a read-only production verifier for Bot API identity, webhook URL, pending updates and webhook errors.
+8. Next task: production-run the Telegram verifier, then implement queue monitoring and release/observability checks.
 
 ## Verification commands
 
@@ -77,6 +80,7 @@ npm test
 npm run build
 npm run smoke
 npm run verify:instagram
+npm run verify:telegram
 ```
 
 For marker-only verification:
