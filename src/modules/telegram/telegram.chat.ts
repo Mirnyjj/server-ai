@@ -2,6 +2,7 @@ import { prisma } from "../../../prisma/prisma.js";
 import { getBrainLlm } from "../ai/llm/provider.js";
 import { extractAndStoreMemories } from "../ai/memory/memory.extractor.js";
 import { listAgentMemories, getMemoryText } from "../ai/memory/memory.service.js";
+import { searchKnowledge } from "../ai/knowledge/knowledge.service.js";
 
 const activeProfiles = new Map<number, string>();
 
@@ -118,6 +119,7 @@ export async function askTelegramAi(input: {
     });
 
   const memories = await listAgentMemories(input.profileId, { take: 30 });
+  const knowledge = await searchKnowledge(input.profileId, input.message, 6);
 
   const memoryContext =
     memories.length > 0
@@ -128,6 +130,16 @@ export async function askTelegramAi(input: {
           )
           .join("\\n")
       : "Постоянная память пока пуста.";
+
+  const knowledgeContext =
+    knowledge.length > 0
+      ? knowledge
+          .map(
+            (item) =>
+              `- [${item.title}] ${item.content}${item.source ? ` (Источник: ${item.source})` : ""}`,
+          )
+          .join("\\n")
+      : "Подходящих материалов базы знаний не найдено.";
 
   const systemPrompt = [
     "Ты — AI-персонаж, которым пользователь управляет через приватный Telegram control plane.",
@@ -147,6 +159,9 @@ export async function askTelegramAi(input: {
     "",
     "Долговременная память профиля:",
     memoryContext,
+    "",
+    "База знаний. Используй её как справочный контекст и не выдумывай сведения, которых в ней нет:",
+    knowledgeContext,
   ].join("\n");
 
   try {
