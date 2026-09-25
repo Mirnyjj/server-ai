@@ -41,6 +41,15 @@ import {
   getTelegramActiveProfileId,
   setTelegramActiveProfile,
 } from "./telegram.chat.js";
+import {
+  approveTelegramPost,
+  generateTelegramContent,
+  listTelegramPendingPosts,
+  parseTelegramPostType,
+  regenerateTelegramPost,
+  rejectTelegramPost,
+  sendTelegramPostReview,
+} from "./telegram.content.js";
 
 export type TelegramPhotoSize = {
   file_id: string;
@@ -187,6 +196,10 @@ export async function handleTelegramUpdate(
       await cmdPublish(chatId, text.slice(cmd.length).trim());
       break;
 
+    case "/content":
+      await cmdContent(chatId, text.slice(cmd.length).trim());
+      break;
+
     case "/insights":
       await cmdInsights(chatId);
       break;
@@ -256,6 +269,9 @@ const HELP_TEXT = [
   `/publish reel <url> | <caption> — опубликовать Reel`,
   `/publish story image <url> — опубликовать Story`,
   `/publish story video <url> — опубликовать Story`,
+  `/content generate <photo|reel|story|carousel|video> | <тема> — создать контент и прислать на проверку`,
+  `/content pending — показать готовый контент на проверку`,
+  `Кнопка «Одобрить и опубликовать» публикует только после вашего подтверждения.`,
   `/insights — получить статистику Instagram`,
   `/profiles — список AI-профилей и Instagram-аккаунтов`,
   `/pending — комментарии и сообщения, требующие решения`,
@@ -1086,6 +1102,76 @@ async function sendMainMenu(chatId: number): Promise<void> {
   );
 }
 
+async function cmdContent(chatId: number, input: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use &lt;profileId&gt;");
+    return;
+  }
+
+  const trimmed = input.trim();
+
+  if (!trimmed || trimmed.toLowerCase() === "pending") {
+    const posts = await listTelegramPendingPosts(profileId);
+
+    if (posts.length === 0) {
+      await sendTelegramMessage(chatId, "Контента, ожидающего проверки, нет.");
+      return;
+    }
+
+    await sendTelegramMessage(chatId, `Контента на проверку: <b>${posts.length}</b>`);
+    for (const post of posts) {
+      await sendTelegramPostReview(chatId, post.id);
+    }
+    return;
+  }
+
+  const match = trimmed.match(/^generate(?:\\s+([^|]+))?(?:\\|\\s*([\\s\\S]*))?$/i);
+  if (!match) {
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Контент</b>",
+        "",
+        "<code>/content generate reel | тема</code>",
+        "<code>/content generate carousel | тема</code>",
+        "<code>/content generate photo | тема</code>",
+        "<code>/content pending</code>",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  const type = parseTelegramPostType(match[1]?.trim());
+  const topicHint = match[2]?.trim();
+
+  if (match[1] && !type) {
+    await sendTelegramMessage(chatId, "Тип должен быть: photo, reel, story, carousel или video.");
+    return;
+  }
+
+  try {
+    await sendTelegramMessage(chatId, "⏳ Генерирую сценарий и медиа...");
+    const result = await generateTelegramContent({
+      chatId,
+      profileId,
+      postType: type,
+      topicHint,
+    });
+
+    await sendTelegramMessage(
+      chatId,
+      `✅ Контент готов к проверке. ID: <code>${result.postId}</code>\nПубликация произойдёт только после вашего подтверждения.`,
+    );
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ Генерация: " + escape(error instanceof Error ? error.message : "неизвестная ошибка"),
+    );
+  }
+}
+
 async function cmdSearch(chatId: number, query: string): Promise<void> {
   if (!query.trim()) {
     await sendTelegramMessage(
@@ -1516,7 +1602,10 @@ async function handleCallback(
   }
 
   const data = cq.data ?? "";
-  const [action, id] = data.split(":");
+  const parts = data.split(":");
+  const action = parts[0] ?? "";
+  const id = parts[1];
+  const subaction = parts[2];
 
   try {
     if (action === "menu") {
@@ -1533,6 +1622,22 @@ async function handleCallback(
         chatId,
         `✅ Активный профиль: <b>${escape(profile?.name ?? id)}</b>`,
       );
+    } else if (action === "post" && id && subaction) {
+      if (subaction === "approve") {
+        const result = await approveTelegramPost(id);
+        await answerCallbackQuery(cq.id, "Одобрено, публикация поставлена в очередь");
+        await sendTelegramMessage(chatId, `✅ Пост <code>${id}</code> одобрен. Job: <code>${result.jobId ?? "queued"}</code>`);
+      } else if (subaction === "reject") {
+        await rejectTelegramPost(id);
+        await answerCallbackQuery(cq.id, "Отклонено");
+        await sendTelegramMessage(chatId, `❌ Пост <code>${id}</code> отклонён.`);
+      } else if (subaction === "regenerate") {
+        await answerCallbackQuery(cq.id, "Запускаю перегенерацию...");
+        const newPostId = await regenerateTelegramPost(chatId, id);
+        await sendTelegramMessage(chatId, `🔄 Создана новая версия: <code>${newPostId}</code>`);
+      } else {
+        await answerCallbackQuery(cq.id, "Неизвестное действие");
+      }
     } else if (action === "c_send" && id) {
       await humanSendComment(id);
 
@@ -1657,7 +1762,26 @@ async function handleMenuCallback(
     return;
   }
 
-  if (section === "instagram" || section === "content" || section === "comments" || section === "dm" || section === "settings") {
+  if (section === "content") {
+    await answerCallbackQuery(callbackQueryId);
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>✍️ Контент</b>",
+        "",
+        "<code>/content generate reel | тема</code> — Reel",
+        "<code>/content generate story | тема</code> — Story",
+        "<code>/content generate carousel | тема</code> — карусель",
+        "<code>/content generate photo | тема</code> — пост",
+        "<code>/content pending</code> — очередь проверки",
+        "",
+        "Готовый контент сначала приходит сюда на проверку.",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  if (section === "instagram" || section === "comments" || section === "dm" || section === "settings") {
     await answerCallbackQuery(callbackQueryId);
     const labels: Record<string, string> = {
       instagram: "📱 Instagram",
