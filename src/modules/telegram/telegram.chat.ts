@@ -122,7 +122,7 @@ export async function askTelegramAi(input: {
   const memories = await listAgentMemories(input.profileId, { take: 30 });
   const knowledge = await searchKnowledge(input.profileId, input.message, 6);
 
-  let webResults = [];
+  let webResults: Awaited<ReturnType<typeof searchWeb>> = [];
   if (shouldSearchWeb(input.message)) {
     try {
       webResults = await searchWeb(input.message, {
