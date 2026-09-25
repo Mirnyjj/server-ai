@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import { runContentPipeline } from "./content.pipeline";
-import { enqueuePublishReadyPost } from "./publish-from-post";
-import type { ContentScenario } from "../content/scenario.types";
+import { runContentPipeline } from "./content.pipeline.js";
+import { enqueuePublishReadyPost } from "./publish-from-post.js";
+import type { ContentScenario } from "../content/scenario.types.js";
 
 export async function registerPipelineRoutes(app: FastifyInstance) {
   /**
