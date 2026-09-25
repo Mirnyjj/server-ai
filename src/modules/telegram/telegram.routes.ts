@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 
 import {
@@ -19,11 +20,24 @@ import {
 
 import { notifyInfo } from "./telegram.notify.js";
 
+function isValidTelegramWebhookSecret(value: string | undefined): boolean {
+  const expected = env.TELEGRAM_WEBHOOK_SECRET;
+  if (!expected || !value) return false;
+  const actualBuffer = Buffer.from(value);
+  const expectedBuffer = Buffer.from(expected);
+  return actualBuffer.length === expectedBuffer.length && timingSafeEqual(actualBuffer, expectedBuffer);
+}
+
 export async function registerTelegramRoutes(app: FastifyInstance) {
   /** Incoming updates from Telegram (set webhook to this URL) */
   app.post("/api/telegram/webhook", async (request, reply) => {
     if (!isTelegramEnabled()) {
       return reply.code(503).send({ error: "telegram_disabled" });
+    }
+
+    const secret = request.headers["x-telegram-bot-api-secret-token"];
+    if (typeof secret !== "string" || !isValidTelegramWebhookSecret(secret)) {
+      return reply.code(401).send({ error: "unauthorized" });
     }
 
     try {
