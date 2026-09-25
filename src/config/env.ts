@@ -38,12 +38,9 @@ const envSchema = z
 
     WHISPER_BASE_URL: z.string().url().optional(),
     MCP_SERVER_TOKEN: z.string().min(32).optional(),
-    /** fal | openai | http — model is selected independently from the provider */
-    IMAGE_MODEL_PROVIDER: z.string().optional(),
     IMAGE_MODEL_API_KEY: z.string().optional(),
-    IMAGE_MODEL: z.string().optional(),
-    /** Required only for IMAGE_MODEL_PROVIDER=http */
     IMAGE_MODEL_BASE_URL: z.string().url().optional(),
+    IMAGE_MODEL: z.string().optional(),
 
     VIDEO_GENERATOR_PROVIDER: z.string().optional(),
     VIDEO_GENERATOR_API_KEY: z.string().optional(),
@@ -110,7 +107,8 @@ const envSchema = z
         ["TELEGRAM_WEBHOOK_URL", data.TELEGRAM_WEBHOOK_URL, "Required in production"],
         ["TELEGRAM_WEBHOOK_SECRET", data.TELEGRAM_WEBHOOK_SECRET, "Required in production"],
         ["MCP_SERVER_TOKEN", data.MCP_SERVER_TOKEN, "Required in production"],
-        ["IMAGE_MODEL_PROVIDER", data.IMAGE_MODEL_PROVIDER, "Required in production"],
+        ["IMAGE_MODEL_API_KEY", data.IMAGE_MODEL_API_KEY, "Required in production"],
+        ["IMAGE_MODEL_BASE_URL", data.IMAGE_MODEL_BASE_URL, "Required in production"],
         ["IMAGE_MODEL", data.IMAGE_MODEL, "Required in production"],
         ["VIDEO_GENERATOR_PROVIDER", data.VIDEO_GENERATOR_PROVIDER, "Required in production"],
         ["VIDEO_GENERATOR_API_KEY", data.VIDEO_GENERATOR_API_KEY, "Required in production"],
@@ -132,26 +130,11 @@ const envSchema = z
         });
       }
 
-      const imageProvider = (data.IMAGE_MODEL_PROVIDER ?? "").toLowerCase();
-      if (!["fal", "openai", "http"].includes(imageProvider)) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["IMAGE_MODEL_PROVIDER"],
-          message: "Production requires IMAGE_MODEL_PROVIDER=fal|openai|http",
-        });
-      }
-      if (["fal", "openai"].includes(imageProvider) && !data.IMAGE_MODEL_API_KEY) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["IMAGE_MODEL_API_KEY"],
-          message: "Required for IMAGE_MODEL_PROVIDER=fal|openai",
-        });
-      }
-      if (imageProvider === "http" && !data.IMAGE_MODEL_BASE_URL) {
+      if (data.IMAGE_MODEL_BASE_URL && !data.IMAGE_MODEL_BASE_URL.startsWith("https://")) {
         ctx.addIssue({
           code: "custom",
           path: ["IMAGE_MODEL_BASE_URL"],
-          message: "Required for IMAGE_MODEL_PROVIDER=http",
+          message: "Production requires IMAGE_MODEL_BASE_URL with https://",
         });
       }
 
