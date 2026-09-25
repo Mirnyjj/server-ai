@@ -32,9 +32,7 @@ const envSchema = z
     LUNA_BASE_URL: z.string().url().optional(),
     LUNA_MODEL: z.string().optional(),
 
-    TRANSCRIPTION_API_KEY: z.string().optional(),
-    TRANSCRIPTION_BASE_URL: z.string().url().optional(),
-    TRANSCRIPTION_MODEL: z.string().optional(),
+    WHISPER_BASE_URL: z.string().url().optional(),
     MCP_SERVER_TOKEN: z.string().min(32).optional(),
     /** stub | http — http uses OpenAI-compatible or custom generate endpoint */
     IMAGE_GENERATOR_PROVIDER: z.string().optional(),
