@@ -1,30 +1,30 @@
-import { prisma } from "../../prisma/prisma";
+import { prisma } from "../../prisma/prisma.js";
 import {
   isInstagramDevMode,
   isOAuthEnabled,
   isTelegramEnabled,
   isLunaEnabled,
   isWebhooksEnabled,
-} from "../config/env";
+} from "../config/env.js";
 import {
   isObjectStorageConfigured,
   getObjectStorage,
-} from "../infrastructure/storage";
+} from "../infrastructure/storage.js";
 import {
   enqueueMediaSync,
   enqueueContentPlanSlot,
   enqueueStrategyRun,
   enqueueProcessComment,
   enqueueProcessDirectMessage,
-} from "../infrastructure/queue";
-import { runContentPipeline } from "../modules/ai/pipeline/content.pipeline";
-import { enqueuePublishReadyPost } from "../modules/ai/pipeline/publish-from-post";
-import { runScheduledContentSlot } from "../modules/ai/plan/content-plan.service";
-import { runStrategyAgent } from "../modules/ai/strategy/strategy.agent";
-import { processComment } from "../modules/agent/comment.agent";
-import { processDirectMessage } from "../modules/agent/message.agent";
-import { createReferenceService } from "../modules/ai/references/reference.service";
-import type { ContentScenario } from "../modules/ai/content/scenario.types";
+} from "../infrastructure/queue.js";
+import { runContentPipeline } from "../modules/ai/pipeline/content.pipeline.js";
+import { enqueuePublishReadyPost } from "../modules/ai/pipeline/publish-from-post.js";
+import { runScheduledContentSlot } from "../modules/ai/plan/content-plan.service.js";
+import { runStrategyAgent } from "../modules/ai/strategy/strategy.agent.js";
+import { processComment } from "../modules/agent/comment.agent.js";
+import { processDirectMessage } from "../modules/agent/message.agent.js";
+import { createReferenceService } from "../modules/ai/references/reference.service.js";
+import type { ContentScenario } from "../modules/ai/content/scenario.types.js";
 
 /** Tool handlers shared by MCP server */
 
