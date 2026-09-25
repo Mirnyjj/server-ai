@@ -59,3 +59,8 @@ const { asset } = await createStorageService().ingestUrl({
 ```
 
 Pipeline calls `ingestUrl` after generators so Post media always points at our storage.
+
+
+## External downloads
+
+S3/R2 `putFromUrl` downloads generator output with a 120-second AbortSignal timeout. The timeout is always cleared in a `finally` block, including failed or aborted requests.
