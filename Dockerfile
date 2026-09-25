@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN npm config set registry https://registry.npmmirror.com && \
-    npm install
+    npm ci
 
 COPY tsconfig.json ./
 COPY prisma.config.ts ./
