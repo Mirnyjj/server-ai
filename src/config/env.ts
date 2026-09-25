@@ -41,6 +41,7 @@ const envSchema = z
     IMAGE_MODEL_API_KEY: z.string().optional(),
     IMAGE_MODEL_BASE_URL: z.string().url().optional(),
     IMAGE_MODEL: z.string().optional(),
+    IMAGE_MAIN_MODEL: z.string().optional(),
 
     VIDEO_GENERATOR_PROVIDER: z.string().optional(),
     VIDEO_GENERATOR_API_KEY: z.string().optional(),
