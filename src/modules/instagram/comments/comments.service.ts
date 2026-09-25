@@ -1,6 +1,6 @@
-import { env } from "../../../config/env";
-import { createInstagramClient } from "../client/instagram.client";
-import { createCommentReconciliationService } from "./comments.reconciliation";
+import { env } from "../../../config/env.js";
+import { createInstagramClient } from "../client/instagram.client.js";
+import { createCommentReconciliationService } from "./comments.reconciliation.js";
 
 export function createInstagramCommentsService(accessToken: string) {
   const instagramClient = createInstagramClient({
