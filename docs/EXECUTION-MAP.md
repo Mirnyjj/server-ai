@@ -28,6 +28,7 @@
 
 - [ ] Instagram production verification
   - [x] DB-backed token resolution
+  - [x] INSTAGRAM_MARKER runtime fallback retained temporarily
   - [x] Read-only verification script
   - [ ] OAuth real-account flow
   - [ ] profile
@@ -46,7 +47,6 @@
   - [ ] DM moderation
 - [ ] Queue monitoring
 - [ ] Observability
-[x] Remove runtime INSTAGRAM_MARKER fallback; DB connection becomes the single source of truth
 
 ## P2 — Release
 
@@ -66,10 +66,11 @@
 ## Current execution
 
 1. Unit-test coverage was expanded for the HTTP video generator and FFmpeg audio/video preservation.
-2. CI now runs `npm test` and `npm run build` on `main`, `fix/**`, and pull requests.
+2. CI runs `npm test` and `npm run build` on `main`, `fix/**`, and pull requests.
 3. CI is green: 16 automated tests pass and the TypeScript build passes. The FFmpeg test verifies video + audio preservation.
-4. Next task: run the real Instagram read verification with `npm run verify:instagram` using an OAuth-created DB connection. Then verify publishing, comments, DM and webhooks manually.
-5. Then move to production Instagram / Telegram verification.
+4. Instagram runtime token resolution currently prefers an active DB connection and falls back to `INSTAGRAM_MARKER`.
+5. When `INSTAGRAM_MARKER` is removed, the existing DB-backed OAuth connection becomes the runtime source without another code migration.
+6. Next task: run the real Instagram read verification with `npm run verify:instagram` once an OAuth-created DB connection is available. Then verify publishing, comments, DM and webhooks manually.
 
 ## Verification commands
 
