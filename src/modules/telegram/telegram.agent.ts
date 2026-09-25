@@ -33,6 +33,7 @@ type AgentPlan = {
 export async function runTelegramAgent(input: {
   profileId: string;
   request: string;
+  onPostGenerated?: (postId: string) => Promise<void>;
 }): Promise<string> {
   const toolList = Object.entries(TOOL_DESCRIPTIONS)
     .map(([name, description]) => `- ${name}: ${description}`)
@@ -108,6 +109,17 @@ export async function runTelegramAgent(input: {
     try {
       const result = await executeAgentTool(call.tool, args);
       results.push({ tool: call.tool, ok: true, result });
+
+      if (
+        input.onPostGenerated &&
+        call.tool === "run_pipeline" &&
+        typeof result === "object" &&
+        result !== null &&
+        "postId" in result &&
+        typeof result.postId === "string"
+      ) {
+        await input.onPostGenerated(result.postId);
+      }
     } catch (error) {
       results.push({
         tool: call.tool,
