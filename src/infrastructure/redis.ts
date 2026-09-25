@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import { env } from "../config/env";
+import { env } from "../config/env.js";
 
 /**
  * Shared Redis connection for BullMQ and general caching.
