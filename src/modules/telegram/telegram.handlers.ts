@@ -13,6 +13,7 @@ import { createInstagramContentService } from "../instagram/content/content.serv
 import { createInstagramInsightsService } from "../instagram/insights/insights.service.js";
 import { transcribeAudio } from "../ai/transcription/transcription.service.js";
 import { searchWeb } from "../ai/search/search.service.js";
+import { runTelegramAgent } from "./telegram.agent.js";
 import {
   addAgentMemory,
   deleteAgentMemory,
@@ -178,6 +179,10 @@ export async function handleTelegramUpdate(
       await cmdSearch(chatId, text.slice(cmd.length).trim());
       break;
 
+    case "/agent":
+      await cmdAgent(chatId, text.slice(cmd.length).trim());
+      break;
+
     case "/publish":
       await cmdPublish(chatId, text.slice(cmd.length).trim());
       break;
@@ -207,6 +212,10 @@ export async function handleTelegramUpdate(
 
     case "/ask":
       await cmdAsk(chatId, text.slice(cmd.length).trim());
+      break;
+
+    case "/tool":
+      await cmdTool(chatId, text.slice(cmd.length).trim());
       break;
 
     case "/prompt":
@@ -241,6 +250,8 @@ const HELP_TEXT = [
   `/menu — главное меню управления`,
   `/status — состояние системы и подключений`,
   `/search <запрос> — поиск в интернете`,
+  `/agent <команда> — AI-управление всеми функциями`,
+  `/tool <имя> <JSON> — прямой вызов инструмента control plane`,
   `/publish image <url> | <caption> — опубликовать фото`,
   `/publish reel <url> | <caption> — опубликовать Reel`,
   `/publish story image <url> — опубликовать Story`,
@@ -593,6 +604,89 @@ async function cmdUse(chatId: number, profileId?: string): Promise<void> {
       "Теперь можно писать обычным текстом.",
     ].join("\n"),
   );
+}
+
+async function cmdAgent(chatId: number, request: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(
+      chatId,
+      "Сначала выберите AI-профиль: /use &lt;profileId&gt;",
+    );
+    return;
+  }
+
+  if (!request.trim()) {
+    await sendTelegramMessage(
+      chatId,
+      "Использование: /agent &lt;команда&gt;\n\nПример: /agent покажи состояние системы и список профилей",
+    );
+    return;
+  }
+
+  try {
+    await sendTelegramMessage(chatId, "⏳ Выполняю команду...");
+    const result = await runTelegramAgent({
+      profileId,
+      request: request.trim(),
+    });
+    await sendTelegramMessage(chatId, escapeTelegramHtml(result).slice(0, 3900));
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ " +
+        escape(
+          error instanceof Error ? error.message : "Ошибка выполнения команды",
+        ),
+    );
+  }
+}
+
+async function cmdTool(chatId: number, input: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(
+      chatId,
+      "Сначала выберите AI-профиль: /use &lt;profileId&gt;",
+    );
+    return;
+  }
+
+  const match = input.trim().match(/^(\S+)(?:\s+([\s\S]*))?$/);
+  const tool = match?.[1];
+  const json = match?.[2]?.trim() || "{}";
+
+  if (!tool) {
+    await sendTelegramMessage(
+      chatId,
+      "Использование: /tool &lt;имя&gt; &lt;JSON&gt;",
+    );
+    return;
+  }
+
+  try {
+    const args = JSON.parse(json) as Record<string, unknown>;
+    const { executeAgentTool } = await import("../../mcp/tools.js");
+    const result = await executeAgentTool(tool as Parameters<typeof executeAgentTool>[0], {
+      profileId,
+      ...args,
+    });
+
+    await sendTelegramMessage(
+      chatId,
+      escapeTelegramHtml(JSON.stringify(result, null, 2)).slice(0, 3900),
+    );
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ " +
+        escape(
+          error instanceof Error ? error.message : "Ошибка вызова инструмента",
+        ),
+    );
+  }
 }
 
 async function cmdAsk(chatId: number, message: string): Promise<void> {
