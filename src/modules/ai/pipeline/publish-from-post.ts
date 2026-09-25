@@ -1,5 +1,5 @@
-import { prisma } from "../../../../prisma/prisma";
-import { enqueueCreateAndPublish } from "../../../infrastructure/queue";
+import { prisma } from "../../../../prisma/prisma.js";
+import { enqueueCreateAndPublish } from "../../../infrastructure/queue.js";
 
 /**
  * Map READY Post + MediaAssets → BullMQ create-and-publish job.
