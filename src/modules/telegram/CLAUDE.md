@@ -26,3 +26,8 @@ Telegram preview требует public HTTPS media URL.
 AI chat может собрать system prompt + memory + knowledge, запланировать web search, вызвать Luna и после ответа извлечь durable memory. Ошибка memory extraction не должна ломать основной ответ.
 
 Авторизованы только configured Telegram chat IDs. Secrets нельзя отправлять пользователю или писать в обычные логи.
+
+
+## Webhook security
+
+Production Telegram webhooks require `TELEGRAM_WEBHOOK_SECRET`. The application passes it to Telegram via `setWebhook` and validates the `X-Telegram-Bot-Api-Secret-Token` header before processing an update. The comparison is constant-time and invalid requests receive HTTP 401.
