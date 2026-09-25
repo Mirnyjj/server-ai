@@ -9,6 +9,7 @@ import {
 import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver.js";
 import { createInstagramClient } from "../instagram/client/instagram.client.js";
 import { createInstagramCommentsService } from "../instagram/comments/comments.service.js";
+import { transcribeAudio } from "../ai/transcription/transcription.service.js";
 import {
   answerCallbackQuery,
   downloadTelegramFile,
