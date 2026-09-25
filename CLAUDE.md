@@ -66,7 +66,7 @@ strategy/topic → Luna scenario → content pipeline
 ```
 Reel сейчас: Luna создаёт shots → image generator создаёт frame → video generator делает image-to-video → FFmpeg объединяет сцены в MP4.
 
-Image generation uses the generic ImageGenerator interface and one universal Responses API HTTP adapter. IMAGE_MODEL_API_KEY, IMAGE_MODEL_BASE_URL and IMAGE_MODEL select credentials, endpoint and concrete image model; IMAGE_MAIN_MODEL optionally selects the top-level Responses model and otherwise LUNA_MODEL is used. The adapter invokes the `image_generation` tool and returns base64 image data to the storage layer. The pipeline does not contain provider-specific image routing. Video generation remains separately configurable. OpenAI Sora/Videos API не использовать.
+Image generation uses the generic ImageGenerator interface and the Timeweb AI Gateway Images API adapter. IMAGE_MODEL_API_KEY, IMAGE_MODEL_BASE_URL and IMAGE_MODEL select credentials, endpoint and concrete image model. The adapter calls `POST /images/generations` and normalizes either a provider URL or b64_json response into base64 image data for the storage layer. The documented model example is `black_forest_labs/flux-2-pro`. The requested aspect ratio is included in the prompt because the adapter relies on the documented model and prompt request fields. IMAGE_MAIN_MODEL is no longer used by the image generator. Video generation remains separately configurable. OpenAI Sora/Videos API не использовать.
 
 ## LLM
 Consumers работают через `LlmProvider`. Основные операции: `completeText` и `completeJson`. Luna — текущий brain provider. LLM output не является источником истины для БД; structured output валидируется вызывающим кодом.
