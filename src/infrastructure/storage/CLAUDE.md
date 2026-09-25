@@ -64,3 +64,24 @@ Pipeline calls `ingestUrl` after generators so Post media always points at our s
 ## External downloads
 
 S3/R2 `putFromUrl` downloads generator output with a 120-second AbortSignal timeout. The timeout is always cleared in a `finally` block, including failed or aborted requests.
+
+
+## Public URL resolution
+
+For S3-compatible storage, `STORAGE_PUBLIC_BASE_URL` is treated as an object public base such as a CDN/custom domain. If it is exactly the same normalized URL as `STORAGE_ENDPOINT`, it is interpreted as the S3 API endpoint rather than an object root, and the bucket is inserted into the path.
+
+For Timeweb Cloud S3, this means the following configuration is supported:
+
+```env
+STORAGE_ENDPOINT=https://s3.twcstorage.ru
+STORAGE_PUBLIC_BASE_URL=https://s3.twcstorage.ru
+STORAGE_BUCKET=<bucket-id>
+```
+
+An object key such as `profiles/<profileId>/generated/<id>.png` resolves to:
+
+```
+https://s3.twcstorage.ru/<bucket-id>/profiles/<profileId>/generated/<id>.png
+```
+
+A different `STORAGE_PUBLIC_BASE_URL` is treated as an explicit public/CDN base and does not receive the bucket automatically.
