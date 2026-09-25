@@ -1,7 +1,7 @@
-import { prisma } from "../../../../prisma/prisma";
-import { runContentPipeline } from "../pipeline/content.pipeline";
-import { enqueuePublishReadyPost } from "../pipeline/publish-from-post";
-import type { ContentScenario } from "../content/scenario.types";
+import { prisma } from "../../../../prisma/prisma.js";
+import { runContentPipeline } from "../pipeline/content.pipeline.js";
+import { enqueuePublishReadyPost } from "../pipeline/publish-from-post.js";
+import type { ContentScenario } from "../content/scenario.types.js";
 
 /**
  * Run one "planned" content slot for a profile.
