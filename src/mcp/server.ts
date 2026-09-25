@@ -7,8 +7,8 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
-import type { ContentScenario } from "../modules/ai/content/scenario.types";
-import * as tools from "./tools";
+import type { ContentScenario } from "../modules/ai/content/scenario.types.js";
+import * as tools from "./tools.js";
 
 export const TOOL_DEFS = [
   {
