@@ -1,10 +1,10 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
-import type { ContentPlanSlotJobData, StrategyRunJobData } from "../types";
-import { runScheduledContentSlot } from "../../../modules/ai/plan/content-plan.service";
-import { runStrategyAgent } from "../../../modules/ai/strategy/strategy.agent";
-import type { ContentScenario } from "../../../modules/ai/content/scenario.types";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
+import type { ContentPlanSlotJobData, StrategyRunJobData } from "../types.js";
+import { runScheduledContentSlot } from "../../../modules/ai/plan/content-plan.service.js";
+import { runStrategyAgent } from "../../../modules/ai/strategy/strategy.agent.js";
+import type { ContentScenario } from "../../../modules/ai/content/scenario.types.js";
 
 export function createContentPlanWorker() {
   const worker = new Worker(
