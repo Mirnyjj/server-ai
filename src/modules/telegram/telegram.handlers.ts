@@ -351,6 +351,51 @@ async function handleTelegramMedia(
       return;
     }
 
+    if (media.kind === "voice" || media.kind === "audio") {
+      const profileId = await getTelegramActiveProfileId(chatId);
+
+      if (!profileId) {
+        await sendTelegramMessage(
+          chatId,
+          "Сначала выберите AI-профиль: /use &lt;profileId&gt;",
+        );
+        return;
+      }
+
+      await sendTelegramMessage(chatId, "🎙 Расшифровываю голосовое...");
+
+      const transcription = await transcribeAudio({
+        data,
+        filename: media.fileName ?? `${message.message_id}.ogg`,
+        mimeType: media.mimeType ?? "audio/ogg",
+      });
+
+      const transcript = transcription.text.trim();
+
+      if (!transcript) {
+        await sendTelegramMessage(chatId, "❌ Не удалось распознать речь.");
+        return;
+      }
+
+      const userMessage = media.caption
+        ? `Подпись к голосовому: ${media.caption.trim()}\n\nТекст голосового:\n${transcript}`
+        : transcript;
+
+      await sendTelegramMessage(
+        chatId,
+        `<b>Распознано:</b>\n${escapeTelegramHtml(transcript.slice(0, 3500))}`,
+      );
+
+      const answer = await askTelegramAi({
+        chatId,
+        profileId,
+        message: userMessage,
+      });
+
+      await sendTelegramMessage(chatId, escapeTelegramHtml(answer));
+      return;
+    }
+
     await sendTelegramMessage(
       chatId,
       [
@@ -360,14 +405,11 @@ async function handleTelegramMedia(
         media.fileName ? `Имя: <code>${escape(media.fileName)}</code>` : "",
         media.caption ? `Подпись: ${escape(media.caption.slice(0, 500))}` : "",
         "",
-        "Файл скачан. Следующим этапом подключим его к AI-анализу.",
+        "Файл скачан. Анализ этого типа медиа будет подключён следующим этапом.",
       ]
         .filter(Boolean)
         .join("\n"),
     );
-
-    // Пока только проверяем транспорт. AI-анализ подключим отдельным этапом.
-    void data;
   } catch (error) {
     await sendTelegramMessage(
       chatId,
