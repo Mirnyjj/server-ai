@@ -1,5 +1,5 @@
-import { getBrainLlm } from "../../ai/llm/provider";
-import type { CommentAgentDecision } from "../types";
+import { getBrainLlm } from "../../ai/llm/provider.js";
+import type { CommentAgentDecision } from "../types.js";
 
 /**
  * Comment decision via GPT-6 Luna (structured JSON).
