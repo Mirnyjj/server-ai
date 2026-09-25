@@ -1,11 +1,11 @@
-import { prisma } from "../../../prisma/prisma";
-import { env } from "../../config/env";
-import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver";
-import { createInstagramClient } from "../instagram/client/instagram.client";
-import { notifySensitiveComment } from "../telegram/telegram.notify";
-import { PolicyEngine } from "./policy/policy.engine";
-import type { CommentAgentDecision, AgentRunResult } from "./types";
-import { runLunaCommentDecision } from "./luna/comment.decision";
+import { prisma } from "../../../prisma/prisma.js";
+import { env } from "../../config/env.js";
+import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver.js";
+import { createInstagramClient } from "../instagram/client/instagram.client.js";
+import { notifySensitiveComment } from "../telegram/telegram.notify.js";
+import { PolicyEngine } from "./policy/policy.engine.js";
+import type { CommentAgentDecision, AgentRunResult } from "./types.js";
+import { runLunaCommentDecision } from "./luna/comment.decision.js";
 
 export async function processComment(commentId: string): Promise<
   AgentRunResult<CommentAgentDecision>
