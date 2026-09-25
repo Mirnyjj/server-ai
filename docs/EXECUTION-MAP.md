@@ -27,7 +27,9 @@
 ## P1 — Production verification
 
 - [ ] Instagram production verification
-  - [ ] OAuth
+  - [x] DB-backed token resolution
+  - [x] Read-only verification script
+  - [ ] OAuth real-account flow
   - [ ] profile
   - [ ] media sync
   - [ ] photo publish
@@ -44,7 +46,7 @@
   - [ ] DM moderation
 - [ ] Queue monitoring
 - [ ] Observability
-- [ ] Remove runtime INSTAGRAM_MARKER fallback; DB connection becomes the single source of truth
+[x] Remove runtime INSTAGRAM_MARKER fallback; DB connection becomes the single source of truth
 
 ## P2 — Release
 
@@ -66,7 +68,7 @@
 1. Unit-test coverage was expanded for the HTTP video generator and FFmpeg audio/video preservation.
 2. CI now runs `npm test` and `npm run build` on `main`, `fix/**`, and pull requests.
 3. CI is green: 16 automated tests pass and the TypeScript build passes. The FFmpeg test verifies video + audio preservation.
-4. Next task: run Kling → FFmpeg → Storage E2E against the real Fal/Timeweb environment, then run image → Storage → public HTTPS against the real Timeweb/S3 environment.
+4. Next task: run the real Instagram read verification with `npm run verify:instagram` using an OAuth-created DB connection. Then verify publishing, comments, DM and webhooks manually.
 5. Then move to production Instagram / Telegram verification.
 
 ## Verification commands
