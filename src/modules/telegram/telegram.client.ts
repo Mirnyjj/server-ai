@@ -176,3 +176,17 @@ export async function getTelegramMe() {
     "getMe",
   );
 }
+
+export type TelegramWebhookInfo = {
+  url: string;
+  has_custom_certificate: boolean;
+  pending_update_count: number;
+  last_error_date?: number;
+  last_error_message?: string;
+  max_connections?: number;
+  ip_address?: string;
+};
+
+export async function getTelegramWebhookInfo() {
+  return tgRequest<TelegramWebhookInfo>("getWebhookInfo");
+}
