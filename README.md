@@ -63,6 +63,17 @@ Control Plane
 ↓
 Node.js API
 
+Telegram voice/audio processing:
+Telegram voice/audio
+↓
+Telegram Bot API file download
+↓
+Speech-to-Text provider
+↓
+transcript
+↓
+Telegram AI Agent
+
 Python Instagram Worker полностью удаляется.
 
 3. Meta integration
