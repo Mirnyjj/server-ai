@@ -12,8 +12,8 @@ export type TranscriptionResult = {
   durationSeconds?: number;
 };
 
-type TranscriptionResponse = {
-  text?: string;
+type WhisperResponse = {
+  text: string;
   language?: string;
   duration?: number;
 };
@@ -21,48 +21,41 @@ type TranscriptionResponse = {
 export async function transcribeAudio(
   input: TranscriptionInput,
 ): Promise<TranscriptionResult> {
-  const apiKey = env.TRANSCRIPTION_API_KEY;
-
-  if (!apiKey) {
-    throw new Error(
-      "TRANSCRIPTION_API_KEY is not configured. Set a Speech-to-Text provider before sending voice messages.",
-    );
-  }
-
   const baseUrl = (
-    env.TRANSCRIPTION_BASE_URL ?? "https://api.openai.com/v1"
+    env.WHISPER_BASE_URL ?? "http://whisper:8001"
   ).replace(/\/$/, "");
-  const model = env.TRANSCRIPTION_MODEL ?? "gpt-4o-mini-transcribe";
 
   const form = new FormData();
-  form.append("model", model);
+
   form.append(
     "file",
-    new Blob([new Uint8Array(input.data)], { type: input.mimeType }),
+    new Blob([new Uint8Array(input.data)], {
+      type: input.mimeType,
+    }),
     input.filename,
   );
 
-  const response = await fetch(`${baseUrl}/audio/transcriptions`, {
+  const response = await fetch(`${baseUrl}/transcribe`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-    },
     body: form,
   });
 
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Transcription API error ${response.status}: ${text}`);
+    const errorText = await response.text();
+
+    throw new Error(
+      `Whisper service error ${response.status}: ${errorText}`,
+    );
   }
 
-  const result = (await response.json()) as TranscriptionResponse;
+  const result = (await response.json()) as WhisperResponse;
 
-  if (!result.text) {
-    throw new Error("Transcription API returned an empty transcript");
+  if (!result.text?.trim()) {
+    throw new Error("Whisper returned an empty transcript");
   }
 
   return {
-    text: result.text,
+    text: result.text.trim(),
     language: result.language,
     durationSeconds: result.duration,
   };
