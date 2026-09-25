@@ -44,6 +44,8 @@ Worker:
 ## Security (ТЗ §12)
 
 - Signature verification (production required)
+- Production verification uses the exact raw HTTP body, not re-serialized JSON
+- Missing production signature is rejected with HTTP 403
 - Dev: signature optional if NODE_ENV=development
 - Idempotency prevents double processing
 - Raw payload stored in DB for replay/debug
