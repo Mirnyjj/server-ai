@@ -123,19 +123,41 @@ export async function askTelegramAi(input: {
   const knowledge = await searchKnowledge(input.profileId, input.message, 6);
 
   let webResults: Awaited<ReturnType<typeof searchWeb>> = [];
-  if (shouldSearchWeb(input.message)) {
-    try {
-      webResults = await searchWeb(input.message, {
+  let webSearchQuery: string | null = null;
+
+  try {
+    const decision = await getBrainLlm().completeJson<{
+      useWebSearch?: boolean;
+      query?: string;
+    }>({
+      temperature: 0,
+      maxTokens: 300,
+      messages: [
+        {
+          role: "system",
+          content:
+            'Determine whether the user request requires current internet information. Return JSON only: {"useWebSearch": boolean, "query": string}. Use search for current facts, prices, news, recent changes, external documentation, market trends, or information not reliably contained in the profile context. Do not search for ordinary conversation or requests that can be answered from provided context.',
+        },
+        {
+          role: "user",
+          content: input.message,
+        },
+      ],
+    });
+
+    const query = decision.data.query?.trim();
+    if (decision.data.useWebSearch === true && query) {
+      webSearchQuery = query;
+      webResults = await searchWeb(query, {
         limit: 5,
-        country: "RU",
-        searchLang: "ru",
+        language: "ru",
       });
-    } catch (error) {
-      console.error(
-        "Web search failed:",
-        error instanceof Error ? error.message : error,
-      );
     }
+  } catch (error) {
+    console.error(
+      "Web search planning failed:",
+      error instanceof Error ? error.message : error,
+    );
   }
 
   const memoryContext =
@@ -185,7 +207,8 @@ export async function askTelegramAi(input: {
     "База знаний. Используй её как справочный контекст и не выдумывай сведения, которых в ней нет:",
     knowledgeContext,
     "",
-    "Актуальный веб-поиск. Если он присутствует, используй его для текущих сведений и явно отделяй найденные факты от предположений:",
+    "Актуальный веб-поиск. Если результаты присутствуют, используй их для текущих сведений. Отделяй найденные факты от предположений и не выдумывай сведения, которых нет в результатах.",
+    webSearchQuery ? `Поисковый запрос: ${webSearchQuery}` : "Поиск не потребовался.",
     webContext,
   ].join("\n");
 
@@ -255,30 +278,6 @@ export async function askTelegramAi(input: {
 
     throw error;
   }
-}
-
-function shouldSearchWeb(message: string): boolean {
-  const normalized = message.toLocaleLowerCase();
-
-  return [
-    "найди в интернете",
-    "поищи в интернете",
-    "поиск в интернете",
-    "поищи в сети",
-    "найди актуаль",
-    "что сейчас",
-    "на сегодня",
-    "сегодня",
-    "последние новости",
-    "свежие новости",
-    "актуальные новости",
-    "тренды",
-    "курс ",
-    "цена сейчас",
-    "сколько стоит сейчас",
-    "последние обновления",
-    "что изменилось",
-  ].some((phrase) => normalized.includes(phrase));
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
