@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import { resolveAccessToken, resolveAccessTokenByProfileId } from "../auth/token.resolver";
-import { createInstagramProfileService } from "./profile.service";
-import { syncInstagramAccount } from "../client/instagram.account.service";
+import { resolveAccessToken, resolveAccessTokenByProfileId } from "../auth/token.resolver.js";
+import { createInstagramProfileService } from "./profile.service.js";
+import { syncInstagramAccount } from "../client/instagram.account.service.js";
 
 export async function registerInstagramProfileRoutes(app: FastifyInstance) {
   app.get("/api/instagram/profile", async (request, reply) => {
