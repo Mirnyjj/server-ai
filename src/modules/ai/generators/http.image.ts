@@ -17,13 +17,13 @@ import type {
  * Reference URLs appended to prompt text (most APIs don't support multi-ref natively).
  */
 export function createHttpImageGenerator(): ImageGenerator {
-  const model = env.IMAGE_GENERATOR_MODEL ?? "default";
-  const baseUrl = env.IMAGE_GENERATOR_BASE_URL;
-  const apiKey = env.IMAGE_GENERATOR_API_KEY;
+  const model = env.IMAGE_MODEL ?? "default";
+  const baseUrl = env.IMAGE_MODEL_BASE_URL;
+  const apiKey = env.IMAGE_MODEL_API_KEY;
 
   if (!baseUrl || !apiKey) {
     throw new Error(
-      "IMAGE_GENERATOR_PROVIDER=http requires IMAGE_GENERATOR_BASE_URL and IMAGE_GENERATOR_API_KEY",
+      "IMAGE_MODEL_PROVIDER=http requires IMAGE_MODEL_BASE_URL and IMAGE_MODEL_API_KEY",
     );
   }
 
