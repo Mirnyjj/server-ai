@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 import {
   resolveAccessToken,
   resolveAccessTokenByProfileId,
-} from "../auth/token.resolver";
-import { createInstagramMediaService } from "./media.service";
-import { enqueueMediaSync } from "../../../infrastructure/queue";
+} from "../auth/token.resolver.js";
+import { createInstagramMediaService } from "./media.service.js";
+import { enqueueMediaSync } from "../../../infrastructure/queue.js";
 
 export async function registerInstagramMediaRoutes(app: FastifyInstance) {
   app.get("/api/instagram/media", async (request, reply) => {
