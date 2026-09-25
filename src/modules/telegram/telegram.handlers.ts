@@ -251,6 +251,130 @@ async function cmdAsk(chatId: number, message: string): Promise<void> {
   await handlePlainText(chatId, message);
 }
 
+async function cmdPrompt(chatId: number, input: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(
+      chatId,
+      "Сначала выберите AI-профиль: /use &lt;profileId&gt;",
+    );
+    return;
+  }
+
+  const profile = await prisma.aiProfile.findUnique({
+    where: {
+      id: profileId,
+    },
+  });
+
+  if (!profile) {
+    await sendTelegramMessage(chatId, "❌ AI-профиль не найден.");
+    return;
+  }
+
+  const [subcommand, ...rest] = input.trim().split(/\\s+/);
+  const value = rest.join(" ").trim();
+
+  if (!input.trim()) {
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Системный промпт</b>",
+        "",
+        profile.systemPrompt?.trim()
+          ? escapeTelegramHtml(profile.systemPrompt)
+          : "<i>Не задан</i>",
+        "",
+        "Изменение:",
+        "<code>/prompt set Новый системный промпт</code>",
+        "<code>/prompt append Дополнительная инструкция</code>",
+        "<code>/prompt reset</code>",
+      ].join("\n").slice(0, 3900),
+    );
+    return;
+  }
+
+  if (subcommand.toLowerCase() === "reset") {
+    await prisma.aiProfile.update({
+      where: {
+        id: profile.id,
+      },
+      data: {
+        systemPrompt: null,
+      },
+    });
+
+    await sendTelegramMessage(chatId, "✅ Пользовательский системный промпт сброшен.");
+    return;
+  }
+
+  if (subcommand.toLowerCase() === "set") {
+    if (!value) {
+      await sendTelegramMessage(
+        chatId,
+        "Использование: /prompt set &lt;системный промпт&gt;",
+      );
+      return;
+    }
+
+    await prisma.aiProfile.update({
+      where: {
+        id: profile.id,
+      },
+      data: {
+        systemPrompt: value,
+      },
+    });
+
+    await sendTelegramMessage(
+      chatId,
+      "✅ Системный промпт профиля обновлён.",
+    );
+    return;
+  }
+
+  if (subcommand.toLowerCase() === "append") {
+    if (!value) {
+      await sendTelegramMessage(
+        chatId,
+        "Использование: /prompt append &lt;дополнительная инструкция&gt;",
+      );
+      return;
+    }
+
+    const current = profile.systemPrompt?.trim() ?? "";
+    const next = current ? `${current}\\n\\n${value}` : value;
+
+    await prisma.aiProfile.update({
+      where: {
+        id: profile.id,
+      },
+      data: {
+        systemPrompt: next,
+      },
+    });
+
+    await sendTelegramMessage(
+      chatId,
+      "✅ Инструкция добавлена в системный промпт.",
+    );
+    return;
+  }
+
+  await sendTelegramMessage(
+    chatId,
+    [
+      "Неизвестная операция.",
+      "",
+      "<code>/prompt</code> — показать текущий промпт",
+      "<code>/prompt set ...</code> — заменить",
+      "<code>/prompt append ...</code> — добавить",
+      "<code>/prompt reset</code> — сбросить",
+    ].join("\n"),
+  );
+}
+
 type TelegramMediaKind = "photo" | "video" | "document" | "voice" | "audio";
 
 function hasTelegramMedia(
