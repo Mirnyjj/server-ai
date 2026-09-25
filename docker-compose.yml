@@ -10,17 +10,7 @@ services:
       - .env
 
     depends_on:
-      searxng:
-    image: searxng/searxng:latest
-    container_name: ig-agent-searxng
-    restart: unless-stopped
-    volumes:
-      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
-      - searxng_cache:/var/cache/searxng
-    expose:
-      - "8080"
-
-  redis:
+      redis:
         condition: service_started
       whisper:
         condition: service_started
@@ -43,9 +33,6 @@ services:
     volumes:
       - redis_data:/data
 
-    ports:
-      - "6379:6379"
-
   whisper:
     build:
       context: ./whisper
@@ -60,6 +47,18 @@ services:
 
     mem_limit: 1200m
     cpus: "0.8"
+
+  searxng:
+    image: searxng/searxng:latest
+    container_name: ig-agent-searxng
+    restart: unless-stopped
+
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
+      - searxng_cache:/var/cache/searxng
+
+    expose:
+      - "8080"
 
 volumes:
   redis_data:
