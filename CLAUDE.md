@@ -31,6 +31,10 @@ Orchestrator маршрутизирует запрос к одной роли. �
 
 Transport layer не должен содержать дублирующую бизнес-логику. Telegram и MCP должны переиспользовать существующие services/tool executor.
 
+## Landing
+
+The public `GET /` route is served by `src/modules/landing/landing.routes.ts` as a self-contained responsive landing page with an animated atlas. API, MCP and existing application routes are not replaced by the landing module. HTTPS termination remains the responsibility of the reverse proxy.
+
 ## Домены
 - `src/modules/ai` — LLM, сценарии, стратегия, память, knowledge, search, генераторы.
 - `src/modules/agents` — специализированные AI-агенты и маршрутизация.
