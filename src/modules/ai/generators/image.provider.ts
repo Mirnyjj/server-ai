@@ -6,11 +6,13 @@ import type {
 } from "./types.js";
 import { createHttpImageGenerator } from "./http.image.js";
 import { createOpenAiImageGenerator } from "./openai.image.js";
+import { createFalImageGenerator } from "./fal.image.js";
 
 export function createImageGenerator(): ImageGenerator {
-  const provider = (env.IMAGE_GENERATOR_PROVIDER ?? "stub").toLowerCase();
-  const model = env.IMAGE_GENERATOR_MODEL ?? "gpt-image-2";
+  const provider = (env.IMAGE_MODEL_PROVIDER ?? "fal").toLowerCase();
+  const model = env.IMAGE_MODEL ?? "fal-ai/gpt-image-1/text-to-image";
 
+  if (provider === "fal") return createFalImageGenerator();
   if (provider === "openai") return createOpenAiImageGenerator();
   if (provider === "http") return createHttpImageGenerator();
 
