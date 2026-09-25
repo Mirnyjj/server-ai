@@ -1,5 +1,6 @@
 import os
 from functools import lru_cache
+from io import BytesIO
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from faster_whisper import WhisperModel
@@ -40,7 +41,7 @@ async def transcribe(file: UploadFile = File(...)) -> dict[str, object]:
     try:
         model = get_model()
         segments, info = model.transcribe(
-            data,
+            BytesIO(data),
             language=None,
             beam_size=1,
             vad_filter=True,
