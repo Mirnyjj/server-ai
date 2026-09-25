@@ -21,7 +21,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "e2e:media": "tsx scripts/e2e-media-pipeline.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
