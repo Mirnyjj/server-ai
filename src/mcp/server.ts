@@ -48,6 +48,7 @@ export const TOOL_DEFS = [
         postType: { type: "string", enum: ["PHOTO", "REEL", "STORY", "CAROUSEL", "VIDEO"] },
         topicHint: { type: "string" },
         autoPublish: { type: "boolean" },
+        async: { type: "boolean" },
       },
       required: ["profileId"],
     },
