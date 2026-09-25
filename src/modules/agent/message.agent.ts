@@ -1,11 +1,11 @@
-import { prisma } from "../../../prisma/prisma";
-import { env } from "../../config/env";
-import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver";
-import { createInstagramClient } from "../instagram/client/instagram.client";
-import { notifySensitiveDm } from "../telegram/telegram.notify";
-import { PolicyEngine } from "./policy/policy.engine";
-import type { MessageAgentDecision, AgentRunResult } from "./types";
-import { runLunaMessageDecision } from "./luna/message.decision";
+import { prisma } from "../../../prisma/prisma.js";
+import { env } from "../../config/env.js";
+import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver.js";
+import { createInstagramClient } from "../instagram/client/instagram.client.js";
+import { notifySensitiveDm } from "../telegram/telegram.notify.js";
+import { PolicyEngine } from "./policy/policy.engine.js";
+import type { MessageAgentDecision, AgentRunResult } from "./types.js";
+import { runLunaMessageDecision } from "./luna/message.decision.js";
 
 export async function processDirectMessage(
   messageId: string,
