@@ -29,25 +29,17 @@ export async function registerPipelineRoutes(app: FastifyInstance) {
         scenario: body.scenario,
       });
 
-      let publishJob: { jobId?: string; mediaType?: string } | null = null;
-
-      if (body.autoPublish && result.publishReady) {
-        publishJob = await enqueuePublishReadyPost(result.postId);
-      } else if (body.autoPublish && !result.publishReady) {
-        return reply.send({
-          success: true,
-          ...result,
-          publishJob: null,
-          note:
-            result.note +
-            " autoPublish skipped — media URLs not public HTTPS",
+      if (body.autoPublish) {
+        return reply.code(400).send({
+          error:
+            "Automatic publishing is disabled. Approve the generated post explicitly before publishing.",
         });
       }
 
       return reply.send({
         success: true,
         ...result,
-        publishJob,
+        publishJob: null,
       });
     } catch (error) {
       request.log.error(error);
@@ -57,7 +49,7 @@ export async function registerPipelineRoutes(app: FastifyInstance) {
     }
   });
 
-  /** Publish an existing READY post to Instagram via queue */
+  /** Publish an explicitly APPROVED post to Instagram via queue */
   app.post("/api/ai/pipeline/posts/:postId/publish", async (request, reply) => {
     const { postId } = request.params as { postId: string };
 
