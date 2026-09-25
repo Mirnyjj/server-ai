@@ -126,7 +126,7 @@ function normalizeSeconds(value?: number): 4 | 8 | 12 {
 function aspectToSize(aspectRatio?: VideoGenerationRequest["aspectRatio"]): string {
   switch (aspectRatio) {
     case "16:9": return "1280x720";
-    case "1:1": return "720x720";
+    case "1:1": return "1280x720";
     case "9:16":
     default: return "720x1280";
   }
