@@ -53,7 +53,6 @@
 
 - [x] Release checklist
 - [ ] CI deployment verification
-- [ ] CI deployment verification
 - [ ] Rollback procedure
 
 ## Landing
@@ -91,6 +90,7 @@ npm run build
 npm run smoke
 npm run verify:instagram
 npm run verify:telegram
+npm run queue:status
 ```
 
 For marker-only verification:
