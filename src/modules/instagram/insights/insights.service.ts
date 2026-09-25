@@ -1,12 +1,12 @@
-import { Prisma } from "../../../generated/prisma/client";
-import { prisma } from "../../../../prisma/prisma";
-import { env } from "../../../config/env";
-import { createInstagramClient } from "../client/instagram.client";
-import type { InstagramInsightMetric } from "../client/instagram.types";
+import { Prisma } from "../../../generated/prisma/client.js";
+import { prisma } from "../../../../prisma/prisma.js";
+import { env } from "../../../config/env.js";
+import { createInstagramClient } from "../client/instagram.client.js";
+import type { InstagramInsightMetric } from "../client/instagram.types.js";
 import {
   ACCOUNT_INSIGHTS_METRICS,
   metricsForMediaType,
-} from "./insights.metrics";
+} from "./insights.metrics.js";
 
 function flattenInsights(
   data: InstagramInsightMetric[],
