@@ -67,10 +67,75 @@ async function processCreateAndPublish(
     apiVersion: env.INSTAGRAM_API_VERSION,
   });
 
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: {
+      containers: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
+  });
+
+  if (!post) {
+    throw new Error(`Post ${postId} not found`);
+  }
+
+  if (post.status === PostStatus.PUBLISHED && post.instagramMediaId) {
+    job.log(`Post ${postId} is already published — skipping duplicate publish`);
+    return {
+      status: "already_published",
+      mediaId: post.instagramMediaId,
+    };
+  }
+
   await prisma.post.update({
     where: { id: postId },
     data: { status: PostStatus.PUBLISHING },
   });
+
+  const existingContainer = post.containers[0];
+  if (existingContainer) {
+    if (existingContainer.status === "PUBLISHED") {
+      throw new Error(
+        `Post ${postId} has a published Instagram container ${existingContainer.containerId}, but instagramMediaId is missing; reconciliation is required before retrying`,
+      );
+    }
+
+    if (
+      existingContainer.status === "CREATED" ||
+      existingContainer.status === "IN_PROGRESS"
+    ) {
+      await enqueuePollContainer({
+        postId,
+        containerId: existingContainer.containerId,
+        instagramUserId,
+        attempt: 0,
+      });
+      job.log(
+        `Reusing existing Instagram container ${existingContainer.containerId} instead of creating a duplicate`,
+      );
+      return {
+        containerId: existingContainer.containerId,
+        status: "polling_existing",
+      };
+    }
+
+    if (existingContainer.status === "FINISHED") {
+      await enqueuePublishPost({
+        postId,
+        instagramUserId,
+        containerId: existingContainer.containerId,
+      });
+      job.log(
+        `Reusing finished Instagram container ${existingContainer.containerId} instead of creating a duplicate`,
+      );
+      return {
+        containerId: existingContainer.containerId,
+        status: "publish_queued_existing",
+      };
+    }
+  }
 
   let containerId: string;
 
