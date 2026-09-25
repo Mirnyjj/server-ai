@@ -6,6 +6,14 @@ Production использует webhook `POST /api/telegram/webhook`. Developmen
 
 Telegram управляет profile selection, AI chat, system prompt, memory, knowledge base, web search, Instagram sync/connect/insights, content generation и review.
 
+Команда `/agent` теперь проходит через `Agent Orchestrator`, который маршрутизирует запрос к специализированной роли:
+- `platform` — административные и технические операции;
+- `content` — контент и генерация;
+- `analytics` — аналитика и стратегия;
+- `community` — комментарии и Direct.
+
+Специализированный агент получает только разрешённые для его роли tools. Это ограничение реализовано кодом, а не только system prompt.
+
 Content flow:
 ```
 /content generate → pipeline → Post READY
