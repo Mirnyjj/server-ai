@@ -13,3 +13,5 @@ Workers находятся в `src/infrastructure/queue/workers`.
 6. Publish jobs обязаны проверять актуальный Post status и Instagram connection.
 
 Generation jobs могут занимать минуты; transport layer должен поставить job в очередь и сообщить пользователю о состоянии, а не блокировать request.
+
+Content generation uses the dedicated `content-generation` BullMQ queue. Async generation returns a job ID, Post remains `GENERATING` while the worker runs, and BullMQ retries failed jobs with the shared exponential backoff policy.
