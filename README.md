@@ -68,11 +68,21 @@ Telegram voice/audio
 ↓
 Telegram Bot API file download
 ↓
-Speech-to-Text provider
+local Whisper service (faster-whisper, CPU)
 ↓
 transcript
 ↓
 Telegram AI Agent
+
+Whisper service:
+whisper/
+├── Dockerfile
+├── requirements.txt
+└── main.py
+
+The Whisper service runs only inside the Docker network at http://whisper:8001.
+The production server uses the base model with int8 CPU quantization and one CPU thread to fit the 1 vCPU / 2 GB RAM host.
+No external Speech-to-Text API key is required.
 
 Python Instagram Worker полностью удаляется.
 
