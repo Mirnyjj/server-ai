@@ -959,3 +959,35 @@ pagination истории, если используем endpoint истории
 обработка 24h messaging window
 webhooks
 Сейчас это самое непосредственное незавершённое место.
+
+
+### Media generation
+
+Image and video generation are separate providers. The reasoning model (Luna) does not generate media.
+
+OpenAI is supported directly:
+```env
+IMAGE_GENERATOR_PROVIDER=openai
+IMAGE_GENERATOR_API_KEY=...
+IMAGE_GENERATOR_MODEL=gpt-image-2
+
+VIDEO_GENERATOR_PROVIDER=openai
+VIDEO_GENERATOR_API_KEY=...
+VIDEO_GENERATOR_MODEL=sora-2
+VIDEO_GENERATOR_POLL_MS=5000
+```
+
+The image adapter stores OpenAI's base64 image response directly in Object Storage. The video adapter creates a Sora job, polls it until completion, downloads the MP4, and stores the bytes in Object Storage. This keeps the OpenAI media URL out of the Instagram publishing flow.
+
+HTTP adapters remain available for alternative image/video providers:
+```env
+IMAGE_GENERATOR_PROVIDER=http
+IMAGE_GENERATOR_BASE_URL=https://...
+IMAGE_GENERATOR_API_KEY=...
+IMAGE_GENERATOR_MODEL=...
+
+VIDEO_GENERATOR_PROVIDER=http
+VIDEO_GENERATOR_BASE_URL=https://...
+VIDEO_GENERATOR_API_KEY=...
+VIDEO_GENERATOR_MODEL=...
+```
