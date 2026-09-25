@@ -16,6 +16,7 @@ import { registerPipelineRoutes } from "./modules/ai/pipeline/pipeline.routes.js
 import { registerStorageRoutes } from "./infrastructure/storage/storage.routes.js";
 import { registerPlanRoutes } from "./modules/ai/plan/plan.routes.js";
 import { registerMcpRoutes } from "./mcp/mcp.routes.js";
+import { registerLandingRoutes } from "./modules/landing/landing.routes.js";
 
 export async function createApp() {
   const app = Fastify({
@@ -27,6 +28,8 @@ export async function createApp() {
   app.get("/health", async () => ({
     status: "ok",
   }));
+
+  await registerLandingRoutes(app);
 
   await registerInstagramAuthRoutes(app);
   await registerInstagramCommentsRoutes(app);
