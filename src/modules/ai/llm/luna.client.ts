@@ -1,10 +1,10 @@
-import { env } from "../../../config/env";
+import { env } from "../../../config/env.js";
 import type {
   LlmJsonRequest,
   LlmJsonResponse,
   LlmMessage,
   LlmProvider,
-} from "./types";
+} from "./types.js";
 
 /**
  * GPT-6 Luna — primary brain.
