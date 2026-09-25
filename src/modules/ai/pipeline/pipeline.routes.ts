@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { runContentPipeline } from "./content.pipeline.js";
 import { enqueuePublishReadyPost } from "./publish-from-post.js";
+import { enqueueContentGeneration } from "../../../infrastructure/queue/index.js";
 import type { ContentScenario } from "../content/scenario.types.js";
 
 export async function registerPipelineRoutes(app: FastifyInstance) {
@@ -15,6 +16,7 @@ export async function registerPipelineRoutes(app: FastifyInstance) {
       topicHint?: string;
       scenario?: ContentScenario;
       autoPublish?: boolean;
+      async?: boolean;
     };
 
     if (!body.profileId) {
@@ -22,6 +24,27 @@ export async function registerPipelineRoutes(app: FastifyInstance) {
     }
 
     try {
+      if (body.autoPublish) {
+        return reply.code(400).send({
+          error:
+            "Automatic publishing is disabled. Approve the generated post explicitly before publishing.",
+        });
+      }
+
+      if (body.async) {
+        const job = await enqueueContentGeneration({
+          profileId: body.profileId,
+          postType: body.postType,
+          topicHint: body.topicHint,
+          scenario: body.scenario as Record<string, unknown> | undefined,
+        });
+        return reply.code(202).send({
+          success: true,
+          enqueued: true,
+          jobId: job.id,
+        });
+      }
+
       const result = await runContentPipeline({
         profileId: body.profileId,
         postType: body.postType,
