@@ -2,7 +2,7 @@ import { Worker, type Job } from "bullmq";
 import { getBullMqConnection } from "../connection.js";
 import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
 import type { PublishPostJobData, CreateAndPublishJobData } from "../types.js";
-import { enqueuePollContainer } from "../queues.js";
+import { enqueuePollContainer, enqueuePublishPost } from "../queues.js";
 import { resolveAccessToken } from "../../../modules/instagram/auth/token.resolver.js";
 import { createInstagramClient } from "../../../modules/instagram/client/instagram.client.js";
 import { env } from "../../../config/env.js";
@@ -46,9 +46,7 @@ async function processPublishPost(job: Job<PublishPostJobData>) {
   return result;
 }
 
-async function processCreateAndPublish(
-  job: Job<CreateAndPublishJobData>,
-) {
+async function processCreateAndPublish(job: Job<CreateAndPublishJobData>) {
   const {
     postId,
     instagramUserId,
@@ -215,7 +213,11 @@ async function processCreateAndPublish(
   });
 
   // Videos/Reels need async processing — poll status before publish
-  if (mediaType === "REEL" || mediaType === "VIDEO" || mediaType === "CAROUSEL") {
+  if (
+    mediaType === "REEL" ||
+    mediaType === "VIDEO" ||
+    mediaType === "CAROUSEL"
+  ) {
     await enqueuePollContainer({
       postId,
       containerId,
