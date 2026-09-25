@@ -1325,6 +1325,16 @@ async function cmdProfiles(chatId: number): Promise<void> {
   await sendTelegramMessage(
     chatId,
     `<b>AI-профили</b>\n\n${lines.join("\n\n")}`,
+    {
+      reply_markup: {
+        inline_keyboard: profiles.map((profile) => [
+          {
+            text: `Использовать: ${profile.name}`,
+            callback_data: `profile:${profile.id}`,
+          },
+        ]),
+      },
+    },
   );
 }
 
@@ -1418,6 +1428,18 @@ async function handleCallback(
   try {
     if (action === "menu") {
       await handleMenuCallback(chatId, cq.id, id);
+    } else if (action === "profile" && id) {
+      await setTelegramActiveProfile(chatId, id);
+      const profile = await prisma.aiProfile.findUnique({
+        where: { id },
+        select: { name: true },
+      });
+
+      await answerCallbackQuery(cq.id, "Профиль выбран");
+      await sendTelegramMessage(
+        chatId,
+        `✅ Активный профиль: <b>${escape(profile?.name ?? id)}</b>`,
+      );
     } else if (action === "c_send" && id) {
       await humanSendComment(id);
 
