@@ -18,6 +18,7 @@ import {
   type ProcessDirectMessageJobData,
   type ContentPlanSlotJobData,
   type StrategyRunJobData,
+  type ContentGenerationJobData,
 } from "./types.js";
 
 const connection = getBullMqConnection();
@@ -35,6 +36,7 @@ export const insightsQueue = createQueue(QUEUE_NAMES.INSIGHTS);
 export const commentReconcileQueue = createQueue(QUEUE_NAMES.COMMENT_RECONCILE);
 export const agentQueue = createQueue(QUEUE_NAMES.AGENT);
 export const contentPlanQueue = createQueue(QUEUE_NAMES.CONTENT_PLAN);
+export const contentGenerationQueue = createQueue(QUEUE_NAMES.CONTENT_GENERATION);
 
 export async function enqueueTokenRefresh(
   data: RefreshConnectionJobData,
@@ -148,6 +150,12 @@ export async function enqueueContentPlanSlot(data: ContentPlanSlotJobData) {
   });
 }
 
+export async function enqueueContentGeneration(data: ContentGenerationJobData) {
+  return contentGenerationQueue.add(JOB_NAMES.CONTENT_GENERATION, data, {
+    jobId: `content-generation-${data.profileId}-${Date.now()}`,
+  });
+}
+
 export async function enqueueStrategyRun(data: StrategyRunJobData) {
   return contentPlanQueue.add(JOB_NAMES.STRATEGY_RUN, data, {
     jobId: `strategy-${data.profileId}-${Date.now()}`,
@@ -165,5 +173,6 @@ export async function closeAllQueues(): Promise<void> {
     commentReconcileQueue.close(),
     agentQueue.close(),
     contentPlanQueue.close(),
+    contentGenerationQueue.close(),
   ]);
 }
