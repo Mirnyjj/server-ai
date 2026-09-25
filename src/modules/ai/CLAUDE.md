@@ -21,7 +21,7 @@ Luna → scenario → pipeline → generators → Object Storage → Post/MediaA
 ```
 Luna не рендерит media. Image и Video — отдельные interfaces.
 
-Current providers: OpenAI Images для image generation; fal.ai Kling V3 Pro для image-to-video; FFmpeg для composition.
+Current image generation uses a provider/model abstraction: the selected provider is configured through IMAGE_MODEL_PROVIDER and the concrete model through IMAGE_MODEL. fal.ai is supported as the universal model provider, allowing different fal model IDs without changing the pipeline. OpenAI and generic HTTP adapters remain available. Video remains provider/model configurable separately.
 
 Pipeline может использовать system prompt, visual identity, MediaReference, memory, knowledge и web context. Эти источники имеют разную семантику и не должны без необходимости сливаться в один источник истины.
 
