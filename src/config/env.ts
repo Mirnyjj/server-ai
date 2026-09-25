@@ -90,11 +90,11 @@ const envSchema = z
       }
 
       const storageProvider = (data.STORAGE_PROVIDER ?? "").toLowerCase();
-      if (!["s3", "r2", "minio"].includes(storageProvider)) {
+      if (!["s3", "supabase", "r2", "minio"].includes(storageProvider)) {
         ctx.addIssue({
           code: "custom",
           path: ["STORAGE_PROVIDER"],
-          message: "Production requires STORAGE_PROVIDER=s3|r2|minio",
+          message: "Production requires STORAGE_PROVIDER=s3|supabase|r2|minio",
         });
       }
       for (const [path, value, message] of [
