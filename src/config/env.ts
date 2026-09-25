@@ -31,6 +31,7 @@ const envSchema = z
     LUNA_API_KEY: z.string().optional(),
     LUNA_BASE_URL: z.string().url().optional(),
     LUNA_MODEL: z.string().optional(),
+    BRAVE_SEARCH_API_KEY: z.string().min(1).optional(),
 
     WHISPER_BASE_URL: z.string().url().optional(),
     MCP_SERVER_TOKEN: z.string().min(32).optional(),
