@@ -1,4 +1,4 @@
-import type { MediaReferenceType } from "../../../generated/prisma/enums";
+import type { MediaReferenceType } from "../../../generated/prisma/enums.js";
 
 /** Structured metadata stored on MediaReference.metadata */
 export type ReferenceMetadata = {
