@@ -1,5 +1,7 @@
 import { prisma } from "../../../prisma/prisma.js";
 import { getBrainLlm } from "../ai/llm/provider.js";
+import { extractAndStoreMemories } from "../ai/memory/memory.extractor.js";
+import { listAgentMemories, getMemoryText } from "../ai/memory/memory.service.js";
 
 const activeProfiles = new Map<number, string>();
 
@@ -115,6 +117,18 @@ export async function askTelegramAi(input: {
       return messages;
     });
 
+  const memories = await listAgentMemories(input.profileId, { take: 30 });
+
+  const memoryContext =
+    memories.length > 0
+      ? memories
+          .map(
+            (memory) =>
+              `- [${memory.type}] ${getMemoryText(memory.content)}`,
+          )
+          .join("\\n")
+      : "Постоянная память пока пуста.";
+
   const systemPrompt = [
     "Ты — AI-персонаж, которым пользователь управляет через приватный Telegram control plane.",
     "Отвечай как выбранный AI-профиль, учитывая его persona и writingStyle.",
@@ -130,6 +144,9 @@ export async function askTelegramAi(input: {
     "Persona: " + JSON.stringify(profile.persona),
     "Writing style: " + JSON.stringify(profile.writingStyle),
     "Content strategy: " + JSON.stringify(profile.contentStrategy),
+    "",
+    "Долговременная память профиля:",
+    memoryContext,
   ].join("\n");
 
   try {
@@ -165,6 +182,19 @@ export async function askTelegramAi(input: {
         status: "SUCCESS",
       },
     });
+
+    try {
+      await extractAndStoreMemories({
+        profileId: input.profileId,
+        userMessage: input.message,
+        assistantMessage: answer,
+      });
+    } catch (memoryError) {
+      console.error(
+        "Failed to extract Telegram memories:",
+        memoryError instanceof Error ? memoryError.message : memoryError,
+      );
+    }
 
     return answer;
   } catch (error) {
