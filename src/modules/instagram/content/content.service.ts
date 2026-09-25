@@ -1,14 +1,14 @@
-import { createInstagramContainerService } from "./container.service";
-import { createInstagramPublishService } from "./publish.service";
-import { createInstagramReelsService } from "./reels.service";
-import { createInstagramCarouselService } from "./carousel.service";
+import { createInstagramContainerService } from "./container.service.js";
+import { createInstagramPublishService } from "./publish.service.js";
+import { createInstagramReelsService } from "./reels.service.js";
+import { createInstagramCarouselService } from "./carousel.service.js";
 import type {
   CreateCarouselInput,
   CreateImageContainerInput,
   CreateReelInput,
   CreateStoryInput,
-} from "./content.types";
-import { createInstagramStoriesService } from "./stories.service";
+} from "./content.types.js";
+import { createInstagramStoriesService } from "./stories.service.js";
 
 export function createInstagramContentService(accessToken: string) {
   const containerService = createInstagramContainerService(accessToken);
