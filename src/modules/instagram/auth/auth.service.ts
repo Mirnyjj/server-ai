@@ -1,13 +1,13 @@
-import { env, isOAuthEnabled } from "../../../config/env";
-import { encryptSecret } from "../../../lib/crypto/secret.service";
-import { createInstagramClient } from "../client/instagram.client";
-import { upsertInstagramAccount } from "./account.repository";
-import { upsertInstagramConnection } from "./connection.repository";
-import type { InstagramAuthResult } from "./auth.types";
+import { env, isOAuthEnabled } from "../../../config/env.js";
+import { encryptSecret } from "../../../lib/crypto/secret.service.js";
+import { createInstagramClient } from "../client/instagram.client.js";
+import { upsertInstagramAccount } from "./account.repository.js";
+import { upsertInstagramConnection } from "./connection.repository.js";
+import type { InstagramAuthResult } from "./auth.types.js";
 import {
   exchangeCodeForToken,
   exchangeForLongLivedToken,
-} from "./token.service";
+} from "./token.service.js";
 
 /** CORE MVP scopes from TZ */
 const INSTAGRAM_SCOPES = [
