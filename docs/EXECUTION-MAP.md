@@ -21,7 +21,6 @@
 - [x] Automated unit tests
 - [ ] Production verification of image → storage → public HTTPS
 - [ ] Production verification of Kling → FFmpeg → storage
-- [ ] Production E2E
 
 ## P1 — Production verification
 
@@ -64,7 +63,7 @@
 ## Current execution
 
 1. E2E test scripts have been removed from the project by request.
-2. The media pipeline itself remains implemented; its production verification is now tracked as a manual/production task rather than an automated E2E test.
+2. The media pipeline remains implemented; its production verification is tracked as a manual production task, not as an automated E2E test.
 3. Unit tests remain enabled through `npm test`.
 4. Instagram runtime token resolution currently prefers an active DB connection and falls back to `INSTAGRAM_MARKER`.
 5. When `INSTAGRAM_MARKER` is removed, the existing DB-backed OAuth connection becomes the runtime source without another token-resolution migration.
