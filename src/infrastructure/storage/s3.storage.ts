@@ -5,14 +5,14 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { env } from "../../config/env";
+import { env } from "../../config/env.js";
 import type {
   ObjectStorage,
   PutFromUrlInput,
   PutObjectInput,
   StorageObject,
-} from "./types";
-import { guessMimeFromUrl } from "./key";
+} from "./types.js";
+import { guessMimeFromUrl } from "./key.js";
 
 /**
  * S3-compatible Object Storage (AWS S3, Cloudflare R2, MinIO).
