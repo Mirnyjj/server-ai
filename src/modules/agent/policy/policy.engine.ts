@@ -1,4 +1,4 @@
-import { prisma } from "../../../../prisma/prisma";
+import { prisma } from "../../../../prisma/prisma.js";
 import {
   DEFAULT_POLICY,
   SENSITIVE_CATEGORIES,
@@ -6,7 +6,7 @@ import {
   type PolicyFlags,
   type AgentActionType,
   type SensitiveCategory,
-} from "./policy.types";
+} from "./policy.types.js";
 
 /**
  * Policy Engine (TZ §21).
