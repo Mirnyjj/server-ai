@@ -1,5 +1,5 @@
-import { getBrainLlm } from "../../ai/llm/provider";
-import type { MessageAgentDecision } from "../types";
+import { getBrainLlm } from "../../ai/llm/provider.js";
+import type { MessageAgentDecision } from "../types.js";
 
 export async function runLunaMessageDecision(input: {
   persona: unknown;
