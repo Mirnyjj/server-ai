@@ -1,12 +1,12 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
 import type {
   ProcessCommentJobData,
   ProcessDirectMessageJobData,
-} from "../types";
-import { processComment } from "../../../modules/agent/comment.agent";
-import { processDirectMessage } from "../../../modules/agent/message.agent";
+} from "../types.js";
+import { processComment } from "../../../modules/agent/comment.agent.js";
+import { processDirectMessage } from "../../../modules/agent/message.agent.js";
 
 export function createAgentWorker() {
   const worker = new Worker(
