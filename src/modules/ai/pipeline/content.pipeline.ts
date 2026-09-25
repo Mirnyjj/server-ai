@@ -1,11 +1,11 @@
-import { prisma } from "../../../../prisma/prisma";
-import { PolicyEngine } from "../../agent/policy/policy.engine";
-import { createStorageService } from "../../../infrastructure/storage/storage.service";
-import { getImageGenerator, getVideoGenerator } from "../generators";
-import type { CharacterReferenceInput } from "../generators/types";
-import { createScenarioService } from "../content/scenario.service";
-import type { ContentScenario } from "../content/scenario.types";
-import { createReferenceService } from "../references/reference.service";
+import { prisma } from "../../../../prisma/prisma.js";
+import { PolicyEngine } from "../../agent/policy/policy.engine.js";
+import { createStorageService } from "../../../infrastructure/storage/storage.service.js";
+import { getImageGenerator, getVideoGenerator } from "../generators.js";
+import type { CharacterReferenceInput } from "../generators/types.js";
+import { createScenarioService } from "../content/scenario.service.js";
+import type { ContentScenario } from "../content/scenario.types.js";
+import { createReferenceService } from "../references/reference.service.js";
 
 export type PipelineResult = {
   postId: string;
