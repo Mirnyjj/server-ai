@@ -10,6 +10,7 @@ import { resolveAccessTokenByProfileId } from "../instagram/auth/token.resolver.
 import { createInstagramClient } from "../instagram/client/instagram.client.js";
 import { createInstagramCommentsService } from "../instagram/comments/comments.service.js";
 import { transcribeAudio } from "../ai/transcription/transcription.service.js";
+import { searchWeb } from "../ai/search/search.service.js";
 import {
   addAgentMemory,
   deleteAgentMemory,
@@ -168,6 +169,14 @@ export async function handleTelegramUpdate(
       await cmdStatus(chatId);
       break;
 
+    case "/menu":
+      await sendMainMenu(chatId);
+      break;
+
+    case "/search":
+      await cmdSearch(chatId, text.slice(cmd.length).trim());
+      break;
+
     case "/pending":
       await cmdPending(chatId);
       break;
@@ -220,7 +229,9 @@ export async function handleTelegramUpdate(
 const HELP_TEXT = [
   `<b>AI Instagram — управление</b>`,
   ``,
+  `/menu — главное меню управления`,
   `/status — состояние системы и подключений`,
+  `/search <запрос> — поиск в интернете`,
   `/profiles — список AI-профилей и Instagram-аккаунтов`,
   `/pending — комментарии и сообщения, требующие решения`,
   `/sync &lt;profileId&gt; — синхронизация публикаций`,
@@ -916,6 +927,106 @@ function escapeTelegramHtml(s: string): string {
   return escape(s).slice(0, 3900);
 }
 
+function escapeAttribute(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+async function sendMainMenu(chatId: number): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+  const profile = profileId
+    ? await prisma.aiProfile.findUnique({
+        where: { id: profileId },
+        select: { name: true },
+      })
+    : null;
+
+  await sendTelegramMessage(
+    chatId,
+    [
+      "<b>AI Instagram Agent</b>",
+      "",
+      `Профиль: <b>${escape(profile?.name ?? "не выбран")}</b>`,
+      "",
+      "Выберите раздел:",
+    ].join("\n"),
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [
+            { text: "📱 Instagram", callback_data: "menu:instagram" },
+            { text: "✍️ Контент", callback_data: "menu:content" },
+          ],
+          [
+            { text: "💬 Комментарии", callback_data: "menu:comments" },
+            { text: "✉️ Direct", callback_data: "menu:dm" },
+          ],
+          [
+            { text: "🧠 Память", callback_data: "menu:memory" },
+            { text: "📚 Knowledge", callback_data: "menu:knowledge" },
+          ],
+          [
+            { text: "🔎 Web Search", callback_data: "menu:search" },
+            { text: "📊 Статус", callback_data: "menu:status" },
+          ],
+          [
+            { text: "⚙️ Настройки", callback_data: "menu:settings" },
+            { text: "🤖 Профили", callback_data: "menu:profiles" },
+          ],
+        ],
+      },
+    },
+  );
+}
+
+async function cmdSearch(chatId: number, query: string): Promise<void> {
+  if (!query.trim()) {
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Web Search</b>",
+        "",
+        "Использование:",
+        "<code>/search актуальные тренды Instagram Reels</code>",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  try {
+    await sendTelegramMessage(chatId, "🔎 Ищу в интернете...");
+
+    const results = await searchWeb(query, {
+      limit: 6,
+      country: "RU",
+      searchLang: "ru",
+    });
+
+    if (results.length === 0) {
+      await sendTelegramMessage(chatId, "Ничего не найдено.");
+      return;
+    }
+
+    const text = [
+      "<b>Результаты Web Search</b>",
+      "",
+      ...results.map(
+        (result, index) =>
+          `<b>${index + 1}. ${escape(result.title)}</b>\n${escape(result.description.slice(0, 500))}\n<a href="${escapeAttribute(result.url)}">Открыть источник</a>`,
+      ),
+    ].join("\n\n");
+
+    await sendTelegramMessage(chatId, text.slice(0, 3900), {
+      disable_web_page_preview: true,
+    });
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ Web Search: " +
+        escape(error instanceof Error ? error.message : "неизвестная ошибка"),
+    );
+  }
+}
+
 async function cmdStatus(chatId: number): Promise<void> {
   const accounts = await prisma.instagramAccount.count({
     where: {
@@ -1142,7 +1253,9 @@ async function handleCallback(
   const [action, id] = data.split(":");
 
   try {
-    if (action === "c_send" && id) {
+    if (action === "menu") {
+      await handleMenuCallback(chatId, cq.id, id);
+    } else if (action === "c_send" && id) {
       await humanSendComment(id);
 
       await answerCallbackQuery(cq.id, "Ответ отправлен");
@@ -1213,6 +1326,82 @@ async function handleCallback(
       error instanceof Error ? error.message.slice(0, 180) : "Произошла ошибка",
     );
   }
+}
+
+async function handleMenuCallback(
+  chatId: number,
+  callbackQueryId: string,
+  section?: string,
+): Promise<void> {
+  if (!section) {
+    await answerCallbackQuery(callbackQueryId, "Раздел не указан");
+    return;
+  }
+
+  if (section === "status") {
+    await answerCallbackQuery(callbackQueryId);
+    await cmdStatus(chatId);
+    return;
+  }
+
+  if (section === "profiles") {
+    await answerCallbackQuery(callbackQueryId);
+    await cmdProfiles(chatId);
+    return;
+  }
+
+  if (section === "memory") {
+    await answerCallbackQuery(callbackQueryId);
+    await cmdMemory(chatId, "");
+    return;
+  }
+
+  if (section === "knowledge") {
+    await answerCallbackQuery(callbackQueryId);
+    await cmdKnowledge(chatId, "");
+    return;
+  }
+
+  if (section === "search") {
+    await answerCallbackQuery(callbackQueryId);
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Web Search</b>",
+        "",
+        "Используйте:",
+        "<code>/search ваш запрос</code>",
+        "",
+        "Пример:",
+        "<code>/search последние тренды Instagram Reels</code>",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  if (section === "instagram" || section === "content" || section === "comments" || section === "dm" || section === "settings") {
+    await answerCallbackQuery(callbackQueryId);
+    const labels: Record<string, string> = {
+      instagram: "📱 Instagram",
+      content: "✍️ Контент",
+      comments: "💬 Комментарии",
+      dm: "✉️ Direct",
+      settings: "⚙️ Настройки",
+    };
+
+    await sendTelegramMessage(
+      chatId,
+      [
+        `<b>${labels[section]}</b>`,
+        "",
+        "Раздел подключён к Telegram control plane.",
+        "Детальные операции будут добавляться сюда без необходимости использовать HTTP API.",
+      ].join("\n"),
+    );
+    return;
+  }
+
+  await answerCallbackQuery(callbackQueryId, "Неизвестный раздел");
 }
 
 async function humanSendComment(commentId: string): Promise<void> {
