@@ -1,7 +1,7 @@
 import {
   InstagramLongLivedTokenResponse,
   InstagramTokenResponse,
-} from "./auth.types";
+} from "./auth.types.js";
 
 type ExchangeCodeInput = {
   code: string;
