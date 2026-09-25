@@ -269,10 +269,21 @@ export async function runContentPipeline(input: {
       });
 
       for (const intermediate of intermediateAssets) {
-        if (intermediate.storageKey) {
-          await storageService.storage.deleteObject(intermediate.storageKey);
+        try {
+          if (intermediate.storageKey) {
+            await storageService.storage.deleteObject(intermediate.storageKey);
+          }
+          await prisma.mediaAsset.delete({ where: { id: intermediate.id } });
+        } catch (cleanupError) {
+          console.error("Failed to clean up intermediate reel asset", {
+            assetId: intermediate.id,
+            storageKey: intermediate.storageKey,
+            error:
+              cleanupError instanceof Error
+                ? cleanupError.message
+                : cleanupError,
+          });
         }
-        await prisma.mediaAsset.delete({ where: { id: intermediate.id } });
       }
     } else if (postType === "CAROUSEL" && scenario.slides?.length) {
       const imageGen = getImageGenerator();
