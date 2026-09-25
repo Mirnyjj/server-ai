@@ -26,3 +26,5 @@ Image generation uses one universal Responses API HTTP adapter. IMAGE_MODEL sele
 Pipeline может использовать system prompt, visual identity, MediaReference, memory, knowledge и web context. Эти источники имеют разную семантику и не должны без необходимости сливаться в один источник истины.
 
 External provider должен получать URL, который реально доступен извне. Private/internal storage URL использовать только если provider имеет к нему доступ.
+
+The image adapter currently maps supported aspect ratios to explicit generation sizes: 1:1 → 1024×1024, 4:5 → 1024×1280, 9:16 → 1024×1536, 16:9 → 1536×1024. The returned MediaAsset dimensions reflect the actual requested generation size rather than optional request metadata.
