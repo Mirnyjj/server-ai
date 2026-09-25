@@ -1,13 +1,16 @@
 import { decryptSecret } from "../../../lib/crypto/secret.service.js";
 import { prisma } from "../../../../prisma/prisma.js";
+import { env } from "../../../config/env.js";
 
 /**
  * Resolves an Instagram access token for API calls.
  *
- * Priority:
- * Resolves only from an active DB InstagramConnection.
+ * Resolution order:
+ * 1. Active DB InstagramConnection.
+ * 2. INSTAGRAM_MARKER legacy fallback.
  *
- * Throws if neither is available.
+ * INSTAGRAM_MARKER remains the runtime source until the production OAuth
+ * connection is ready. Once the marker is removed, DB-backed OAuth is used.
  */
 export async function resolveAccessToken(options?: {
   instagramUserId?: string;
@@ -37,8 +40,12 @@ export async function resolveAccessToken(options?: {
     }
   }
 
+  if (env.INSTAGRAM_MARKER) {
+    return env.INSTAGRAM_MARKER;
+  }
+
   throw new Error(
-    "No active Instagram connection found. Connect an account via OAuth.",
+    "No active Instagram connection found and INSTAGRAM_MARKER is not configured.",
   );
 }
 
@@ -64,7 +71,11 @@ export async function resolveAccessTokenByProfileId(
     return decryptSecret(account.connection.accessTokenEncrypted);
   }
 
+  if (env.INSTAGRAM_MARKER) {
+    return env.INSTAGRAM_MARKER;
+  }
+
   throw new Error(
-    `No active Instagram connection for profile ${profileId}. Connect via OAuth.`,
+    `No active Instagram connection for profile ${profileId} and INSTAGRAM_MARKER is not configured.`,
   );
 }
