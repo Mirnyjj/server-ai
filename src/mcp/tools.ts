@@ -243,3 +243,90 @@ export async function toolAddReference(input: {
     mediaAssetId: ref.mediaAssetId,
   };
 }
+
+export type AgentToolName =
+  | "system_status"
+  | "list_profiles"
+  | "pending_reviews"
+  | "sync_media"
+  | "run_pipeline"
+  | "run_plan_slot"
+  | "run_strategy"
+  | "publish_post"
+  | "process_comment"
+  | "process_dm"
+  | "list_references"
+  | "add_reference";
+
+export async function executeAgentTool(
+  name: AgentToolName,
+  args: Record<string, unknown>,
+): Promise<unknown> {
+  switch (name) {
+    case "system_status":
+      return toolSystemStatus();
+    case "list_profiles":
+      return toolListProfiles();
+    case "pending_reviews":
+      return toolPendingReviews(
+        typeof args.limit === "number" ? Math.floor(args.limit) : 10,
+      );
+    case "sync_media":
+      return toolSyncMedia(requireToolString(args, "profileId"));
+    case "run_pipeline":
+      return toolRunPipeline({
+        profileId: requireToolString(args, "profileId"),
+        postType: typeof args.postType === "string" ? args.postType as ContentScenario["postType"] : undefined,
+        topicHint: typeof args.topicHint === "string" ? args.topicHint : undefined,
+        autoPublish: typeof args.autoPublish === "boolean" ? args.autoPublish : undefined,
+      });
+    case "run_plan_slot":
+      return toolRunPlanSlot({
+        profileId: requireToolString(args, "profileId"),
+        postType: typeof args.postType === "string" ? args.postType as ContentScenario["postType"] : undefined,
+        topicHint: typeof args.topicHint === "string" ? args.topicHint : undefined,
+        autoPublish: typeof args.autoPublish === "boolean" ? args.autoPublish : undefined,
+        async: typeof args.async === "boolean" ? args.async : undefined,
+      });
+    case "run_strategy":
+      return toolRunStrategy({
+        profileId: requireToolString(args, "profileId"),
+        async: typeof args.async === "boolean" ? args.async : undefined,
+      });
+    case "publish_post":
+      return toolPublishPost(requireToolString(args, "postId"));
+    case "process_comment":
+      return toolProcessComment({
+        commentId: requireToolString(args, "commentId"),
+        async: typeof args.async === "boolean" ? args.async : undefined,
+      });
+    case "process_dm":
+      return toolProcessDm({
+        messageId: requireToolString(args, "messageId"),
+        async: typeof args.async === "boolean" ? args.async : undefined,
+      });
+    case "list_references":
+      return toolListReferences(requireToolString(args, "profileId"));
+    case "add_reference":
+      return toolAddReference({
+        profileId: requireToolString(args, "profileId"),
+        url: requireToolString(args, "url"),
+        type: requireToolString(args, "type"),
+        description: requireToolString(args, "description"),
+        priority: typeof args.priority === "number" ? args.priority : undefined,
+        tags: Array.isArray(args.tags) && args.tags.every((item) => typeof item === "string")
+          ? args.tags as string[]
+          : undefined,
+      });
+  }
+}
+
+function requireToolString(args: Record<string, unknown>, name: string): string {
+  const value = args[name];
+
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new Error(`${name} is required`);
+  }
+
+  return value;
+}
