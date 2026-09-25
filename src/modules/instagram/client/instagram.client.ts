@@ -2,8 +2,8 @@ import {
   InstagramContainerStatusResponse,
   InstagramMediaContainerResponse,
   InstagramPublishMediaResponse,
-} from "../content/content.types";
-import { createInstagramApiError } from "./instagram.errors";
+} from "../content/content.types.js";
+import { createInstagramApiError } from "./instagram.errors.js";
 import type {
   InstagramApiErrorResponse,
   InstagramClientConfig,
@@ -14,7 +14,7 @@ import type {
   InstagramMediaResponse,
   InstagramProfile,
   InstagramSendMessageResponse,
-} from "./instagram.types";
+} from "./instagram.types.js";
 
 export function createInstagramClient(config: InstagramClientConfig) {
   const baseUrl = `https://graph.instagram.com/${config.apiVersion}`;
