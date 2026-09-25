@@ -16,6 +16,7 @@
     "start:worker": "node dist/worker.js",
     "start:mcp": "node dist/mcp/server.js",
     "test": "tsx --test test/*.test.ts",
+    "smoke": "node scripts/smoke-test.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
