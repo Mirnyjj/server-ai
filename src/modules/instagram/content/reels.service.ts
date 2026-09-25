@@ -1,5 +1,5 @@
-import { createInstagramContainerService } from "./container.service";
-import type { CreateReelInput } from "./content.types";
+import { createInstagramContainerService } from "./container.service.js";
+import type { CreateReelInput } from "./content.types.js";
 
 export function createInstagramReelsService(accessToken: string) {
   const containerService = createInstagramContainerService(accessToken);
