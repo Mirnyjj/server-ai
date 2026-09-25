@@ -4,7 +4,7 @@ import {
   resolveAccessTokenByProfileId,
 } from "../auth/token.resolver.js";
 import { createInstagramCommentsService } from "./comments.service.js";
-import { enqueueCommentReconciliation } from "../../../infrastructure/queue.js";
+import { enqueueCommentReconciliation } from "../../../infrastructure/queue/index.js";
 
 export async function registerInstagramCommentsRoutes(app: FastifyInstance) {
   app.get("/api/instagram/media/:mediaId/comments", async (request, reply) => {
@@ -29,62 +29,66 @@ export async function registerInstagramCommentsRoutes(app: FastifyInstance) {
       request.log.error(error);
       return reply.code(500).send({
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to list comments",
+          error instanceof Error ? error.message : "Failed to list comments",
       });
     }
   });
 
-  app.get("/api/instagram/comments/:commentId/replies", async (request, reply) => {
-    const { commentId } = request.params as {
-      commentId: string;
-    };
+  app.get(
+    "/api/instagram/comments/:commentId/replies",
+    async (request, reply) => {
+      const { commentId } = request.params as {
+        commentId: string;
+      };
 
-    try {
-      const accessToken = await resolveAccessToken();
-      const commentsService = createInstagramCommentsService(accessToken);
+      try {
+        const accessToken = await resolveAccessToken();
+        const commentsService = createInstagramCommentsService(accessToken);
 
-      return commentsService.listReplies(commentId);
-    } catch (error) {
-      request.log.error(error);
-      return reply.code(500).send({
-        error:
-          error instanceof Error ? error.message : "Failed to list replies",
-      });
-    }
-  });
+        return commentsService.listReplies(commentId);
+      } catch (error) {
+        request.log.error(error);
+        return reply.code(500).send({
+          error:
+            error instanceof Error ? error.message : "Failed to list replies",
+        });
+      }
+    },
+  );
 
-  app.post("/api/instagram/comments/:commentId/reply", async (request, reply) => {
-    const { commentId } = request.params as {
-      commentId: string;
-    };
+  app.post(
+    "/api/instagram/comments/:commentId/reply",
+    async (request, reply) => {
+      const { commentId } = request.params as {
+        commentId: string;
+      };
 
-    const body = request.body as {
-      message?: string;
-    };
+      const body = request.body as {
+        message?: string;
+      };
 
-    if (!body.message) {
-      return reply.code(400).send({
-        error: "message is required",
-      });
-    }
+      if (!body.message) {
+        return reply.code(400).send({
+          error: "message is required",
+        });
+      }
 
-    try {
-      const accessToken = await resolveAccessToken();
-      const commentsService = createInstagramCommentsService(accessToken);
+      try {
+        const accessToken = await resolveAccessToken();
+        const commentsService = createInstagramCommentsService(accessToken);
 
-      return commentsService.replyToComment(commentId, body.message);
-    } catch (error) {
-      request.log.error(error);
-      return reply.code(500).send({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to reply to comment",
-      });
-    }
-  });
+        return commentsService.replyToComment(commentId, body.message);
+      } catch (error) {
+        request.log.error(error);
+        return reply.code(500).send({
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to reply to comment",
+        });
+      }
+    },
+  );
 
   app.delete("/api/instagram/comments/:commentId", async (request, reply) => {
     const { commentId } = request.params as {
@@ -100,9 +104,7 @@ export async function registerInstagramCommentsRoutes(app: FastifyInstance) {
       request.log.error(error);
       return reply.code(500).send({
         error:
-          error instanceof Error
-            ? error.message
-            : "Failed to delete comment",
+          error instanceof Error ? error.message : "Failed to delete comment",
       });
     }
   });
@@ -141,37 +143,40 @@ export async function registerInstagramCommentsRoutes(app: FastifyInstance) {
   });
 
   /** Reconcile comments for profile posts → DB (sync) */
-  app.post("/api/instagram/comments/reconcile/profile", async (request, reply) => {
-    const body = request.body as {
-      profileId?: string;
-      limit?: number;
-    };
+  app.post(
+    "/api/instagram/comments/reconcile/profile",
+    async (request, reply) => {
+      const body = request.body as {
+        profileId?: string;
+        limit?: number;
+      };
 
-    if (!body.profileId) {
-      return reply.code(400).send({
-        error: "profileId is required",
-      });
-    }
+      if (!body.profileId) {
+        return reply.code(400).send({
+          error: "profileId is required",
+        });
+      }
 
-    try {
-      const accessToken = await resolveAccessTokenByProfileId(body.profileId);
-      const service = createInstagramCommentsService(accessToken);
-      const result = await service.reconcileProfileComments({
-        profileId: body.profileId,
-        limit: body.limit,
-      });
+      try {
+        const accessToken = await resolveAccessTokenByProfileId(body.profileId);
+        const service = createInstagramCommentsService(accessToken);
+        const result = await service.reconcileProfileComments({
+          profileId: body.profileId,
+          limit: body.limit,
+        });
 
-      return reply.send({ success: true, ...result });
-    } catch (error) {
-      request.log.error(error);
-      return reply.code(500).send({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Profile comment reconciliation failed",
-      });
-    }
-  });
+        return reply.send({ success: true, ...result });
+      } catch (error) {
+        request.log.error(error);
+        return reply.code(500).send({
+          error:
+            error instanceof Error
+              ? error.message
+              : "Profile comment reconciliation failed",
+        });
+      }
+    },
+  );
 
   /** Async reconciliation via BullMQ */
   app.post(

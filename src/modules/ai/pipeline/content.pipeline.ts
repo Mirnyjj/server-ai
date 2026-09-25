@@ -1,7 +1,7 @@
 import { prisma } from "../../../../prisma/prisma.js";
 import { PolicyEngine } from "../../agent/policy/policy.engine.js";
 import { createStorageService } from "../../../infrastructure/storage/storage.service.js";
-import { getImageGenerator, getVideoGenerator } from "../generators.js";
+import { getImageGenerator, getVideoGenerator } from "../generators/index.js";
 import type { CharacterReferenceInput } from "../generators/types.js";
 import { createScenarioService } from "../content/scenario.service.js";
 import type { ContentScenario } from "../content/scenario.types.js";
@@ -11,7 +11,12 @@ export type PipelineResult = {
   postId: string;
   status: string;
   scenario: ContentScenario;
-  mediaAssets: Array<{ id: string; url: string; type: string; storageKey?: string | null }>;
+  mediaAssets: Array<{
+    id: string;
+    url: string;
+    type: string;
+    storageKey?: string | null;
+  }>;
   publishReady: boolean;
   note?: string;
 };

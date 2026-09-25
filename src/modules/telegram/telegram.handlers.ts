@@ -253,16 +253,14 @@ function hasTelegramMedia(
 ): boolean {
   return Boolean(
     message.photo?.length ||
-      message.video ||
-      message.document ||
-      message.voice ||
-      message.audio,
+    message.video ||
+    message.document ||
+    message.voice ||
+    message.audio,
   );
 }
 
-function getTelegramMedia(
-  message: NonNullable<TelegramUpdate["message"]>,
-): {
+function getTelegramMedia(message: NonNullable<TelegramUpdate["message"]>): {
   kind: TelegramMediaKind;
   fileId: string;
   fileName?: string;
@@ -358,12 +356,8 @@ async function handleTelegramMedia(
         "✅ Получено.",
         `Тип: <b>${media.kind}</b>`,
         `Размер: <b>${formatBytes(data.byteLength)}</b>`,
-        media.fileName
-          ? `Имя: <code>${escape(media.fileName)}</code>`
-          : "",
-        media.caption
-          ? `Подпись: ${escape(media.caption.slice(0, 500))}`
-          : "",
+        media.fileName ? `Имя: <code>${escape(media.fileName)}</code>` : "",
+        media.caption ? `Подпись: ${escape(media.caption.slice(0, 500))}` : "",
         "",
         "Файл скачан. Следующим этапом подключим его к AI-анализу.",
       ]
@@ -541,7 +535,7 @@ async function cmdProfiles(chatId: number): Promise<void> {
     return;
   }
 
-  const lines = profiles.map((profile: AiProfile) => {
+  const lines = profiles.map((profile) => {
     const instagram = profile.instagramAccounts[0];
 
     return [

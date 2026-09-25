@@ -2,7 +2,7 @@ import crypto from "node:crypto";
 import { env } from "../../../config/env.js";
 import { prisma } from "../../../../prisma/prisma.js";
 import { createInstagramClient } from "../client/instagram.client.js";
-import { enqueueWebhookEvent } from "../../../infrastructure/queue.js";
+import { enqueueWebhookEvent } from "../../../infrastructure/queue/index.js";
 
 type MetaWebhookPayload = {
   object?: string;

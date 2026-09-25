@@ -9,14 +9,14 @@ import {
 import {
   isObjectStorageConfigured,
   getObjectStorage,
-} from "../infrastructure/storage.js";
+} from "../infrastructure/storage/index.js";
 import {
   enqueueMediaSync,
   enqueueContentPlanSlot,
   enqueueStrategyRun,
   enqueueProcessComment,
   enqueueProcessDirectMessage,
-} from "../infrastructure/queue.js";
+} from "../infrastructure/queue/index.js";
 import { runContentPipeline } from "../modules/ai/pipeline/content.pipeline.js";
 import { enqueuePublishReadyPost } from "../modules/ai/pipeline/publish-from-post.js";
 import { runScheduledContentSlot } from "../modules/ai/plan/content-plan.service.js";

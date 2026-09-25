@@ -4,7 +4,7 @@ import {
   resolveAccessTokenByProfileId,
 } from "../auth/token.resolver.js";
 import { createInstagramMediaService } from "./media.service.js";
-import { enqueueMediaSync } from "../../../infrastructure/queue.js";
+import { enqueueMediaSync } from "../../../infrastructure/queue/index.js";
 
 export async function registerInstagramMediaRoutes(app: FastifyInstance) {
   app.get("/api/instagram/media", async (request, reply) => {
@@ -44,8 +44,7 @@ export async function registerInstagramMediaRoutes(app: FastifyInstance) {
     } catch (error) {
       request.log.error(error);
       return reply.code(500).send({
-        error:
-          error instanceof Error ? error.message : "Failed to list media",
+        error: error instanceof Error ? error.message : "Failed to list media",
       });
     }
   });

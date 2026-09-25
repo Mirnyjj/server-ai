@@ -1,5 +1,5 @@
 import { prisma } from "../../../../prisma/prisma.js";
-import { enqueueCreateAndPublish } from "../../../infrastructure/queue.js";
+import { enqueueCreateAndPublish } from "../../../infrastructure/queue/index.js";
 
 /**
  * Map READY Post + MediaAssets → BullMQ create-and-publish job.
@@ -66,9 +66,7 @@ export async function enqueuePublishReadyPost(postId: string) {
       caption,
       isAiGenerated: post.isAiGenerated,
       items: assets.map((a) =>
-        a.type === "VIDEO"
-          ? { videoUrl: a.url }
-          : { imageUrl: a.url },
+        a.type === "VIDEO" ? { videoUrl: a.url } : { imageUrl: a.url },
       ),
     });
     return { jobId: job.id, mediaType };
