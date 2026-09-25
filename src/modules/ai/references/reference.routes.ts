@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { createReferenceService } from "./reference.service";
+import { createReferenceService } from "./reference.service.js";
 
 export async function registerReferenceRoutes(app: FastifyInstance) {
   const service = createReferenceService();
