@@ -156,9 +156,14 @@ export async function editMessageText(
 }
 
 export async function setTelegramWebhook(url: string) {
+  if (!env.TELEGRAM_WEBHOOK_SECRET) {
+    throw new Error("TELEGRAM_WEBHOOK_SECRET is not configured");
+  }
+
   return tgRequest("setWebhook", {
     url,
     allowed_updates: ["message", "callback_query"],
+    secret_token: env.TELEGRAM_WEBHOOK_SECRET,
   });
 }
 
