@@ -1,13 +1,13 @@
 import type { Worker } from "bullmq";
-import { createTokenRefreshWorker } from "./token-refresh.worker";
-import { createWebhookWorker } from "./webhook.worker";
-import { createPublishWorker } from "./publish.worker";
-import { createContainerStatusWorker } from "./container-status.worker";
-import { createMediaSyncWorker } from "./media-sync.worker";
-import { createInsightsWorker } from "./insights.worker";
-import { createCommentReconcileWorker } from "./comment-reconcile.worker";
-import { createAgentWorker } from "./agent.worker";
-import { createContentPlanWorker } from "./content-plan.worker";
+import { createTokenRefreshWorker } from "./token-refresh.worker.js";
+import { createWebhookWorker } from "./webhook.worker.js";
+import { createPublishWorker } from "./publish.worker.js";
+import { createContainerStatusWorker } from "./container-status.worker.js";
+import { createMediaSyncWorker } from "./media-sync.worker.js";
+import { createInsightsWorker } from "./insights.worker.js";
+import { createCommentReconcileWorker } from "./comment-reconcile.worker.js";
+import { createAgentWorker } from "./agent.worker.js";
+import { createContentPlanWorker } from "./content-plan.worker.js";
 
 let workers: Worker[] = [];
 
@@ -33,8 +33,8 @@ export function startWorkers(): Worker[] {
 
 async function registerRepeatableJobs(): Promise<void> {
   try {
-    const { tokenRefreshQueue } = await import("../queues");
-    const { JOB_NAMES } = await import("../types");
+    const { tokenRefreshQueue } = await import("../queues.js");
+    const { JOB_NAMES } = await import("../types.js");
 
     await tokenRefreshQueue.upsertJobScheduler(
       "refresh-all-expiring",
