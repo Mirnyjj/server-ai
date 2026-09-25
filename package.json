@@ -36,7 +36,7 @@
     "ioredis": "^6.0.0",
     "pg": "^8.23.0",
     "zod": "^4.6.5",
-    "@fal-ai/client": "^1.7.3"
+    "@fal-ai/client": "^1.10.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
