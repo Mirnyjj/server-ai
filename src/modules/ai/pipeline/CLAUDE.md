@@ -20,3 +20,6 @@ Publishing policy: generated posts remain READY until an explicit human approval
 
 
 `POST /api/ai/pipeline/run` supports `async: true`, which enqueues generation in BullMQ and returns `202 + jobId`. MCP `run_pipeline` also accepts `async: true`.
+
+
+Publish retry/idempotency: the create-and-publish worker first checks the Post and its latest InstagramMediaContainer. An already PUBLISHED post with instagramMediaId is skipped; active/finished existing containers are reused instead of creating another Instagram container. A container recorded as PUBLISHED without post.instagramMediaId stops the retry and requires reconciliation rather than attempting another publish.
