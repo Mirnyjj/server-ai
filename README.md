@@ -990,3 +990,10 @@ VIDEO_GENERATOR_BASE_URL=https://...
 VIDEO_GENERATOR_API_KEY=...
 VIDEO_GENERATOR_MODEL=...
 ```
+
+
+---
+
+## Execution map
+
+The active implementation map is maintained in [docs/EXECUTION-MAP.md](docs/EXECUTION-MAP.md). It is updated after implementation changes and separates code-complete items from production verification.
