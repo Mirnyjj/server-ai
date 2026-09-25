@@ -1,5 +1,5 @@
-import { env } from "../../../config/env";
-import { createInstagramClient } from "../client/instagram.client";
+import { env } from "../../../config/env.js";
+import { createInstagramClient } from "../client/instagram.client.js";
 
 export function createInstagramPublishService(accessToken: string) {
   const instagramClient = createInstagramClient({
