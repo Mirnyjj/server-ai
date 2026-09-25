@@ -1,13 +1,13 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
-import type { PollContainerJobData } from "../types";
-import { enqueuePollContainer, enqueuePublishPost } from "../queues";
-import { resolveAccessToken } from "../../../modules/instagram/auth/token.resolver";
-import { createInstagramClient } from "../../../modules/instagram/client/instagram.client";
-import { env } from "../../../config/env";
-import { prisma } from "../../../../prisma/prisma";
-import { PostStatus } from "../../../generated/prisma/enums";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
+import type { PollContainerJobData } from "../types.js";
+import { enqueuePollContainer, enqueuePublishPost } from "../queues.js";
+import { resolveAccessToken } from "../../../modules/instagram/auth/token.resolver.js";
+import { createInstagramClient } from "../../../modules/instagram/client/instagram.client.js";
+import { env } from "../../../config/env.js";
+import { prisma } from "../../../../prisma/prisma.js";
+import { PostStatus } from "../../../generated/prisma/enums.js";
 
 const MAX_POLL_ATTEMPTS = 20;
 const POLL_INTERVAL_MS = 30_000; // 30s between polls
