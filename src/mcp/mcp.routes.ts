@@ -3,8 +3,8 @@ import type { FastifyInstance } from "fastify";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
 
-import { env } from "../config/env";
-import { createMcpServer } from "./server";
+import { env } from "../config/env.js";
+import { createMcpServer } from "./server.js";
 
 const sessions = new Map<string, StreamableHTTPServerTransport>();
 
