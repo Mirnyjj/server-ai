@@ -24,9 +24,8 @@ import { runStrategyAgent } from "../modules/ai/strategy/strategy.agent.js";
 import { processComment } from "../modules/agent/comment.agent.js";
 import { processDirectMessage } from "../modules/agent/message.agent.js";
 import { createReferenceService } from "../modules/ai/references/reference.service.js";
+import { searchWeb } from "../modules/ai/search/search.service.js";
 import type { ContentScenario } from "../modules/ai/content/scenario.types.js";
-
-/** Tool handlers shared by MCP server */
 
 export async function toolSystemStatus() {
   let storageName = "n/a";
@@ -244,6 +243,19 @@ export async function toolAddReference(input: {
   };
 }
 
+export async function toolWebSearch(input: {
+  query: string;
+  limit?: number;
+  language?: string;
+  timeRange?: "day" | "month" | "year";
+}) {
+  return searchWeb(input.query, {
+    limit: input.limit,
+    language: input.language,
+    timeRange: input.timeRange,
+  });
+}
+
 export type AgentToolName =
   | "system_status"
   | "list_profiles"
@@ -256,7 +268,8 @@ export type AgentToolName =
   | "process_comment"
   | "process_dm"
   | "list_references"
-  | "add_reference";
+  | "add_reference"
+  | "web_search";
 
 export async function executeAgentTool(
   name: AgentToolName,
@@ -269,41 +282,41 @@ export async function executeAgentTool(
       return toolListProfiles();
     case "pending_reviews":
       return toolPendingReviews(
-        typeof args.limit === "number" ? Math.floor(args.limit) : 10,
+        typeof args.limit === "number" ? Math.max(1, Math.floor(args.limit)) : 10,
       );
     case "sync_media":
       return toolSyncMedia(requireToolString(args, "profileId"));
     case "run_pipeline":
       return toolRunPipeline({
         profileId: requireToolString(args, "profileId"),
-        postType: typeof args.postType === "string" ? args.postType as ContentScenario["postType"] : undefined,
-        topicHint: typeof args.topicHint === "string" ? args.topicHint : undefined,
-        autoPublish: typeof args.autoPublish === "boolean" ? args.autoPublish : undefined,
+        postType: parsePostType(args.postType),
+        topicHint: optionalString(args, "topicHint"),
+        autoPublish: optionalBoolean(args, "autoPublish"),
       });
     case "run_plan_slot":
       return toolRunPlanSlot({
         profileId: requireToolString(args, "profileId"),
-        postType: typeof args.postType === "string" ? args.postType as ContentScenario["postType"] : undefined,
-        topicHint: typeof args.topicHint === "string" ? args.topicHint : undefined,
-        autoPublish: typeof args.autoPublish === "boolean" ? args.autoPublish : undefined,
-        async: typeof args.async === "boolean" ? args.async : undefined,
+        postType: parsePostType(args.postType),
+        topicHint: optionalString(args, "topicHint"),
+        autoPublish: optionalBoolean(args, "autoPublish"),
+        async: optionalBoolean(args, "async"),
       });
     case "run_strategy":
       return toolRunStrategy({
         profileId: requireToolString(args, "profileId"),
-        async: typeof args.async === "boolean" ? args.async : undefined,
+        async: optionalBoolean(args, "async"),
       });
     case "publish_post":
       return toolPublishPost(requireToolString(args, "postId"));
     case "process_comment":
       return toolProcessComment({
         commentId: requireToolString(args, "commentId"),
-        async: typeof args.async === "boolean" ? args.async : undefined,
+        async: optionalBoolean(args, "async"),
       });
     case "process_dm":
       return toolProcessDm({
         messageId: requireToolString(args, "messageId"),
-        async: typeof args.async === "boolean" ? args.async : undefined,
+        async: optionalBoolean(args, "async"),
       });
     case "list_references":
       return toolListReferences(requireToolString(args, "profileId"));
@@ -313,20 +326,97 @@ export async function executeAgentTool(
         url: requireToolString(args, "url"),
         type: requireToolString(args, "type"),
         description: requireToolString(args, "description"),
-        priority: typeof args.priority === "number" ? args.priority : undefined,
-        tags: Array.isArray(args.tags) && args.tags.every((item) => typeof item === "string")
-          ? args.tags as string[]
-          : undefined,
+        priority: optionalNumber(args, "priority"),
+        tags: optionalTags(args),
       });
+    case "web_search":
+      return toolWebSearch({
+        query: requireToolString(args, "query"),
+        limit: optionalNumber(args, "limit"),
+        language: optionalString(args, "language"),
+        timeRange: parseTimeRange(args.timeRange),
+      });
+    default:
+      throw new Error(`Unknown tool: ${name}`);
   }
 }
 
 function requireToolString(args: Record<string, unknown>, name: string): string {
   const value = args[name];
-
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`${name} is required`);
   }
+  return value.trim();
+}
 
+function optionalString(
+  args: Record<string, unknown>,
+  name: string,
+): string | undefined {
+  const value = args[name];
+  if (value === undefined) return undefined;
+  if (typeof value !== "string") throw new Error(`${name} must be a string`);
+  return value;
+}
+
+function optionalBoolean(
+  args: Record<string, unknown>,
+  name: string,
+): boolean | undefined {
+  const value = args[name];
+  if (value === undefined) return undefined;
+  if (typeof value !== "boolean") throw new Error(`${name} must be a boolean`);
+  return value;
+}
+
+function optionalNumber(
+  args: Record<string, unknown>,
+  name: string,
+): number | undefined {
+  const value = args[name];
+  if (value === undefined) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${name} must be a finite number`);
+  }
+  return value;
+}
+
+function parsePostType(
+  value: unknown,
+): ContentScenario["postType"] | undefined {
+  if (value === undefined) return undefined;
+  if (
+    value !== "PHOTO" &&
+    value !== "REEL" &&
+    value !== "STORY" &&
+    value !== "CAROUSEL" &&
+    value !== "VIDEO"
+  ) {
+    throw new Error(
+      "postType must be one of: PHOTO, REEL, STORY, CAROUSEL, VIDEO",
+    );
+  }
+  return value;
+}
+
+function parseTimeRange(
+  value: unknown,
+): "day" | "month" | "year" | undefined {
+  if (value === undefined) return undefined;
+  if (value !== "day" && value !== "month" && value !== "year") {
+    throw new Error("timeRange must be one of: day, month, year");
+  }
+  return value;
+}
+
+function optionalTags(args: Record<string, unknown>): string[] | undefined {
+  const value = args.tags;
+  if (value === undefined) return undefined;
+  if (
+    !Array.isArray(value) ||
+    !value.every((item) => typeof item === "string")
+  ) {
+    throw new Error("tags must be an array of strings");
+  }
   return value;
 }
