@@ -8,6 +8,7 @@ import { createInsightsWorker } from "./insights.worker.js";
 import { createCommentReconcileWorker } from "./comment-reconcile.worker.js";
 import { createAgentWorker } from "./agent.worker.js";
 import { createContentPlanWorker } from "./content-plan.worker.js";
+import { createContentGenerationWorker } from "./content-generation.worker.js";
 
 let workers: Worker[] = [];
 
@@ -24,6 +25,7 @@ export function startWorkers(): Worker[] {
     createCommentReconcileWorker(),
     createAgentWorker(),
     createContentPlanWorker(),
+    createContentGenerationWorker(),
   ];
 
   console.log(`[queues] started ${workers.length} workers`);
