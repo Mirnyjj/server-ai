@@ -1,13 +1,13 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
 import type {
   ReconcileProfileCommentsJobData,
   ReconcilePostCommentsJobData,
-} from "../types";
-import { resolveAccessTokenByProfileId, resolveAccessToken } from "../../../modules/instagram/auth/token.resolver";
-import { createCommentReconciliationService } from "../../../modules/instagram/comments/comments.reconciliation";
-import { prisma } from "../../../../prisma/prisma";
+} from "../types.js";
+import { resolveAccessTokenByProfileId, resolveAccessToken } from "../../../modules/instagram/auth/token.resolver.js";
+import { createCommentReconciliationService } from "../../../modules/instagram/comments/comments.reconciliation.js";
+import { prisma } from "../../../../prisma/prisma.js";
 
 async function processProfile(job: Job<ReconcileProfileCommentsJobData>) {
   const { profileId, limit } = job.data;
