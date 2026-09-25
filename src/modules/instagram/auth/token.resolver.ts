@@ -1,6 +1,6 @@
-import { env } from "../../../config/env";
-import { decryptSecret } from "../../../lib/crypto/secret.service";
-import { prisma } from "../../../../prisma/prisma";
+import { env } from "../../../config/env.js";
+import { decryptSecret } from "../../../lib/crypto/secret.service.js";
+import { prisma } from "../../../../prisma/prisma.js";
 
 /**
  * Resolves an Instagram access token for API calls.
