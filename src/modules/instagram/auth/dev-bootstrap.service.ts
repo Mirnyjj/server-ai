@@ -1,8 +1,8 @@
-import { env } from "../../../config/env";
-import { encryptSecret } from "../../../lib/crypto/secret.service";
-import { createInstagramClient } from "../client/instagram.client";
-import { upsertInstagramAccount } from "./account.repository";
-import { upsertInstagramConnection } from "./connection.repository";
+import { env } from "../../../config/env.js";
+import { encryptSecret } from "../../../lib/crypto/secret.service.js";
+import { createInstagramClient } from "../client/instagram.client.js";
+import { upsertInstagramAccount } from "./account.repository.js";
+import { upsertInstagramConnection } from "./connection.repository.js";
 
 /**
  * Local dev helper: using INSTAGRAM_MARKER, fetch profile and upsert
