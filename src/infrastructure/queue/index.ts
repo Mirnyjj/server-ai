@@ -18,7 +18,7 @@ export {
   type ProcessDirectMessageJobData,
   type ContentPlanSlotJobData,
   type StrategyRunJobData,
-} from "./types";
+} from "./types.js";
 
 export {
   tokenRefreshQueue,
@@ -46,6 +46,6 @@ export {
   enqueueContentPlanSlot,
   enqueueStrategyRun,
   closeAllQueues,
-} from "./queues";
+} from "./queues.js";
 
-export { startWorkers, stopWorkers } from "./workers/index";
+export { startWorkers, stopWorkers } from "./workers/index.js";
