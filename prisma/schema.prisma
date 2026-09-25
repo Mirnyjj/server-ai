@@ -10,6 +10,7 @@ datasource db {
 model AiProfile {
   id                String             @id @default(cuid())
   name              String
+  systemPrompt       String?
   persona           Json
   visualIdentity    Json
   writingStyle      Json
