@@ -19,6 +19,13 @@ import {
   type MemoryType,
 } from "../ai/memory/memory.service.js";
 import {
+  addKnowledgeDocument,
+  deleteKnowledgeDocument,
+  listKnowledgeDocuments,
+  searchKnowledge,
+  type KnowledgeSourceType,
+} from "../ai/knowledge/knowledge.service.js";
+import {
   answerCallbackQuery,
   downloadTelegramFile,
   editMessageText,
@@ -192,6 +199,11 @@ export async function handleTelegramUpdate(
       await cmdMemory(chatId, text.slice(cmd.length).trim());
       break;
 
+    case "/knowledge":
+    case "/kb":
+      await cmdKnowledge(chatId, text.slice(cmd.length).trim());
+      break;
+
     default:
       if (command.startsWith("/")) {
         await sendTelegramMessage(
@@ -225,10 +237,163 @@ const HELP_TEXT = [
   `/memory add &lt;тип&gt; &lt;текст&gt; — сохранить память`,
   `/memory search &lt;текст&gt; — найти память`,
   `/memory forget &lt;id&gt; — удалить память`,
+  `/knowledge — список документов базы знаний`,
+  `/knowledge add &lt;название&gt; | &lt;текст&gt; — добавить документ`,
+  `/knowledge search &lt;текст&gt; — найти знания`,
+  `/knowledge forget &lt;id&gt; — удалить документ`,
   `Обычный текст после /use отправляется выбранному AI-профилю.`,
   ``,
   `Важные комментарии и сообщения поступают отдельными уведомлениями с кнопками для действий.`,
 ].join("\n");
+
+const KNOWLEDGE_SOURCE_TYPES: KnowledgeSourceType[] = [
+  "MANUAL",
+  "FILE",
+  "URL",
+  "INSTAGRAM",
+  "TELEGRAM",
+  "OTHER",
+];
+
+async function cmdKnowledge(chatId: number, input: string): Promise<void> {
+  const profileId = await getTelegramActiveProfileId(chatId);
+
+  if (!profileId) {
+    await sendTelegramMessage(
+      chatId,
+      "Сначала выберите AI-профиль: /use &lt;profileId&gt;",
+    );
+    return;
+  }
+
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    const documents = await listKnowledgeDocuments(profileId, 20);
+
+    if (documents.length === 0) {
+      await sendTelegramMessage(chatId, "База знаний пока пуста.");
+      return;
+    }
+
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>База знаний</b>",
+        "",
+        ...documents.map(
+          (document) =>
+            `• <b>${escape(document.title)}</b> [${document.sourceType}]\n  <code>${document.id}</code>${document.source ? `\n  Источник: ${escape(document.source)}` : ""}`,
+        ),
+      ].join("\n"),
+    );
+    return;
+  }
+
+  const [subcommand, ...rest] = trimmed.split(/\\s+/);
+  const value = rest.join(" ").trim();
+
+  if (subcommand.toLowerCase() === "add") {
+    const separator = value.indexOf("|");
+
+    if (separator === -1) {
+      await sendTelegramMessage(
+        chatId,
+        "Использование: /knowledge add &lt;название&gt; | &lt;текст&gt;",
+      );
+      return;
+    }
+
+    const title = value.slice(0, separator).trim();
+    const content = value.slice(separator + 1).trim();
+
+    if (!title || !content) {
+      await sendTelegramMessage(
+        chatId,
+        "Название и текст документа обязательны.",
+      );
+      return;
+    }
+
+    const document = await addKnowledgeDocument({
+      profileId,
+      title,
+      content,
+      sourceType: "TELEGRAM",
+    });
+
+    await sendTelegramMessage(
+      chatId,
+      `✅ Документ добавлен.\nID: <code>${document.id}</code>\nФрагментов: <b>${document.chunks}</b>`,
+    );
+    return;
+  }
+
+  if (subcommand.toLowerCase() === "search") {
+    if (!value) {
+      await sendTelegramMessage(
+        chatId,
+        "Использование: /knowledge search &lt;текст&gt;",
+      );
+      return;
+    }
+
+    const results = await searchKnowledge(profileId, value, 6);
+
+    if (results.length === 0) {
+      await sendTelegramMessage(chatId, "Ничего не найдено в базе знаний.");
+      return;
+    }
+
+    await sendTelegramMessage(
+      chatId,
+      [
+        "<b>Результаты поиска</b>",
+        "",
+        ...results.map(
+          (result) =>
+            `• <b>${escape(result.title)}</b>\n${escape(result.content.slice(0, 700))}\n<code>${result.id}</code>`,
+        ),
+      ].join("\n\n").slice(0, 3900),
+    );
+    return;
+  }
+
+  if (subcommand.toLowerCase() === "forget") {
+    if (!value) {
+      await sendTelegramMessage(
+        chatId,
+        "Использование: /knowledge forget &lt;id&gt;",
+      );
+      return;
+    }
+
+    try {
+      await deleteKnowledgeDocument(profileId, value);
+      await sendTelegramMessage(chatId, "✅ Документ удалён.");
+    } catch (error) {
+      await sendTelegramMessage(
+        chatId,
+        "❌ " + escape(error instanceof Error ? error.message : "Ошибка удаления"),
+      );
+    }
+    return;
+  }
+
+  await sendTelegramMessage(
+    chatId,
+    [
+      "<b>База знаний</b>",
+      "",
+      "<code>/knowledge</code> — список",
+      "<code>/knowledge add Название | Текст</code> — добавить",
+      "<code>/knowledge search запрос</code> — поиск",
+      "<code>/knowledge forget &lt;id&gt;</code> — удалить",
+      "",
+      "Источники: " + KNOWLEDGE_SOURCE_TYPES.join(", "),
+    ].join("\n"),
+  );
+}
 
 const MEMORY_TYPES: MemoryType[] = [
   "PERSONA",
