@@ -66,6 +66,12 @@ Pipeline calls `ingestUrl` after generators so Post media always points at our s
 S3/R2 `putFromUrl` downloads generator output with a 120-second AbortSignal timeout. The timeout is always cleared in a `finally` block, including failed or aborted requests.
 
 
+## Supabase Storage
+
+Supabase Storage is supported through its S3-compatible protocol. Keep the provider explicit with `STORAGE_PROVIDER=supabase`, but use the same S3 adapter internally. Supabase documents the S3 endpoint as `https://<project-ref>.storage.supabase.co/storage/v1/s3` and recommends the direct storage hostname for large uploads. The S3 access key and secret are server-side credentials.
+
+For public media, the Supabase bucket must be public. The public object URL is `https://<project-ref>.supabase.co/storage/v1/object/public/<bucket>/<key>`. Upload/delete operations still use the authenticated S3 endpoint; public URL generation must use the public object endpoint.
+
 ## Public URL resolution
 
 For S3-compatible storage, `STORAGE_PUBLIC_BASE_URL` is treated as an object public base such as a CDN/custom domain. If it is exactly the same normalized URL as `STORAGE_ENDPOINT`, it is interpreted as the S3 API endpoint rather than an object root, and the bucket is inserted into the path.
@@ -85,3 +91,19 @@ https://s3.twcstorage.ru/<bucket-id>/profiles/<profileId>/generated/<id>.png
 ```
 
 A different `STORAGE_PUBLIC_BASE_URL` is treated as an explicit public/CDN base and does not receive the bucket automatically.
+
+
+### Supabase environment
+
+```env
+STORAGE_PROVIDER=supabase
+STORAGE_BUCKET=media
+STORAGE_REGION=<project-region>
+STORAGE_ENDPOINT=https://<project-ref>.storage.supabase.co/storage/v1/s3
+STORAGE_ACCESS_KEY_ID=<supabase-s3-access-key>
+STORAGE_SECRET_ACCESS_KEY=<supabase-s3-secret>
+STORAGE_PUBLIC_BASE_URL=https://<project-ref>.supabase.co/storage/v1/object/public/media
+STORAGE_FORCE_PATH_STYLE=true
+```
+
+`STORAGE_PUBLIC_BASE_URL` must include the bucket because it is the public object root, not the S3 API endpoint.
