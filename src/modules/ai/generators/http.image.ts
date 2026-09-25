@@ -1,9 +1,9 @@
-import { env } from "../../../config/env";
+import { env } from "../../../config/env.js";
 import type {
   ImageGenerator,
   ImageGenerationRequest,
   ImageGenerationResult,
-} from "./types";
+} from "./types.js";
 
 /**
  * Generic HTTP image generator.
