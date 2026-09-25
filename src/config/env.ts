@@ -48,6 +48,7 @@ const envSchema = z
     VIDEO_GENERATOR_API_KEY: z.string().optional(),
     VIDEO_GENERATOR_MODEL: z.string().optional(),
     VIDEO_GENERATOR_BASE_URL: z.string().url().optional(),
+    VIDEO_GENERATOR_POLL_MS: z.coerce.number().int().positive().default(5000),
 
     STORAGE_PROVIDER: z.string().optional(),
     STORAGE_BUCKET: z.string().optional(),
