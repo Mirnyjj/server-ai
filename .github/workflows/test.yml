@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+      - "fix/**"
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      DIRECT_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+      REDIS_URL: redis://127.0.0.1:6379
+      INSTAGRAM_TOKEN_ENCRYPTION_KEY: 12345678901234567890123456789012
+      INSTAGRAM_API_VERSION: v23.0
+      INSTAGRAM_MARKER: test-token
+      IMAGE_MODEL_API_KEY: test-key
+      IMAGE_MODEL_BASE_URL: https://example.com/v1
+      IMAGE_MODEL: black_forest_labs/flux-2-pro
+      VIDEO_GENERATOR_PROVIDER: http
+      VIDEO_GENERATOR_API_KEY: test-key
+      VIDEO_GENERATOR_BASE_URL: https://example.com/video
+      VIDEO_GENERATOR_MODEL: test-video-model
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx prisma generate
+
+      - run: npm test
+
+      - run: npm run build
