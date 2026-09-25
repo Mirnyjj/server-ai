@@ -1783,25 +1783,36 @@ async function handleMenuCallback(
     return;
   }
 
-  if (section === "instagram" || section === "comments" || section === "dm" || section === "settings") {
+  if (section === "instagram") {
     await answerCallbackQuery(callbackQueryId);
-    const labels: Record<string, string> = {
-      instagram: "📱 Instagram",
-      content: "✍️ Контент",
-      comments: "💬 Комментарии",
-      dm: "✉️ Direct",
-      settings: "⚙️ Настройки",
-    };
-
+    const profileId = await getTelegramActiveProfileId(chatId);
+    if (!profileId) {
+      await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use &lt;profileId&gt;");
+      return;
+    }
     await sendTelegramMessage(
       chatId,
       [
-        `<b>${labels[section]}</b>`,
+        "<b>📱 Instagram</b>",
         "",
-        "Раздел подключён к Telegram control plane.",
-        "Детальные операции будут добавляться сюда без необходимости использовать HTTP API.",
+        `<code>/status</code> — состояние подключений`,
+        `<code>/sync ${profileId}</code> — синхронизация контента`,
+        `<code>/connect ${profileId}</code> — подключить аккаунт`,
+        `<code>/insights</code> — статистика`,
       ].join("\n"),
     );
+    return;
+  }
+
+  if (section === "comments" || section === "dm") {
+    await answerCallbackQuery(callbackQueryId);
+    await cmdPending(chatId);
+    return;
+  }
+
+  if (section === "settings") {
+    await answerCallbackQuery(callbackQueryId);
+    await cmdPrompt(chatId, "");
     return;
   }
 
