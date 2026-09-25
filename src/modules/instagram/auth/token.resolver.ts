@@ -1,4 +1,3 @@
-import { env } from "../../../config/env.js";
 import { decryptSecret } from "../../../lib/crypto/secret.service.js";
 import { prisma } from "../../../../prisma/prisma.js";
 
@@ -6,8 +5,7 @@ import { prisma } from "../../../../prisma/prisma.js";
  * Resolves an Instagram access token for API calls.
  *
  * Priority:
- * 1. Active InstagramConnection for the given instagramUserId / accountId (encrypted in DB)
- * 2. INSTAGRAM_MARKER env (dev/test only)
+ * Resolves only from an active DB InstagramConnection.
  *
  * Throws if neither is available.
  */
@@ -39,12 +37,8 @@ export async function resolveAccessToken(options?: {
     }
   }
 
-  if (env.INSTAGRAM_MARKER) {
-    return env.INSTAGRAM_MARKER;
-  }
-
   throw new Error(
-    "No Instagram access token available. Connect an account via OAuth or set INSTAGRAM_MARKER for development.",
+    "No active Instagram connection found. Connect an account via OAuth.",
   );
 }
 
@@ -70,11 +64,7 @@ export async function resolveAccessTokenByProfileId(
     return decryptSecret(account.connection.accessTokenEncrypted);
   }
 
-  if (env.INSTAGRAM_MARKER) {
-    return env.INSTAGRAM_MARKER;
-  }
-
   throw new Error(
-    `No active Instagram connection for profile ${profileId}. Connect via OAuth or set INSTAGRAM_MARKER.`,
+    `No active Instagram connection for profile ${profileId}. Connect via OAuth.`,
   );
 }
