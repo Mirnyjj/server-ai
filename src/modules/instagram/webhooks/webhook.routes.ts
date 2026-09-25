@@ -1,4 +1,5 @@
-import type { FastifyInstance } from "fastify";
+import { Readable } from "node:stream";
+import type { FastifyInstance, FastifyRequest } from "fastify";
 import {
   env,
   isInstagramDevMode,
@@ -6,7 +7,22 @@ import {
 } from "../../../config/env.js";
 import { createInstagramWebhookService } from "./webhook.service.js";
 
+type RawBodyRequest = FastifyRequest & { rawBody?: Buffer };
+
 export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
+  app.addHook("preParsing", async (request, _reply, payload) => {
+    if (request.method !== "POST" || request.url !== "/api/instagram/webhook") {
+      return payload;
+    }
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of payload) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+
+    (request as RawBodyRequest).rawBody = Buffer.concat(chunks);
+    return Readable.from((request as RawBodyRequest).rawBody);
+  });
   const webhookService = createInstagramWebhookService(env.INSTAGRAM_MARKER);
 
   app.get("/api/instagram/webhook", async (request, reply) => {
@@ -61,10 +77,11 @@ export async function registerInstagramWebhookRoutes(app: FastifyInstance) {
       | string
       | undefined;
 
-    const rawBody =
-      typeof request.body === "string"
-        ? request.body
-        : JSON.stringify(request.body ?? {});
+    const rawBody = (request as RawBodyRequest).rawBody;
+
+    if (!rawBody) {
+      return reply.code(400).send({ error: "raw_body_unavailable" });
+    }
 
     try {
       const result = await webhookService.handleEvent(request.body, {
