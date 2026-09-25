@@ -1,9 +1,11 @@
+CREATE TYPE "KnowledgeSourceType" AS ENUM ('MANUAL', 'FILE', 'URL', 'INSTAGRAM', 'TELEGRAM', 'OTHER');
+
 CREATE TABLE "KnowledgeDocument" (
     "id" TEXT NOT NULL,
     "profileId" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "source" TEXT,
-    "sourceType" TEXT NOT NULL DEFAULT 'MANUAL',
+    "sourceType" "KnowledgeSourceType" NOT NULL DEFAULT 'MANUAL',
     "content" TEXT NOT NULL,
     "metadata" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
