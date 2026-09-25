@@ -18,6 +18,7 @@ export {
   type ProcessDirectMessageJobData,
   type ContentPlanSlotJobData,
   type StrategyRunJobData,
+  type ContentGenerationJobData,
 } from "./types.js";
 
 export {
@@ -30,6 +31,7 @@ export {
   commentReconcileQueue,
   agentQueue,
   contentPlanQueue,
+  contentGenerationQueue,
   enqueueTokenRefresh,
   enqueueRefreshAllExpiring,
   enqueueWebhookEvent,
@@ -45,6 +47,7 @@ export {
   enqueueProcessDirectMessage,
   enqueueContentPlanSlot,
   enqueueStrategyRun,
+  enqueueContentGeneration,
   closeAllQueues,
 } from "./queues.js";
 
