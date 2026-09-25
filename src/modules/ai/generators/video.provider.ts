@@ -5,33 +5,27 @@ import type {
   VideoGenerationResult,
 } from "./types.js";
 import { createHttpVideoGenerator } from "./http.video.js";
+import { createOpenAiVideoGenerator } from "./openai.video.js";
 
 export function createVideoGenerator(): VideoGenerator {
   const provider = (env.VIDEO_GENERATOR_PROVIDER ?? "stub").toLowerCase();
-  const model = env.VIDEO_GENERATOR_MODEL ?? "default-video-model";
+  const model = env.VIDEO_GENERATOR_MODEL ?? "sora-2";
 
-  if (provider === "http") {
-    return createHttpVideoGenerator();
-  }
+  if (provider === "openai") return createOpenAiVideoGenerator();
+  if (provider === "http") return createHttpVideoGenerator();
 
   return {
-    name: `stub:${model}`,
-
-    async generate(
-      request: VideoGenerationRequest,
-    ): Promise<VideoGenerationResult> {
+    name: "stub:" + model,
+    async generate(request: VideoGenerationRequest): Promise<VideoGenerationResult> {
       return {
-        url: `https://placeholder.local/generated/${request.profileId}/${Date.now()}.mp4`,
+        url: "https://placeholder.local/generated/" + request.profileId + "/" + Date.now() + ".mp4",
         provider: "stub",
         model,
         durationMs: (request.durationSec ?? 10) * 1000,
         width: 1080,
         height: 1920,
         mimeType: "video/mp4",
-        raw: {
-          prompt: request.prompt,
-          note: "Set VIDEO_GENERATOR_PROVIDER=http + BASE_URL + API_KEY",
-        },
+        raw: { prompt: request.prompt },
       };
     },
   };
