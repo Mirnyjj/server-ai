@@ -1623,17 +1623,18 @@ async function handleCallback(
         `✅ Активный профиль: <b>${escape(profile?.name ?? id)}</b>`,
       );
     } else if (action === "post" && id && subaction) {
-      if (subaction === "approve") {
-        const result = await approveTelegramPost(id);
+      const postId = subaction;
+      if (id === "approve") {
+        const result = await approveTelegramPost(postId);
         await answerCallbackQuery(cq.id, "Одобрено, публикация поставлена в очередь");
-        await sendTelegramMessage(chatId, `✅ Пост <code>${id}</code> одобрен. Job: <code>${result.jobId ?? "queued"}</code>`);
-      } else if (subaction === "reject") {
-        await rejectTelegramPost(id);
+        await sendTelegramMessage(chatId, `✅ Пост <code>${postId}</code> одобрен. Job: <code>${result.jobId ?? "queued"}</code>`);
+      } else if (id === "reject") {
+        await rejectTelegramPost(postId);
         await answerCallbackQuery(cq.id, "Отклонено");
-        await sendTelegramMessage(chatId, `❌ Пост <code>${id}</code> отклонён.`);
-      } else if (subaction === "regenerate") {
+        await sendTelegramMessage(chatId, `❌ Пост <code>${postId}</code> отклонён.`);
+      } else if (id === "regenerate") {
         await answerCallbackQuery(cq.id, "Запускаю перегенерацию...");
-        const newPostId = await regenerateTelegramPost(chatId, id);
+        const newPostId = await regenerateTelegramPost(chatId, postId);
         await sendTelegramMessage(chatId, `🔄 Создана новая версия: <code>${newPostId}</code>`);
       } else {
         await answerCallbackQuery(cq.id, "Неизвестное действие");
