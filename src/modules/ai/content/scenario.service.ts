@@ -1,7 +1,7 @@
-import { prisma } from "../../../../prisma/prisma";
-import { getBrainLlm } from "../llm/provider";
-import { createReferenceService } from "../references/reference.service";
-import type { AnalyticsInsight, ContentScenario } from "./scenario.types";
+import { prisma } from "../../../../prisma/prisma.js";
+import { getBrainLlm } from "../llm/provider.js";
+import { createReferenceService } from "../references/reference.service.js";
+import type { AnalyticsInsight, ContentScenario } from "./scenario.types.js";
 
 /**
  * Luna writes content scenarios and analytics.
