@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 import {
   resolveAccessToken,
   resolveAccessTokenByProfileId,
-} from "../auth/token.resolver";
-import { createInstagramInsightsService } from "./insights.service";
-import { enqueueCollectInsights } from "../../../infrastructure/queue";
+} from "../auth/token.resolver.js";
+import { createInstagramInsightsService } from "./insights.service.js";
+import { enqueueCollectInsights } from "../../../infrastructure/queue.js";
 
 export async function registerInstagramInsightsRoutes(app: FastifyInstance) {
   /** Raw media insights from Graph API (no DB write) */
