@@ -8,6 +8,7 @@ export const QUEUE_NAMES = {
   COMMENT_RECONCILE: "comment-reconcile",
   AGENT: "agent",
   CONTENT_PLAN: "content-plan",
+  CONTENT_GENERATION: "content-generation",
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];
@@ -28,6 +29,7 @@ export const JOB_NAMES = {
   PROCESS_DIRECT_MESSAGE: "process-direct-message",
   CONTENT_PLAN_SLOT: "content-plan-slot",
   STRATEGY_RUN: "strategy-run",
+  CONTENT_GENERATION: "content-generation",
 } as const;
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES];
@@ -77,3 +79,9 @@ export type ContentPlanSlotJobData = {
   autoPublish?: boolean;
 };
 export type StrategyRunJobData = { profileId: string };
+export type ContentGenerationJobData = {
+  profileId: string;
+  postType?: string;
+  topicHint?: string;
+  scenario?: Record<string, unknown>;
+};
