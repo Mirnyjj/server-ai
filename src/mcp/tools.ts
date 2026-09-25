@@ -147,8 +147,10 @@ export async function toolRunPipeline(input: {
   let publishJob: Awaited<ReturnType<typeof enqueuePublishReadyPost>> | null =
     null;
 
-  if (input.autoPublish && result.publishReady) {
-    publishJob = await enqueuePublishReadyPost(result.postId);
+  if (input.autoPublish) {
+    throw new Error(
+      "Automatic publishing is disabled. The post must be approved explicitly before publishing.",
+    );
   }
 
   return { ...result, publishJob };
@@ -166,11 +168,17 @@ export async function toolRunPlanSlot(input: {
       profileId: input.profileId,
       postType: input.postType,
       topicHint: input.topicHint,
-      autoPublish: input.autoPublish,
+      autoPublish: false,
     });
     return { enqueued: true, jobId: job.id };
   }
-  return runScheduledContentSlot(input);
+  if (input.autoPublish) {
+    throw new Error(
+      "Automatic publishing is disabled. The post must be approved explicitly before publishing.",
+    );
+  }
+
+  return runScheduledContentSlot({ ...input, autoPublish: false });
 }
 
 export async function toolRunStrategy(input: {
