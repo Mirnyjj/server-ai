@@ -15,7 +15,7 @@ services:
     container_name: ig-agent-searxng
     restart: unless-stopped
     volumes:
-      - searxng_config:/etc/searxng
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro
       - searxng_cache:/var/cache/searxng
     expose:
       - "8080"
@@ -63,5 +63,4 @@ services:
 
 volumes:
   redis_data:
-  searxng_config:
   searxng_cache:
