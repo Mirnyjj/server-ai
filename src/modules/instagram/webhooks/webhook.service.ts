@@ -111,18 +111,16 @@ export function createInstagramWebhookService(accessToken?: string) {
     payload: unknown,
     options?: { rawBody?: string | Buffer; signature?: string },
   ) {
-    if (options?.rawBody && options?.signature) {
-      const valid = verifySignature(options.rawBody, options.signature);
-      if (!valid) {
+    if (env.NODE_ENV === "production") {
+      if (!options?.rawBody || !options.signature) {
         throw new Error("Invalid Meta webhook signature");
       }
-    } else if (options?.signature) {
-      // signature present but no raw body — still try with stringified body
-      const valid = verifySignature(
-        options.rawBody ?? JSON.stringify(payload ?? {}),
-        options.signature,
-      );
-      if (!valid && env.NODE_ENV === "production") {
+
+      if (!verifySignature(options.rawBody, options.signature)) {
+        throw new Error("Invalid Meta webhook signature");
+      }
+    } else if (options?.rawBody && options.signature) {
+      if (!verifySignature(options.rawBody, options.signature)) {
         throw new Error("Invalid Meta webhook signature");
       }
     }
