@@ -22,7 +22,8 @@
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "seed": "tsx prisma/seed.ts",
-    "verify:instagram": "tsx scripts/verify-instagram-production.ts"
+    "verify:instagram": "tsx scripts/verify-instagram-production.ts",
+    "verify:telegram": "tsx scripts/verify-telegram-production.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
