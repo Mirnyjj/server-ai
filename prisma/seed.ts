@@ -4,6 +4,7 @@ async function main() {
   const profile = await prisma.aiProfile.create({
     data: {
       name: "Test Instagram Agent",
+      systemPrompt: null,
       persona: {},
       visualIdentity: {},
       writingStyle: {},
