@@ -10,11 +10,11 @@ type OpenAiImageResponse = {
 };
 
 export function createOpenAiImageGenerator(): ImageGenerator {
-  const apiKey = env.IMAGE_GENERATOR_API_KEY;
-  const model = env.IMAGE_GENERATOR_MODEL ?? "gpt-image-2";
+  const apiKey = env.IMAGE_MODEL_API_KEY;
+  const model = env.IMAGE_MODEL ?? "gpt-image-2";
 
   if (!apiKey) {
-    throw new Error("IMAGE_GENERATOR_PROVIDER=openai requires IMAGE_GENERATOR_API_KEY");
+    throw new Error("IMAGE_MODEL_PROVIDER=openai requires IMAGE_MODEL_API_KEY");
   }
 
   return {
