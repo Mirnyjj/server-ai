@@ -1192,8 +1192,7 @@ async function cmdSearch(chatId: number, query: string): Promise<void> {
 
     const results = await searchWeb(query, {
       limit: 6,
-      country: "RU",
-      searchLang: "ru",
+      language: "ru",
     });
 
     if (results.length === 0) {
