@@ -2,9 +2,9 @@ import type { FastifyInstance } from "fastify";
 import {
   resolveAccessToken,
   resolveAccessTokenByProfileId,
-} from "../auth/token.resolver";
-import { createInstagramCommentsService } from "./comments.service";
-import { enqueueCommentReconciliation } from "../../../infrastructure/queue";
+} from "../auth/token.resolver.js";
+import { createInstagramCommentsService } from "./comments.service.js";
+import { enqueueCommentReconciliation } from "../../../infrastructure/queue.js";
 
 export async function registerInstagramCommentsRoutes(app: FastifyInstance) {
   app.get("/api/instagram/media/:mediaId/comments", async (request, reply) => {
