@@ -42,6 +42,36 @@ async function tgRequest<T>(
   return data.result as T;
 }
 
+export type TelegramFile = {
+  file_id: string;
+  file_unique_id: string;
+  file_path?: string;
+};
+
+export async function getTelegramFile(fileId: string): Promise<TelegramFile> {
+  return tgRequest<TelegramFile>("getFile", {
+    file_id: fileId,
+  });
+}
+
+export async function downloadTelegramFile(filePath: string): Promise<Buffer> {
+  if (!env.TELEGRAM_BOT_TOKEN) {
+    throw new Error("TELEGRAM_BOT_TOKEN is not configured");
+  }
+
+  const response = await fetch(
+    `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${filePath}`,
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Telegram file download failed: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+}
+
 export async function sendTelegramMessage(
   chatId: number | string,
   text: string,
