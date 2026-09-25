@@ -971,13 +971,12 @@ IMAGE_GENERATOR_PROVIDER=openai
 IMAGE_GENERATOR_API_KEY=...
 IMAGE_GENERATOR_MODEL=gpt-image-2
 
-VIDEO_GENERATOR_PROVIDER=openai
+VIDEO_GENERATOR_PROVIDER=fal
 VIDEO_GENERATOR_API_KEY=...
-VIDEO_GENERATOR_MODEL=sora-2
-VIDEO_GENERATOR_POLL_MS=5000
+VIDEO_GENERATOR_MODEL=fal-ai/kling-video/v3/pro/image-to-video
 ```
 
-The image adapter stores OpenAI's base64 image response directly in Object Storage. The video adapter creates a Sora job, polls it until completion, downloads the MP4, and stores the bytes in Object Storage. This keeps the OpenAI media URL out of the Instagram publishing flow.
+The image adapter stores OpenAI's base64 image response directly in Object Storage. The video adapter uses Kling V3 through fal.ai, waits for the queued generation to complete, and then stores the returned MP4 in Object Storage. This keeps the OpenAI media URL out of the Instagram publishing flow.
 
 HTTP adapters remain available for alternative image/video providers:
 ```env
