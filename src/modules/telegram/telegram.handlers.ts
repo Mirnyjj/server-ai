@@ -205,6 +205,10 @@ const HELP_TEXT = [
   ``,
   `/use &lt;profileId&gt; — выбрать AI-профиль для чата`,
   `/ask &lt;текст&gt; — задать вопрос AI`,
+  `/prompt — показать системный промпт`,
+  `/prompt set &lt;текст&gt; — заменить системный промпт`,
+  `/prompt append &lt;текст&gt; — добавить инструкцию`,
+  `/prompt reset — сбросить системный промпт`,
   `Обычный текст после /use отправляется выбранному AI-профилю.`,
   ``,
   `Важные комментарии и сообщения поступают отдельными уведомлениями с кнопками для действий.`,
@@ -273,8 +277,9 @@ async function cmdPrompt(chatId: number, input: string): Promise<void> {
     return;
   }
 
-  const [subcommand, ...rest] = input.trim().split(/\\s+/);
-  const value = rest.join(" ").trim();
+  const match = input.trim().match(/^(\\S+)(?:\\s+([\\s\\S]*))?$/);
+  const subcommand = match?.[1] ?? "";
+  const value = match?.[2]?.trim() ?? "";
 
   if (!input.trim()) {
     await sendTelegramMessage(
