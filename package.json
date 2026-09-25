@@ -35,7 +35,8 @@
     "fastify": "^5.12.5",
     "ioredis": "^6.0.0",
     "pg": "^8.23.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "@fal-ai/client": "^1.7.3"
   },
   "devDependencies": {
     "@types/node": "^26.6.2",
