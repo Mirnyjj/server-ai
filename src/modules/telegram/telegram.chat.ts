@@ -3,6 +3,7 @@ import { getBrainLlm } from "../ai/llm/provider.js";
 import { extractAndStoreMemories } from "../ai/memory/memory.extractor.js";
 import { listAgentMemories, getMemoryText } from "../ai/memory/memory.service.js";
 import { searchKnowledge } from "../ai/knowledge/knowledge.service.js";
+import { formatWebSearchContext, searchWeb } from "../ai/search/search.service.js";
 
 const activeProfiles = new Map<number, string>();
 
@@ -121,6 +122,22 @@ export async function askTelegramAi(input: {
   const memories = await listAgentMemories(input.profileId, { take: 30 });
   const knowledge = await searchKnowledge(input.profileId, input.message, 6);
 
+  let webResults = [];
+  if (shouldSearchWeb(input.message)) {
+    try {
+      webResults = await searchWeb(input.message, {
+        limit: 5,
+        country: "RU",
+        searchLang: "ru",
+      });
+    } catch (error) {
+      console.error(
+        "Web search failed:",
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
   const memoryContext =
     memories.length > 0
       ? memories
@@ -162,6 +179,9 @@ export async function askTelegramAi(input: {
     "",
     "База знаний. Используй её как справочный контекст и не выдумывай сведения, которых в ней нет:",
     knowledgeContext,
+    "",
+    "Актуальный веб-поиск. Если он присутствует, используй его для текущих сведений и явно отделяй найденные факты от предположений:",
+    webContext,
   ].join("\n");
 
   try {
@@ -230,6 +250,30 @@ export async function askTelegramAi(input: {
 
     throw error;
   }
+}
+
+function shouldSearchWeb(message: string): boolean {
+  const normalized = message.toLocaleLowerCase();
+
+  return [
+    "найди в интернете",
+    "поищи в интернете",
+    "поиск в интернете",
+    "поищи в сети",
+    "найди актуаль",
+    "что сейчас",
+    "на сегодня",
+    "сегодня",
+    "последние новости",
+    "свежие новости",
+    "актуальные новости",
+    "тренды",
+    "курс ",
+    "цена сейчас",
+    "сколько стоит сейчас",
+    "последние обновления",
+    "что изменилось",
+  ].some((phrase) => normalized.includes(phrase));
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
