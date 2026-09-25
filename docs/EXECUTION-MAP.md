@@ -28,6 +28,7 @@
   - [x] DB-backed token resolution
   - [x] INSTAGRAM_MARKER runtime fallback retained temporarily
   - [x] Read-only verification script
+  - [x] Marker-only read verification support
   - [ ] OAuth real-account flow
   - [ ] profile
   - [ ] media sync
@@ -62,12 +63,12 @@
 
 ## Current execution
 
-1. E2E test scripts have been removed from the project by request.
-2. The media pipeline remains implemented; its production verification is tracked as a manual production task, not as an automated E2E test.
-3. Unit tests remain enabled through `npm test`.
-4. Instagram runtime token resolution currently prefers an active DB connection and falls back to `INSTAGRAM_MARKER`.
-5. When `INSTAGRAM_MARKER` is removed, the existing DB-backed OAuth connection becomes the runtime source without another token-resolution migration.
-6. Next task: continue P1 production verification, starting with Instagram read-only verification while `INSTAGRAM_MARKER` remains active.
+1. Automated E2E tests and scripts have been removed by request.
+2. Unit tests remain enabled through `npm test`.
+3. Instagram runtime token resolution prefers an active DB connection and falls back to `INSTAGRAM_MARKER`.
+4. The Instagram production read verifier now works in marker-only mode; it can discover the Instagram user ID from `getProfile()` and does not require an OAuth DB connection while the marker is active.
+5. The verifier remains read-only. Publish, comment reply, DM and webhook checks are not automated because they create real external side effects.
+6. Next task: run the marker-based Instagram read verification in production, then continue with controlled manual write checks.
 
 ## Verification commands
 
@@ -77,5 +78,13 @@ npm run build
 npm run smoke
 npm run verify:instagram
 ```
+
+For marker-only verification:
+
+```npm
+INSTAGRAM_MARKER=<production-access-token> npm run verify:instagram
+```
+
+On the production container, use the existing environment rather than putting the token directly into shell history.
 
 Production verification commands require the corresponding production environment variables and must not be replaced by mocked values.
