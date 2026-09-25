@@ -38,12 +38,12 @@ const envSchema = z
 
     WHISPER_BASE_URL: z.string().url().optional(),
     MCP_SERVER_TOKEN: z.string().min(32).optional(),
-    /** stub | http — http uses OpenAI-compatible or custom generate endpoint */
-    IMAGE_GENERATOR_PROVIDER: z.string().optional(),
-    IMAGE_GENERATOR_API_KEY: z.string().optional(),
-    IMAGE_GENERATOR_MODEL: z.string().optional(),
-    /** e.g. https://api.example.com/v1/images/generations */
-    IMAGE_GENERATOR_BASE_URL: z.string().url().optional(),
+    /** fal | openai | http — model is selected independently from the provider */
+    IMAGE_MODEL_PROVIDER: z.string().optional(),
+    IMAGE_MODEL_API_KEY: z.string().optional(),
+    IMAGE_MODEL: z.string().optional(),
+    /** Required only for IMAGE_MODEL_PROVIDER=http */
+    IMAGE_MODEL_BASE_URL: z.string().url().optional(),
 
     VIDEO_GENERATOR_PROVIDER: z.string().optional(),
     VIDEO_GENERATOR_API_KEY: z.string().optional(),
@@ -130,26 +130,26 @@ const envSchema = z
         });
       }
 
-      const imageProvider = (data.IMAGE_GENERATOR_PROVIDER ?? "").toLowerCase();
-      if (!["openai", "http"].includes(imageProvider)) {
+      const imageProvider = (data.IMAGE_MODEL_PROVIDER ?? "").toLowerCase();
+      if (!["fal", "openai", "http"].includes(imageProvider)) {
         ctx.addIssue({
           code: "custom",
-          path: ["IMAGE_GENERATOR_PROVIDER"],
-          message: "Production requires IMAGE_GENERATOR_PROVIDER=openai|http",
+          path: ["IMAGE_MODEL_PROVIDER"],
+          message: "Production requires IMAGE_MODEL_PROVIDER=fal|openai|http",
         });
       }
-      if (imageProvider === "openai" && !data.IMAGE_GENERATOR_API_KEY) {
+      if (["fal", "openai"].includes(imageProvider) && !data.IMAGE_MODEL_API_KEY) {
         ctx.addIssue({
           code: "custom",
-          path: ["IMAGE_GENERATOR_API_KEY"],
-          message: "Required for IMAGE_GENERATOR_PROVIDER=openai",
+          path: ["IMAGE_MODEL_API_KEY"],
+          message: "Required for IMAGE_MODEL_PROVIDER=fal|openai",
         });
       }
-      if (imageProvider === "http" && !data.IMAGE_GENERATOR_BASE_URL) {
+      if (imageProvider === "http" && !data.IMAGE_MODEL_BASE_URL) {
         ctx.addIssue({
           code: "custom",
-          path: ["IMAGE_GENERATOR_BASE_URL"],
-          message: "Required for IMAGE_GENERATOR_PROVIDER=http",
+          path: ["IMAGE_MODEL_BASE_URL"],
+          message: "Required for IMAGE_MODEL_PROVIDER=http",
         });
       }
 
