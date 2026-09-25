@@ -2,6 +2,7 @@ import { prisma } from "../../../../prisma/prisma.js";
 import { PolicyEngine } from "../../agent/policy/policy.engine.js";
 import { createStorageService } from "../../../infrastructure/storage/storage.service.js";
 import { getImageGenerator, getVideoGenerator } from "../generators/index.js";
+import { getVideoComposer } from "../generators/composer.js";
 import type { CharacterReferenceInput } from "../generators/types.js";
 import { createScenarioService } from "../content/scenario.service.js";
 import type { ContentScenario } from "../content/scenario.types.js";
@@ -136,41 +137,103 @@ export async function runContentPipeline(input: {
 
   try {
     if (isVideo) {
+      const imageGen = getImageGenerator();
       const videoGen = getVideoGenerator();
-      const gen = await videoGen.generate({
-        profileId: input.profileId,
-        prompt: scenario.visualBrief.prompt,
-        aspectRatio:
-          (scenario.visualBrief.aspectRatio as "9:16" | "16:9" | "1:1") ??
-          "9:16",
-        references,
-        visualIdentity: profile.visualIdentity,
-        durationSec: scenario.shots?.[0]?.durationSec ?? 10,
+      const composer = getVideoComposer();
+      const shots = scenario.shots?.length
+        ? scenario.shots.slice(0, 8)
+        : [{
+            durationSec: 8,
+            visualBrief: scenario.visualBrief,
+          }];
+
+      const scenes: Array<{ url: string; durationSec?: number }> = [];
+
+      for (let index = 0; index < shots.length; index += 1) {
+        const shot = shots[index];
+        if (!shot) continue;
+
+        const frame = await imageGen.generate({
+          profileId: input.profileId,
+          prompt: shot.visualBrief.prompt,
+          negativePrompt: shot.visualBrief.negativePrompt,
+          aspectRatio: "9:16",
+          references,
+          visualIdentity: profile.visualIdentity,
+        });
+
+        const { asset: frameAsset } = await ingestGeneratedMedia({
+          sourceUrl: frame.url,
+          contentBase64: frame.contentBase64,
+          mediaType: "IMAGE",
+          contentType: frame.mimeType,
+          metadata: {
+            provider: frame.provider,
+            model: frame.model,
+            prompt: shot.visualBrief.prompt,
+            role: "reel-scene-frame",
+            sceneIndex: index,
+          },
+        });
+
+        const scene = await videoGen.generate({
+          profileId: input.profileId,
+          prompt: shot.visualBrief.prompt,
+          startImageUrl: frameAsset.url,
+          aspectRatio: "9:16",
+          references,
+          visualIdentity: profile.visualIdentity,
+          durationSec: shot.durationSec,
+        });
+
+        const { asset: sceneAsset } = await ingestGeneratedMedia({
+          sourceUrl: scene.url,
+          contentBase64: scene.contentBase64,
+          mediaType: "VIDEO",
+          contentType: scene.mimeType,
+          metadata: {
+            provider: scene.provider,
+            model: scene.model,
+            prompt: shot.visualBrief.prompt,
+            role: "reel-scene-video",
+            sceneIndex: index,
+          },
+        });
+
+        scenes.push({
+          url: sceneAsset.url,
+          durationSec: shot.durationSec,
+        });
+      }
+
+      const composed = await composer.compose({
+        scenes,
+        width: 720,
+        height: 1280,
+        fps: 30,
+        outputFormat: "mp4",
       });
 
       const { asset } = await ingestGeneratedMedia({
-        sourceUrl: gen.url,
-        contentBase64: gen.contentBase64,
+        contentBase64: composed.contentBase64,
         mediaType: "VIDEO",
-        contentType: gen.mimeType,
+        contentType: composed.mimeType,
         metadata: {
-          provider: gen.provider,
-          model: gen.model,
-          prompt: scenario.visualBrief.prompt,
+          provider: "ffmpeg",
+          model: "ffmpeg",
+          role: "reel-final",
+          sceneCount: scenes.length,
         },
       });
 
-      // Update dimensions if known
-      if (gen.width || gen.height || gen.durationMs) {
-        await prisma.mediaAsset.update({
-          where: { id: asset.id },
-          data: {
-            width: gen.width,
-            height: gen.height,
-            durationMs: gen.durationMs,
-          },
-        });
-      }
+      await prisma.mediaAsset.update({
+        where: { id: asset.id },
+        data: {
+          width: composed.width,
+          height: composed.height,
+          durationMs: composed.durationMs,
+        },
+      });
 
       await prisma.postMedia.create({
         data: {
@@ -187,6 +250,7 @@ export async function runContentPipeline(input: {
         type: "VIDEO",
         storageKey: asset.storageKey,
       });
+
     } else if (postType === "CAROUSEL" && scenario.slides?.length) {
       const imageGen = getImageGenerator();
       let order = 0;
