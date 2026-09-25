@@ -1,14 +1,14 @@
-import { Prisma } from "../../../generated/prisma/client";
+import { Prisma } from "../../../generated/prisma/client.js";
 import {
   MediaAssetStatus,
   MediaAssetType,
   PostMediaType,
   PostStatus,
   PostType,
-} from "../../../generated/prisma/enums";
-import { prisma } from "../../../../prisma/prisma";
-import { env } from "../../../config/env";
-import { createInstagramClient } from "../client/instagram.client";
+} from "../../../generated/prisma/enums.js";
+import { prisma } from "../../../../prisma/prisma.js";
+import { env } from "../../../config/env.js";
+import { createInstagramClient } from "../client/instagram.client.js";
 
 export function createInstagramMediaService(accessToken: string) {
   const instagramClient = createInstagramClient({
