@@ -16,6 +16,7 @@ import {
   enqueueStrategyRun,
   enqueueProcessComment,
   enqueueProcessDirectMessage,
+  enqueueContentGeneration,
 } from "../infrastructure/queue/index.js";
 import { runContentPipeline } from "../modules/ai/pipeline/content.pipeline.js";
 import { enqueuePublishReadyPost } from "../modules/ai/pipeline/publish-from-post.js";
@@ -137,11 +138,21 @@ export async function toolRunPipeline(input: {
   postType?: ContentScenario["postType"];
   topicHint?: string;
   autoPublish?: boolean;
+  async?: boolean;
 }) {
   if (input.autoPublish) {
     throw new Error(
       "Automatic publishing is disabled. The post must be approved explicitly before publishing.",
     );
+  }
+
+  if (input.async) {
+    const job = await enqueueContentGeneration({
+      profileId: input.profileId,
+      postType: input.postType,
+      topicHint: input.topicHint,
+    });
+    return { enqueued: true, jobId: job.id };
   }
 
   const result = await runContentPipeline({
@@ -297,6 +308,7 @@ export async function executeAgentTool(
         postType: parsePostType(args.postType),
         topicHint: optionalString(args, "topicHint"),
         autoPublish: optionalBoolean(args, "autoPublish"),
+        async: optionalBoolean(args, "async"),
       });
     case "run_plan_slot":
       return toolRunPlanSlot({
