@@ -18,10 +18,9 @@
 - [x] Reel audio preservation
 - [x] Intermediate asset cleanup
 - [x] Media download timeouts
-- [x] Image → Storage → public HTTPS E2E implementation
 - [x] Automated unit tests
-- [ ] Image → Storage → public HTTPS E2E production run
-- [x] Kling → FFmpeg → Storage E2E implementation
+- [ ] Production verification of image → storage → public HTTPS
+- [ ] Production verification of Kling → FFmpeg → storage
 - [ ] Production E2E
 
 ## P1 — Production verification
@@ -50,7 +49,6 @@
 
 ## P2 — Release
 
-- [x] E2E test foundation
 - [ ] Release checklist
 - [ ] CI deployment verification
 - [ ] Rollback procedure
@@ -65,20 +63,20 @@
 
 ## Current execution
 
-1. Unit-test coverage was expanded for the HTTP video generator and FFmpeg audio/video preservation.
-2. CI runs `npm test` and `npm run build` on `main`, `fix/**`, and pull requests.
-3. CI is green: 16 automated tests pass and the TypeScript build passes. The FFmpeg test verifies video + audio preservation.
+1. E2E test scripts have been removed from the project by request.
+2. The media pipeline itself remains implemented; its production verification is now tracked as a manual/production task rather than an automated E2E test.
+3. Unit tests remain enabled through `npm test`.
 4. Instagram runtime token resolution currently prefers an active DB connection and falls back to `INSTAGRAM_MARKER`.
-5. When `INSTAGRAM_MARKER` is removed, the existing DB-backed OAuth connection becomes the runtime source without another code migration.
-6. Next task: run the real Instagram read verification with `npm run verify:instagram` once an OAuth-created DB connection is available. Then verify publishing, comments, DM and webhooks manually.
+5. When `INSTAGRAM_MARKER` is removed, the existing DB-backed OAuth connection becomes the runtime source without another token-resolution migration.
+6. Next task: continue P1 production verification, starting with Instagram read-only verification while `INSTAGRAM_MARKER` remains active.
 
 ## Verification commands
 
 ```bash
 npm test
 npm run build
-npm run e2e:media
 npm run smoke
+npm run verify:instagram
 ```
 
-Production E2E commands require the corresponding production environment variables and must not be replaced by mocked values.
+Production verification commands require the corresponding production environment variables and must not be replaced by mocked values.
