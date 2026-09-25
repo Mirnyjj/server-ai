@@ -1,12 +1,12 @@
-import { env } from "../../../config/env";
-import { createInstagramClient } from "../client/instagram.client";
+import { env } from "../../../config/env.js";
+import { createInstagramClient } from "../client/instagram.client.js";
 import type {
   CreateImageContainerInput,
   CreateReelInput,
   CreateStoryInput,
   CreateVideoContainerInput,
   InstagramContainerStatus,
-} from "./content.types";
+} from "./content.types.js";
 
 export function createInstagramContainerService(accessToken: string) {
   const instagramClient = createInstagramClient({
