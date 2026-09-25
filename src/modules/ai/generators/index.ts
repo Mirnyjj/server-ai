@@ -6,7 +6,7 @@ export type {
   VideoGenerationRequest,
   VideoGenerationResult,
   CharacterReferenceInput,
-} from "./types";
+} from "./types.js";
 
-export { getImageGenerator, createImageGenerator } from "./image.provider";
-export { getVideoGenerator, createVideoGenerator } from "./video.provider";
+export { getImageGenerator, createImageGenerator } from "./image.provider.js";
+export { getVideoGenerator, createVideoGenerator } from "./video.provider.js";
