@@ -77,6 +77,9 @@ BullMQ + Redis используются для долгих и фоновых о
 
 После изменения schema: migration → Prisma generate → исправление TypeScript consumers → build.
 
+## Docker Compose
+`docker-compose.yml` is the production-local topology for API, Redis, Whisper and SearXNG. Redis is internal-only and must not publish port `6379` to the host. API is the only service published directly by Compose on port `8000`; external HTTPS termination belongs to the reverse proxy.
+
 ## Storage
 Object Storage находится в `src/infrastructure/storage`. Внешним AI providers и Telegram нужны реально доступные HTTPS URLs; internal Docker hostname не подходит.
 
