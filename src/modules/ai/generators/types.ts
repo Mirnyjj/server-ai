@@ -27,7 +27,8 @@ export type ImageGenerationRequest = {
 };
 
 export type ImageGenerationResult = {
-  url: string;
+  url?: string;
+  contentBase64?: string;
   storageKey?: string;
   width?: number;
   height?: number;
@@ -58,6 +59,7 @@ export type VideoGenerationResult = {
   provider: string;
   model: string;
   raw?: unknown;
+  contentBase64?: string;
 };
 
 export interface ImageGenerator {

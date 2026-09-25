@@ -148,3 +148,15 @@ export const WebhookEventStatus = {
 } as const
 
 export type WebhookEventStatus = (typeof WebhookEventStatus)[keyof typeof WebhookEventStatus]
+
+
+export const KnowledgeSourceType = {
+  MANUAL: 'MANUAL',
+  FILE: 'FILE',
+  URL: 'URL',
+  INSTAGRAM: 'INSTAGRAM',
+  TELEGRAM: 'TELEGRAM',
+  OTHER: 'OTHER'
+} as const
+
+export type KnowledgeSourceType = (typeof KnowledgeSourceType)[keyof typeof KnowledgeSourceType]

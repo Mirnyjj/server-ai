@@ -65,7 +65,9 @@ export const ModelName = {
   PostMetric: 'PostMetric',
   AgentMemory: 'AgentMemory',
   AgentAction: 'AgentAction',
-  InstagramWebhookEvent: 'InstagramWebhookEvent'
+  InstagramWebhookEvent: 'InstagramWebhookEvent',
+  KnowledgeDocument: 'KnowledgeDocument',
+  KnowledgeChunk: 'KnowledgeChunk'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -87,6 +89,7 @@ export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof
 export const AiProfileScalarFieldEnum = {
   id: 'id',
   name: 'name',
+  systemPrompt: 'systemPrompt',
   persona: 'persona',
   visualIdentity: 'visualIdentity',
   writingStyle: 'writingStyle',
@@ -318,6 +321,34 @@ export const InstagramWebhookEventScalarFieldEnum = {
 } as const
 
 export type InstagramWebhookEventScalarFieldEnum = (typeof InstagramWebhookEventScalarFieldEnum)[keyof typeof InstagramWebhookEventScalarFieldEnum]
+
+
+export const KnowledgeDocumentScalarFieldEnum = {
+  id: 'id',
+  profileId: 'profileId',
+  title: 'title',
+  source: 'source',
+  sourceType: 'sourceType',
+  content: 'content',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type KnowledgeDocumentScalarFieldEnum = (typeof KnowledgeDocumentScalarFieldEnum)[keyof typeof KnowledgeDocumentScalarFieldEnum]
+
+
+export const KnowledgeChunkScalarFieldEnum = {
+  id: 'id',
+  documentId: 'documentId',
+  profileId: 'profileId',
+  chunkIndex: 'chunkIndex',
+  content: 'content',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type KnowledgeChunkScalarFieldEnum = (typeof KnowledgeChunkScalarFieldEnum)[keyof typeof KnowledgeChunkScalarFieldEnum]
 
 
 export const SortOrder = {

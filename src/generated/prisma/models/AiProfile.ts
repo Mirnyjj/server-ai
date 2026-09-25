@@ -27,6 +27,7 @@ export type AggregateAiProfile = {
 export type AiProfileMinAggregateOutputType = {
   id: string | null
   name: string | null
+  systemPrompt: string | null
   autonomousMode: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -35,6 +36,7 @@ export type AiProfileMinAggregateOutputType = {
 export type AiProfileMaxAggregateOutputType = {
   id: string | null
   name: string | null
+  systemPrompt: string | null
   autonomousMode: boolean | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -43,6 +45,7 @@ export type AiProfileMaxAggregateOutputType = {
 export type AiProfileCountAggregateOutputType = {
   id: number
   name: number
+  systemPrompt: number
   persona: number
   visualIdentity: number
   writingStyle: number
@@ -57,6 +60,7 @@ export type AiProfileCountAggregateOutputType = {
 export type AiProfileMinAggregateInputType = {
   id?: true
   name?: true
+  systemPrompt?: true
   autonomousMode?: true
   createdAt?: true
   updatedAt?: true
@@ -65,6 +69,7 @@ export type AiProfileMinAggregateInputType = {
 export type AiProfileMaxAggregateInputType = {
   id?: true
   name?: true
+  systemPrompt?: true
   autonomousMode?: true
   createdAt?: true
   updatedAt?: true
@@ -73,6 +78,7 @@ export type AiProfileMaxAggregateInputType = {
 export type AiProfileCountAggregateInputType = {
   id?: true
   name?: true
+  systemPrompt?: true
   persona?: true
   visualIdentity?: true
   writingStyle?: true
@@ -158,6 +164,7 @@ export type AiProfileGroupByArgs<ExtArgs extends runtime.Types.Extensions.Intern
 export type AiProfileGroupByOutputType = {
   id: string
   name: string
+  systemPrompt: string | null
   persona: runtime.JsonValue
   visualIdentity: runtime.JsonValue
   writingStyle: runtime.JsonValue
@@ -191,6 +198,7 @@ export type AiProfileWhereInput = {
   NOT?: Prisma.AiProfileWhereInput | Prisma.AiProfileWhereInput[]
   id?: Prisma.StringFilter<"AiProfile"> | string
   name?: Prisma.StringFilter<"AiProfile"> | string
+  systemPrompt?: Prisma.StringNullableFilter<"AiProfile"> | string | null
   persona?: Prisma.JsonFilter<"AiProfile">
   visualIdentity?: Prisma.JsonFilter<"AiProfile">
   writingStyle?: Prisma.JsonFilter<"AiProfile">
@@ -204,11 +212,14 @@ export type AiProfileWhereInput = {
   mediaAssets?: Prisma.MediaAssetListRelationFilter
   mediaReferences?: Prisma.MediaReferenceListRelationFilter
   posts?: Prisma.PostListRelationFilter
+  knowledgeDocuments?: Prisma.KnowledgeDocumentListRelationFilter
+  knowledgeChunks?: Prisma.KnowledgeChunkListRelationFilter
 }
 
 export type AiProfileOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  systemPrompt?: Prisma.SortOrderInput | Prisma.SortOrder
   persona?: Prisma.SortOrder
   visualIdentity?: Prisma.SortOrder
   writingStyle?: Prisma.SortOrder
@@ -222,6 +233,8 @@ export type AiProfileOrderByWithRelationInput = {
   mediaAssets?: Prisma.MediaAssetOrderByRelationAggregateInput
   mediaReferences?: Prisma.MediaReferenceOrderByRelationAggregateInput
   posts?: Prisma.PostOrderByRelationAggregateInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentOrderByRelationAggregateInput
+  knowledgeChunks?: Prisma.KnowledgeChunkOrderByRelationAggregateInput
 }
 
 export type AiProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -230,6 +243,7 @@ export type AiProfileWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.AiProfileWhereInput[]
   NOT?: Prisma.AiProfileWhereInput | Prisma.AiProfileWhereInput[]
   name?: Prisma.StringFilter<"AiProfile"> | string
+  systemPrompt?: Prisma.StringNullableFilter<"AiProfile"> | string | null
   persona?: Prisma.JsonFilter<"AiProfile">
   visualIdentity?: Prisma.JsonFilter<"AiProfile">
   writingStyle?: Prisma.JsonFilter<"AiProfile">
@@ -243,11 +257,14 @@ export type AiProfileWhereUniqueInput = Prisma.AtLeast<{
   mediaAssets?: Prisma.MediaAssetListRelationFilter
   mediaReferences?: Prisma.MediaReferenceListRelationFilter
   posts?: Prisma.PostListRelationFilter
+  knowledgeDocuments?: Prisma.KnowledgeDocumentListRelationFilter
+  knowledgeChunks?: Prisma.KnowledgeChunkListRelationFilter
 }, "id">
 
 export type AiProfileOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  systemPrompt?: Prisma.SortOrderInput | Prisma.SortOrder
   persona?: Prisma.SortOrder
   visualIdentity?: Prisma.SortOrder
   writingStyle?: Prisma.SortOrder
@@ -266,6 +283,7 @@ export type AiProfileScalarWhereWithAggregatesInput = {
   NOT?: Prisma.AiProfileScalarWhereWithAggregatesInput | Prisma.AiProfileScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"AiProfile"> | string
   name?: Prisma.StringWithAggregatesFilter<"AiProfile"> | string
+  systemPrompt?: Prisma.StringNullableWithAggregatesFilter<"AiProfile"> | string | null
   persona?: Prisma.JsonWithAggregatesFilter<"AiProfile">
   visualIdentity?: Prisma.JsonWithAggregatesFilter<"AiProfile">
   writingStyle?: Prisma.JsonWithAggregatesFilter<"AiProfile">
@@ -278,6 +296,7 @@ export type AiProfileScalarWhereWithAggregatesInput = {
 export type AiProfileCreateInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -291,11 +310,14 @@ export type AiProfileCreateInput = {
   mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUncheckedCreateInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -309,11 +331,14 @@ export type AiProfileUncheckedCreateInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -327,11 +352,14 @@ export type AiProfileUpdateInput = {
   mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -345,11 +373,14 @@ export type AiProfileUncheckedUpdateInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileCreateManyInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -362,6 +393,7 @@ export type AiProfileCreateManyInput = {
 export type AiProfileUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -374,6 +406,7 @@ export type AiProfileUpdateManyMutationInput = {
 export type AiProfileUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -386,6 +419,7 @@ export type AiProfileUncheckedUpdateManyInput = {
 export type AiProfileCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  systemPrompt?: Prisma.SortOrder
   persona?: Prisma.SortOrder
   visualIdentity?: Prisma.SortOrder
   writingStyle?: Prisma.SortOrder
@@ -398,6 +432,7 @@ export type AiProfileCountOrderByAggregateInput = {
 export type AiProfileMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  systemPrompt?: Prisma.SortOrder
   autonomousMode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -406,6 +441,7 @@ export type AiProfileMaxOrderByAggregateInput = {
 export type AiProfileMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   name?: Prisma.SortOrder
+  systemPrompt?: Prisma.SortOrder
   autonomousMode?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -418,6 +454,10 @@ export type AiProfileScalarRelationFilter = {
 
 export type StringFieldUpdateOperationsInput = {
   set?: string
+}
+
+export type NullableStringFieldUpdateOperationsInput = {
+  set?: string | null
 }
 
 export type BoolFieldUpdateOperationsInput = {
@@ -512,9 +552,38 @@ export type AiProfileUpdateOneRequiredWithoutActionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.AiProfileUpdateToOneWithWhereWithoutActionsInput, Prisma.AiProfileUpdateWithoutActionsInput>, Prisma.AiProfileUncheckedUpdateWithoutActionsInput>
 }
 
+export type AiProfileCreateNestedOneWithoutKnowledgeDocumentsInput = {
+  create?: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeDocumentsInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeDocumentsInput>
+  connectOrCreate?: Prisma.AiProfileCreateOrConnectWithoutKnowledgeDocumentsInput
+  connect?: Prisma.AiProfileWhereUniqueInput
+}
+
+export type AiProfileUpdateOneRequiredWithoutKnowledgeDocumentsNestedInput = {
+  create?: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeDocumentsInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeDocumentsInput>
+  connectOrCreate?: Prisma.AiProfileCreateOrConnectWithoutKnowledgeDocumentsInput
+  upsert?: Prisma.AiProfileUpsertWithoutKnowledgeDocumentsInput
+  connect?: Prisma.AiProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AiProfileUpdateToOneWithWhereWithoutKnowledgeDocumentsInput, Prisma.AiProfileUpdateWithoutKnowledgeDocumentsInput>, Prisma.AiProfileUncheckedUpdateWithoutKnowledgeDocumentsInput>
+}
+
+export type AiProfileCreateNestedOneWithoutKnowledgeChunksInput = {
+  create?: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeChunksInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeChunksInput>
+  connectOrCreate?: Prisma.AiProfileCreateOrConnectWithoutKnowledgeChunksInput
+  connect?: Prisma.AiProfileWhereUniqueInput
+}
+
+export type AiProfileUpdateOneRequiredWithoutKnowledgeChunksNestedInput = {
+  create?: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeChunksInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeChunksInput>
+  connectOrCreate?: Prisma.AiProfileCreateOrConnectWithoutKnowledgeChunksInput
+  upsert?: Prisma.AiProfileUpsertWithoutKnowledgeChunksInput
+  connect?: Prisma.AiProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AiProfileUpdateToOneWithWhereWithoutKnowledgeChunksInput, Prisma.AiProfileUpdateWithoutKnowledgeChunksInput>, Prisma.AiProfileUncheckedUpdateWithoutKnowledgeChunksInput>
+}
+
 export type AiProfileCreateWithoutInstagramAccountsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -527,11 +596,14 @@ export type AiProfileCreateWithoutInstagramAccountsInput = {
   mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUncheckedCreateWithoutInstagramAccountsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -544,6 +616,8 @@ export type AiProfileUncheckedCreateWithoutInstagramAccountsInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileCreateOrConnectWithoutInstagramAccountsInput = {
@@ -565,6 +639,7 @@ export type AiProfileUpdateToOneWithWhereWithoutInstagramAccountsInput = {
 export type AiProfileUpdateWithoutInstagramAccountsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -577,11 +652,14 @@ export type AiProfileUpdateWithoutInstagramAccountsInput = {
   mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileUncheckedUpdateWithoutInstagramAccountsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -594,11 +672,14 @@ export type AiProfileUncheckedUpdateWithoutInstagramAccountsInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileCreateWithoutMediaAssetsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -611,11 +692,14 @@ export type AiProfileCreateWithoutMediaAssetsInput = {
   instagramAccounts?: Prisma.InstagramAccountCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUncheckedCreateWithoutMediaAssetsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -628,6 +712,8 @@ export type AiProfileUncheckedCreateWithoutMediaAssetsInput = {
   instagramAccounts?: Prisma.InstagramAccountUncheckedCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileCreateOrConnectWithoutMediaAssetsInput = {
@@ -649,6 +735,7 @@ export type AiProfileUpdateToOneWithWhereWithoutMediaAssetsInput = {
 export type AiProfileUpdateWithoutMediaAssetsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -661,11 +748,14 @@ export type AiProfileUpdateWithoutMediaAssetsInput = {
   instagramAccounts?: Prisma.InstagramAccountUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileUncheckedUpdateWithoutMediaAssetsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -678,11 +768,14 @@ export type AiProfileUncheckedUpdateWithoutMediaAssetsInput = {
   instagramAccounts?: Prisma.InstagramAccountUncheckedUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileCreateWithoutMediaReferencesInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -695,11 +788,14 @@ export type AiProfileCreateWithoutMediaReferencesInput = {
   instagramAccounts?: Prisma.InstagramAccountCreateNestedManyWithoutProfileInput
   mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUncheckedCreateWithoutMediaReferencesInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -712,6 +808,8 @@ export type AiProfileUncheckedCreateWithoutMediaReferencesInput = {
   instagramAccounts?: Prisma.InstagramAccountUncheckedCreateNestedManyWithoutProfileInput
   mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileCreateOrConnectWithoutMediaReferencesInput = {
@@ -733,6 +831,7 @@ export type AiProfileUpdateToOneWithWhereWithoutMediaReferencesInput = {
 export type AiProfileUpdateWithoutMediaReferencesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -745,11 +844,14 @@ export type AiProfileUpdateWithoutMediaReferencesInput = {
   instagramAccounts?: Prisma.InstagramAccountUpdateManyWithoutProfileNestedInput
   mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileUncheckedUpdateWithoutMediaReferencesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -762,11 +864,14 @@ export type AiProfileUncheckedUpdateWithoutMediaReferencesInput = {
   instagramAccounts?: Prisma.InstagramAccountUncheckedUpdateManyWithoutProfileNestedInput
   mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileCreateWithoutPostsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -779,11 +884,14 @@ export type AiProfileCreateWithoutPostsInput = {
   instagramAccounts?: Prisma.InstagramAccountCreateNestedManyWithoutProfileInput
   mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUncheckedCreateWithoutPostsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -796,6 +904,8 @@ export type AiProfileUncheckedCreateWithoutPostsInput = {
   instagramAccounts?: Prisma.InstagramAccountUncheckedCreateNestedManyWithoutProfileInput
   mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileCreateOrConnectWithoutPostsInput = {
@@ -817,6 +927,7 @@ export type AiProfileUpdateToOneWithWhereWithoutPostsInput = {
 export type AiProfileUpdateWithoutPostsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -829,11 +940,14 @@ export type AiProfileUpdateWithoutPostsInput = {
   instagramAccounts?: Prisma.InstagramAccountUpdateManyWithoutProfileNestedInput
   mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileUncheckedUpdateWithoutPostsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -846,11 +960,14 @@ export type AiProfileUncheckedUpdateWithoutPostsInput = {
   instagramAccounts?: Prisma.InstagramAccountUncheckedUpdateManyWithoutProfileNestedInput
   mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileCreateWithoutMemoriesInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -863,11 +980,14 @@ export type AiProfileCreateWithoutMemoriesInput = {
   mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUncheckedCreateWithoutMemoriesInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -880,6 +1000,8 @@ export type AiProfileUncheckedCreateWithoutMemoriesInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileCreateOrConnectWithoutMemoriesInput = {
@@ -901,6 +1023,7 @@ export type AiProfileUpdateToOneWithWhereWithoutMemoriesInput = {
 export type AiProfileUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -913,11 +1036,14 @@ export type AiProfileUpdateWithoutMemoriesInput = {
   mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileUncheckedUpdateWithoutMemoriesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -930,11 +1056,14 @@ export type AiProfileUncheckedUpdateWithoutMemoriesInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileCreateWithoutActionsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -947,11 +1076,14 @@ export type AiProfileCreateWithoutActionsInput = {
   mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileUncheckedCreateWithoutActionsInput = {
   id?: string
   name: string
+  systemPrompt?: string | null
   persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -964,6 +1096,8 @@ export type AiProfileUncheckedCreateWithoutActionsInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
   mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
   posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
 }
 
 export type AiProfileCreateOrConnectWithoutActionsInput = {
@@ -985,6 +1119,7 @@ export type AiProfileUpdateToOneWithWhereWithoutActionsInput = {
 export type AiProfileUpdateWithoutActionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -997,11 +1132,14 @@ export type AiProfileUpdateWithoutActionsInput = {
   mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
 }
 
 export type AiProfileUncheckedUpdateWithoutActionsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1014,6 +1152,200 @@ export type AiProfileUncheckedUpdateWithoutActionsInput = {
   mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
   mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
   posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type AiProfileCreateWithoutKnowledgeDocumentsInput = {
+  id?: string
+  name: string
+  systemPrompt?: string | null
+  persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  actions?: Prisma.AgentActionCreateNestedManyWithoutProfileInput
+  memories?: Prisma.AgentMemoryCreateNestedManyWithoutProfileInput
+  instagramAccounts?: Prisma.InstagramAccountCreateNestedManyWithoutProfileInput
+  mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
+  mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
+  posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkCreateNestedManyWithoutProfileInput
+}
+
+export type AiProfileUncheckedCreateWithoutKnowledgeDocumentsInput = {
+  id?: string
+  name: string
+  systemPrompt?: string | null
+  persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  actions?: Prisma.AgentActionUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.AgentMemoryUncheckedCreateNestedManyWithoutProfileInput
+  instagramAccounts?: Prisma.InstagramAccountUncheckedCreateNestedManyWithoutProfileInput
+  mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
+  mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
+  posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type AiProfileCreateOrConnectWithoutKnowledgeDocumentsInput = {
+  where: Prisma.AiProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeDocumentsInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeDocumentsInput>
+}
+
+export type AiProfileUpsertWithoutKnowledgeDocumentsInput = {
+  update: Prisma.XOR<Prisma.AiProfileUpdateWithoutKnowledgeDocumentsInput, Prisma.AiProfileUncheckedUpdateWithoutKnowledgeDocumentsInput>
+  create: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeDocumentsInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeDocumentsInput>
+  where?: Prisma.AiProfileWhereInput
+}
+
+export type AiProfileUpdateToOneWithWhereWithoutKnowledgeDocumentsInput = {
+  where?: Prisma.AiProfileWhereInput
+  data: Prisma.XOR<Prisma.AiProfileUpdateWithoutKnowledgeDocumentsInput, Prisma.AiProfileUncheckedUpdateWithoutKnowledgeDocumentsInput>
+}
+
+export type AiProfileUpdateWithoutKnowledgeDocumentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  actions?: Prisma.AgentActionUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.AgentMemoryUpdateManyWithoutProfileNestedInput
+  instagramAccounts?: Prisma.InstagramAccountUpdateManyWithoutProfileNestedInput
+  mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
+  mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
+  posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUpdateManyWithoutProfileNestedInput
+}
+
+export type AiProfileUncheckedUpdateWithoutKnowledgeDocumentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  actions?: Prisma.AgentActionUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.AgentMemoryUncheckedUpdateManyWithoutProfileNestedInput
+  instagramAccounts?: Prisma.InstagramAccountUncheckedUpdateManyWithoutProfileNestedInput
+  mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
+  mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
+  posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeChunks?: Prisma.KnowledgeChunkUncheckedUpdateManyWithoutProfileNestedInput
+}
+
+export type AiProfileCreateWithoutKnowledgeChunksInput = {
+  id?: string
+  name: string
+  systemPrompt?: string | null
+  persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  actions?: Prisma.AgentActionCreateNestedManyWithoutProfileInput
+  memories?: Prisma.AgentMemoryCreateNestedManyWithoutProfileInput
+  instagramAccounts?: Prisma.InstagramAccountCreateNestedManyWithoutProfileInput
+  mediaAssets?: Prisma.MediaAssetCreateNestedManyWithoutProfileInput
+  mediaReferences?: Prisma.MediaReferenceCreateNestedManyWithoutProfileInput
+  posts?: Prisma.PostCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentCreateNestedManyWithoutProfileInput
+}
+
+export type AiProfileUncheckedCreateWithoutKnowledgeChunksInput = {
+  id?: string
+  name: string
+  systemPrompt?: string | null
+  persona: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  actions?: Prisma.AgentActionUncheckedCreateNestedManyWithoutProfileInput
+  memories?: Prisma.AgentMemoryUncheckedCreateNestedManyWithoutProfileInput
+  instagramAccounts?: Prisma.InstagramAccountUncheckedCreateNestedManyWithoutProfileInput
+  mediaAssets?: Prisma.MediaAssetUncheckedCreateNestedManyWithoutProfileInput
+  mediaReferences?: Prisma.MediaReferenceUncheckedCreateNestedManyWithoutProfileInput
+  posts?: Prisma.PostUncheckedCreateNestedManyWithoutProfileInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedCreateNestedManyWithoutProfileInput
+}
+
+export type AiProfileCreateOrConnectWithoutKnowledgeChunksInput = {
+  where: Prisma.AiProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeChunksInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeChunksInput>
+}
+
+export type AiProfileUpsertWithoutKnowledgeChunksInput = {
+  update: Prisma.XOR<Prisma.AiProfileUpdateWithoutKnowledgeChunksInput, Prisma.AiProfileUncheckedUpdateWithoutKnowledgeChunksInput>
+  create: Prisma.XOR<Prisma.AiProfileCreateWithoutKnowledgeChunksInput, Prisma.AiProfileUncheckedCreateWithoutKnowledgeChunksInput>
+  where?: Prisma.AiProfileWhereInput
+}
+
+export type AiProfileUpdateToOneWithWhereWithoutKnowledgeChunksInput = {
+  where?: Prisma.AiProfileWhereInput
+  data: Prisma.XOR<Prisma.AiProfileUpdateWithoutKnowledgeChunksInput, Prisma.AiProfileUncheckedUpdateWithoutKnowledgeChunksInput>
+}
+
+export type AiProfileUpdateWithoutKnowledgeChunksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  actions?: Prisma.AgentActionUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.AgentMemoryUpdateManyWithoutProfileNestedInput
+  instagramAccounts?: Prisma.InstagramAccountUpdateManyWithoutProfileNestedInput
+  mediaAssets?: Prisma.MediaAssetUpdateManyWithoutProfileNestedInput
+  mediaReferences?: Prisma.MediaReferenceUpdateManyWithoutProfileNestedInput
+  posts?: Prisma.PostUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUpdateManyWithoutProfileNestedInput
+}
+
+export type AiProfileUncheckedUpdateWithoutKnowledgeChunksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  systemPrompt?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  persona?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  visualIdentity?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  writingStyle?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  contentStrategy?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  autonomousMode?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  actions?: Prisma.AgentActionUncheckedUpdateManyWithoutProfileNestedInput
+  memories?: Prisma.AgentMemoryUncheckedUpdateManyWithoutProfileNestedInput
+  instagramAccounts?: Prisma.InstagramAccountUncheckedUpdateManyWithoutProfileNestedInput
+  mediaAssets?: Prisma.MediaAssetUncheckedUpdateManyWithoutProfileNestedInput
+  mediaReferences?: Prisma.MediaReferenceUncheckedUpdateManyWithoutProfileNestedInput
+  posts?: Prisma.PostUncheckedUpdateManyWithoutProfileNestedInput
+  knowledgeDocuments?: Prisma.KnowledgeDocumentUncheckedUpdateManyWithoutProfileNestedInput
 }
 
 
@@ -1028,6 +1360,8 @@ export type AiProfileCountOutputType = {
   mediaAssets: number
   mediaReferences: number
   posts: number
+  knowledgeDocuments: number
+  knowledgeChunks: number
 }
 
 export type AiProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1037,6 +1371,8 @@ export type AiProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensi
   mediaAssets?: boolean | AiProfileCountOutputTypeCountMediaAssetsArgs
   mediaReferences?: boolean | AiProfileCountOutputTypeCountMediaReferencesArgs
   posts?: boolean | AiProfileCountOutputTypeCountPostsArgs
+  knowledgeDocuments?: boolean | AiProfileCountOutputTypeCountKnowledgeDocumentsArgs
+  knowledgeChunks?: boolean | AiProfileCountOutputTypeCountKnowledgeChunksArgs
 }
 
 /**
@@ -1091,10 +1427,25 @@ export type AiProfileCountOutputTypeCountPostsArgs<ExtArgs extends runtime.Types
   where?: Prisma.PostWhereInput
 }
 
+/**
+ * AiProfileCountOutputType without action
+ */
+export type AiProfileCountOutputTypeCountKnowledgeDocumentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.KnowledgeDocumentWhereInput
+}
+
+/**
+ * AiProfileCountOutputType without action
+ */
+export type AiProfileCountOutputTypeCountKnowledgeChunksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.KnowledgeChunkWhereInput
+}
+
 
 export type AiProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  systemPrompt?: boolean
   persona?: boolean
   visualIdentity?: boolean
   writingStyle?: boolean
@@ -1108,12 +1459,15 @@ export type AiProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   mediaAssets?: boolean | Prisma.AiProfile$mediaAssetsArgs<ExtArgs>
   mediaReferences?: boolean | Prisma.AiProfile$mediaReferencesArgs<ExtArgs>
   posts?: boolean | Prisma.AiProfile$postsArgs<ExtArgs>
+  knowledgeDocuments?: boolean | Prisma.AiProfile$knowledgeDocumentsArgs<ExtArgs>
+  knowledgeChunks?: boolean | Prisma.AiProfile$knowledgeChunksArgs<ExtArgs>
   _count?: boolean | Prisma.AiProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["aiProfile"]>
 
 export type AiProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  systemPrompt?: boolean
   persona?: boolean
   visualIdentity?: boolean
   writingStyle?: boolean
@@ -1126,6 +1480,7 @@ export type AiProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
 export type AiProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   name?: boolean
+  systemPrompt?: boolean
   persona?: boolean
   visualIdentity?: boolean
   writingStyle?: boolean
@@ -1138,6 +1493,7 @@ export type AiProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
 export type AiProfileSelectScalar = {
   id?: boolean
   name?: boolean
+  systemPrompt?: boolean
   persona?: boolean
   visualIdentity?: boolean
   writingStyle?: boolean
@@ -1147,7 +1503,7 @@ export type AiProfileSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AiProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "persona" | "visualIdentity" | "writingStyle" | "contentStrategy" | "autonomousMode" | "createdAt" | "updatedAt", ExtArgs["result"]["aiProfile"]>
+export type AiProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "systemPrompt" | "persona" | "visualIdentity" | "writingStyle" | "contentStrategy" | "autonomousMode" | "createdAt" | "updatedAt", ExtArgs["result"]["aiProfile"]>
 export type AiProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   actions?: boolean | Prisma.AiProfile$actionsArgs<ExtArgs>
   memories?: boolean | Prisma.AiProfile$memoriesArgs<ExtArgs>
@@ -1155,6 +1511,8 @@ export type AiProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalAr
   mediaAssets?: boolean | Prisma.AiProfile$mediaAssetsArgs<ExtArgs>
   mediaReferences?: boolean | Prisma.AiProfile$mediaReferencesArgs<ExtArgs>
   posts?: boolean | Prisma.AiProfile$postsArgs<ExtArgs>
+  knowledgeDocuments?: boolean | Prisma.AiProfile$knowledgeDocumentsArgs<ExtArgs>
+  knowledgeChunks?: boolean | Prisma.AiProfile$knowledgeChunksArgs<ExtArgs>
   _count?: boolean | Prisma.AiProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AiProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1169,10 +1527,13 @@ export type $AiProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     mediaAssets: Prisma.$MediaAssetPayload<ExtArgs>[]
     mediaReferences: Prisma.$MediaReferencePayload<ExtArgs>[]
     posts: Prisma.$PostPayload<ExtArgs>[]
+    knowledgeDocuments: Prisma.$KnowledgeDocumentPayload<ExtArgs>[]
+    knowledgeChunks: Prisma.$KnowledgeChunkPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
+    systemPrompt: string | null
     persona: runtime.JsonValue
     visualIdentity: runtime.JsonValue
     writingStyle: runtime.JsonValue
@@ -1580,6 +1941,8 @@ export interface Prisma__AiProfileClient<T, Null = never, ExtArgs extends runtim
   mediaAssets<T extends Prisma.AiProfile$mediaAssetsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProfile$mediaAssetsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MediaAssetPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mediaReferences<T extends Prisma.AiProfile$mediaReferencesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProfile$mediaReferencesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MediaReferencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   posts<T extends Prisma.AiProfile$postsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProfile$postsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  knowledgeDocuments<T extends Prisma.AiProfile$knowledgeDocumentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProfile$knowledgeDocumentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$KnowledgeDocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  knowledgeChunks<T extends Prisma.AiProfile$knowledgeChunksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.AiProfile$knowledgeChunksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$KnowledgeChunkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1611,6 +1974,7 @@ export interface Prisma__AiProfileClient<T, Null = never, ExtArgs extends runtim
 export interface AiProfileFieldRefs {
   readonly id: Prisma.FieldRef<"AiProfile", 'String'>
   readonly name: Prisma.FieldRef<"AiProfile", 'String'>
+  readonly systemPrompt: Prisma.FieldRef<"AiProfile", 'String'>
   readonly persona: Prisma.FieldRef<"AiProfile", 'Json'>
   readonly visualIdentity: Prisma.FieldRef<"AiProfile", 'Json'>
   readonly writingStyle: Prisma.FieldRef<"AiProfile", 'Json'>
@@ -2152,6 +2516,54 @@ export type AiProfile$postsArgs<ExtArgs extends runtime.Types.Extensions.Interna
   take?: number
   skip?: number
   distinct?: Prisma.PostScalarFieldEnum | Prisma.PostScalarFieldEnum[]
+}
+
+/**
+ * AiProfile.knowledgeDocuments
+ */
+export type AiProfile$knowledgeDocumentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the KnowledgeDocument
+   */
+  select?: Prisma.KnowledgeDocumentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the KnowledgeDocument
+   */
+  omit?: Prisma.KnowledgeDocumentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.KnowledgeDocumentInclude<ExtArgs> | null
+  where?: Prisma.KnowledgeDocumentWhereInput
+  orderBy?: Prisma.KnowledgeDocumentOrderByWithRelationInput | Prisma.KnowledgeDocumentOrderByWithRelationInput[]
+  cursor?: Prisma.KnowledgeDocumentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.KnowledgeDocumentScalarFieldEnum | Prisma.KnowledgeDocumentScalarFieldEnum[]
+}
+
+/**
+ * AiProfile.knowledgeChunks
+ */
+export type AiProfile$knowledgeChunksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the KnowledgeChunk
+   */
+  select?: Prisma.KnowledgeChunkSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the KnowledgeChunk
+   */
+  omit?: Prisma.KnowledgeChunkOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.KnowledgeChunkInclude<ExtArgs> | null
+  where?: Prisma.KnowledgeChunkWhereInput
+  orderBy?: Prisma.KnowledgeChunkOrderByWithRelationInput | Prisma.KnowledgeChunkOrderByWithRelationInput[]
+  cursor?: Prisma.KnowledgeChunkWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.KnowledgeChunkScalarFieldEnum | Prisma.KnowledgeChunkScalarFieldEnum[]
 }
 
 /**

@@ -1,4 +1,4 @@
-import { prisma } from "../../../prisma/prisma.js";
+import { prisma } from "../../../infrastructure/prisma.js";
 
 export type KnowledgeSourceType =
   | "MANUAL"
@@ -18,6 +18,10 @@ export type KnowledgeSearchResult = {
   score: number;
 };
 
+type KnowledgeDocumentMetadata = Parameters<
+  typeof prisma.knowledgeDocument.create
+>[0]["data"]["metadata"];
+
 const CHUNK_SIZE = 1800;
 const CHUNK_OVERLAP = 200;
 
@@ -27,7 +31,7 @@ export async function addKnowledgeDocument(input: {
   content: string;
   source?: string;
   sourceType?: KnowledgeSourceType;
-  metadata?: Record<string, unknown>;
+  metadata?: KnowledgeDocumentMetadata;
 }): Promise<{ id: string; chunks: number }> {
   const content = input.content.trim();
 
@@ -67,10 +71,7 @@ export async function addKnowledgeDocument(input: {
   };
 }
 
-export async function listKnowledgeDocuments(
-  profileId: string,
-  take = 20,
-) {
+export async function listKnowledgeDocuments(profileId: string, take = 20) {
   return prisma.knowledgeDocument.findMany({
     where: { profileId },
     orderBy: { updatedAt: "desc" },
@@ -191,11 +192,13 @@ export function splitIntoChunks(text: string): string[] {
 }
 
 function tokenize(query: string): string[] {
-  return [...new Set(
-    query
-      .toLocaleLowerCase()
-      .split(/[^\p{L}\p{N}]+/u)
-      .map((term) => term.trim())
-      .filter((term) => term.length >= 3),
-  )].slice(0, 12);
+  return [
+    ...new Set(
+      query
+        .toLocaleLowerCase()
+        .split(/[^\p{L}\p{N}]+/u)
+        .map((term) => term.trim())
+        .filter((term) => term.length >= 3),
+    ),
+  ].slice(0, 12);
 }

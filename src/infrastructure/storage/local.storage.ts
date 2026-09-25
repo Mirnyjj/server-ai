@@ -1,7 +1,6 @@
-import { createWriteStream, existsSync, mkdirSync, unlinkSync } from "node:fs";
+import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { pipeline } from "node:stream/promises";
-import { Readable } from "node:stream";
+
 import { writeFile } from "node:fs/promises";
 import { env } from "../../config/env.js";
 import type {
@@ -22,8 +21,7 @@ import { guessMimeFromUrl } from "./key.js";
 export function createLocalStorage(): ObjectStorage {
   const root = env.STORAGE_LOCAL_PATH ?? "./storage-data.js";
   const publicBase = (
-    env.STORAGE_PUBLIC_BASE_URL ??
-    `http://127.0.0.1:${env.API_PORT}/media`
+    env.STORAGE_PUBLIC_BASE_URL ?? `http://127.0.0.1:${env.API_PORT}/media`
   ).replace(/\/$/, "");
 
   if (!existsSync(root)) {

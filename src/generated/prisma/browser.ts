@@ -92,3 +92,13 @@ export type AgentAction = Prisma.AgentActionModel
  * 
  */
 export type InstagramWebhookEvent = Prisma.InstagramWebhookEventModel
+/**
+ * Model KnowledgeDocument
+ * 
+ */
+export type KnowledgeDocument = Prisma.KnowledgeDocumentModel
+/**
+ * Model KnowledgeChunk
+ * 
+ */
+export type KnowledgeChunk = Prisma.KnowledgeChunkModel

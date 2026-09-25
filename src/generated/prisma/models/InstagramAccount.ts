@@ -583,10 +583,6 @@ export type InstagramAccountUncheckedUpdateManyWithoutProfileNestedInput = {
   deleteMany?: Prisma.InstagramAccountScalarWhereInput | Prisma.InstagramAccountScalarWhereInput[]
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
-}
-
 export type EnumInstagramAccountStatusFieldUpdateOperationsInput = {
   set?: $Enums.InstagramAccountStatus
 }

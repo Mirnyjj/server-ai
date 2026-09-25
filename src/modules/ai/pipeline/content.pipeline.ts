@@ -106,7 +106,7 @@ export async function runContentPipeline(input: {
     mediaType: "IMAGE" | "VIDEO";
     metadata: Record<string, unknown>;
   }) {
-    if (input.contentBase64) {
+    if (input.contentBase64 && profile) {
       return storageService.ingestBuffer({
         profileId: profile.id,
         body: Buffer.from(input.contentBase64, "base64"),
@@ -122,6 +122,10 @@ export async function runContentPipeline(input: {
 
     if (!input.sourceUrl) {
       throw new Error("Generator returned neither URL nor binary content");
+    }
+
+    if (!profile) {
+      throw new Error(`Profile ${input.contentType} not found`);
     }
 
     return storageService.ingestUrl({
@@ -142,10 +146,12 @@ export async function runContentPipeline(input: {
       const composer = getVideoComposer();
       const shots = scenario.shots?.length
         ? scenario.shots.slice(0, 8)
-        : [{
-            durationSec: 8,
-            visualBrief: scenario.visualBrief,
-          }];
+        : [
+            {
+              durationSec: 8,
+              visualBrief: scenario.visualBrief,
+            },
+          ];
 
       const scenes: Array<{ url: string; durationSec?: number }> = [];
 
@@ -250,7 +256,6 @@ export async function runContentPipeline(input: {
         type: "VIDEO",
         storageKey: asset.storageKey,
       });
-
     } else if (postType === "CAROUSEL" && scenario.slides?.length) {
       const imageGen = getImageGenerator();
       let order = 0;

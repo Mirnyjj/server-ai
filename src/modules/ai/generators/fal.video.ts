@@ -15,10 +15,13 @@ type FalVideoResult = {
 
 export function createFalVideoGenerator(): VideoGenerator {
   const credentials = env.VIDEO_GENERATOR_API_KEY;
-  const model = env.VIDEO_GENERATOR_MODEL ?? "fal-ai/kling-video/v3/pro/image-to-video";
+  const model =
+    env.VIDEO_GENERATOR_MODEL ?? "fal-ai/kling-video/v3/pro/image-to-video";
 
   if (!credentials) {
-    throw new Error("VIDEO_GENERATOR_PROVIDER=fal requires VIDEO_GENERATOR_API_KEY");
+    throw new Error(
+      "VIDEO_GENERATOR_PROVIDER=fal requires VIDEO_GENERATOR_API_KEY",
+    );
   }
 
   fal.config({ credentials });
@@ -26,7 +29,9 @@ export function createFalVideoGenerator(): VideoGenerator {
   return {
     name: "fal:" + model,
 
-    async generate(request: VideoGenerationRequest): Promise<VideoGenerationResult> {
+    async generate(
+      request: VideoGenerationRequest,
+    ): Promise<VideoGenerationResult> {
       if (!request.startImageUrl) {
         throw new Error("Fal Kling image-to-video requires startImageUrl");
       }
@@ -37,7 +42,8 @@ export function createFalVideoGenerator(): VideoGenerator {
           prompt: request.prompt,
           duration: normalizeDuration(request.durationSec),
           generate_audio: true,
-          negative_prompt: "blur, distort, low quality, unstable face, extra fingers",
+          negative_prompt:
+            "blur, distort, low quality, unstable face, extra fingers",
         },
       });
 
@@ -62,8 +68,22 @@ export function createFalVideoGenerator(): VideoGenerator {
   };
 }
 
-function normalizeDuration(value?: number): 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 {
+function normalizeDuration(
+  value?: number,
+): 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 {
   const rounded = Math.round(value ?? 5);
   return Math.max(3, Math.min(15, rounded)) as
-    | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+    | 12
+    | 13
+    | 14
+    | 15;
 }
