@@ -411,10 +411,12 @@ async function handleTelegramMedia(
         .join("\n"),
     );
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "неизвестная ошибка";
+
     await sendTelegramMessage(
       chatId,
-      "❌ Не удалось получить файл из Telegram: " +
-        escape(error instanceof Error ? error.message : "неизвестная ошибка"),
+      "❌ Не удалось обработать сообщение: " + escape(message),
     );
   }
 }
