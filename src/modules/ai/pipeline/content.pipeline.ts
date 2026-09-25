@@ -98,6 +98,43 @@ export async function runContentPipeline(input: {
 
   const mediaAssets: PipelineResult["mediaAssets"] = [];
 
+  async function ingestGeneratedMedia(input: {
+    sourceUrl?: string;
+    contentBase64?: string;
+    contentType?: string;
+    mediaType: "IMAGE" | "VIDEO";
+    metadata: Record<string, unknown>;
+  }) {
+  }) {
+    if (input.contentBase64) {
+      return storageService.ingestBuffer({
+        profileId: profile.id,
+        body: Buffer.from(input.contentBase64, "base64"),
+        contentType:
+          input.contentType ??
+          (input.mediaType === "VIDEO" ? "video/mp4" : "image/png"),
+        kind: "generated",
+        mediaType: input.mediaType,
+        postId: post.id,
+        metadata: input.metadata,
+      });
+    }
+
+    if (!input.sourceUrl) {
+      throw new Error("Generator returned neither URL nor binary content");
+    }
+
+    return storageService.ingestUrl({
+      profileId: profile.id,
+      sourceUrl: input.sourceUrl,
+      mediaType: input.mediaType,
+      kind: "generated",
+      postId: post.id,
+      contentType: input.contentType,
+      metadata: input.metadata,
+    });
+  }
+
   try {
     if (isVideo) {
       const videoGen = getVideoGenerator();
@@ -112,12 +149,10 @@ export async function runContentPipeline(input: {
         durationSec: scenario.shots?.[0]?.durationSec ?? 10,
       });
 
-      const { asset } = await storageService.ingestUrl({
-        profileId: input.profileId,
+      const { asset } = await ingestGeneratedMedia({
         sourceUrl: gen.url,
+        contentBase64: gen.contentBase64,
         mediaType: "VIDEO",
-        kind: "generated",
-        postId: post.id,
         contentType: gen.mimeType,
         metadata: {
           provider: gen.provider,
@@ -166,12 +201,10 @@ export async function runContentPipeline(input: {
           visualIdentity: profile.visualIdentity,
         });
 
-        const { asset } = await storageService.ingestUrl({
-          profileId: input.profileId,
+        const { asset } = await ingestGeneratedMedia({
           sourceUrl: gen.url,
+          contentBase64: gen.contentBase64,
           mediaType: "IMAGE",
-          kind: "generated",
-          postId: post.id,
           contentType: gen.mimeType,
           metadata: {
             provider: gen.provider,
@@ -207,12 +240,10 @@ export async function runContentPipeline(input: {
         visualIdentity: profile.visualIdentity,
       });
 
-      const { asset } = await storageService.ingestUrl({
-        profileId: input.profileId,
+      const { asset } = await ingestGeneratedMedia({
         sourceUrl: gen.url,
+        contentBase64: gen.contentBase64,
         mediaType: "IMAGE",
-        kind: "generated",
-        postId: post.id,
         contentType: gen.mimeType,
         metadata: {
           provider: gen.provider,
