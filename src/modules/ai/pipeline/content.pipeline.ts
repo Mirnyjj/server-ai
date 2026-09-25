@@ -105,7 +105,6 @@ export async function runContentPipeline(input: {
     mediaType: "IMAGE" | "VIDEO";
     metadata: Record<string, unknown>;
   }) {
-  }) {
     if (input.contentBase64) {
       return storageService.ingestBuffer({
         profileId: profile.id,
