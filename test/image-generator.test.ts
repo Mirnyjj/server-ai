@@ -1,92 +1,87 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 const originalFetch = globalThis.fetch;
+
 test.afterEach(() => {
   globalThis.fetch = originalFetch;
 });
-test("Responses image generator parses completed image_generation_call", async () => {
+
+test("Timeweb image generator parses base64 image response", async () => {
   process.env.IMAGE_MODEL_API_KEY = "test-key";
   process.env.IMAGE_MODEL_BASE_URL = "https://example.com/v1";
-  process.env.IMAGE_MODEL = "openai/gpt-image-2";
-  process.env.IMAGE_MAIN_MODEL = "test-main-model";
-  const { createHttpImageGenerator } =
-    await import("../src/modules/ai/generators/http.image.js");
+  process.env.IMAGE_MODEL = "black_forest_labs/flux-2-pro";
+
+  const { createHttpImageGenerator } = await import("../src/modules/ai/generators/http.image.js");
+
   globalThis.fetch = async (input, init) => {
-    assert.equal(String(input), "https://example.com/v1/responses");
+    assert.equal(String(input), "https://example.com/v1/images/generations");
     assert.equal(init?.method, "POST");
     const body = JSON.parse(String(init?.body));
-    assert.equal(body.model, "test-main-model");
-    assert.equal(body.tools[0].type, "image_generation");
-    assert.equal(body.tools[0].model, "openai/gpt-image-2");
-    assert.equal(body.tools[0].size, "1024x1536");
-    return new Response(
-      JSON.stringify({
-        id: "resp_test",
-        output: [
-          {
-            type: "image_generation_call",
-            status: "completed",
-            result: "aGVsbG8=",
-          },
-        ],
-      }),
-      { status: 200, headers: { "content-type": "application/json" } },
-    );
+    assert.equal(body.model, "black_forest_labs/flux-2-pro");
+    assert.match(body.prompt, /A portrait/);
+    assert.match(body.prompt, /9:16/);
+
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 4, 0, 0, 0, 6, 0]);
+    return new Response(JSON.stringify({ data: [{ b64_json: png.toString("base64") }] }), { status: 200, headers: { "content-type": "application/json" } });
   };
-  const result = await createHttpImageGenerator().generate({
-    profileId: "profile-1",
-    prompt: "A portrait",
-    aspectRatio: "9:16",
-    references: [],
-  });
-  assert.equal(result.contentBase64, "aGVsbG8=");
+
+  const result = await createHttpImageGenerator().generate({ profileId: "profile-1", prompt: "A portrait", aspectRatio: "9:16", references: [] });
+  assert.ok(result.contentBase64);
   assert.equal(result.width, 1024);
   assert.equal(result.height, 1536);
   assert.equal(result.mimeType, "image/png");
+  assert.equal(result.provider, "timeweb");
+  assert.equal(result.model, "black_forest_labs/flux-2-pro");
 });
-test("Responses image generator rejects unsuccessful HTTP response", async () => {
+
+test("Timeweb image generator downloads URL response", async () => {
   process.env.IMAGE_MODEL_API_KEY = "test-key";
   process.env.IMAGE_MODEL_BASE_URL = "https://example.com/v1";
-  process.env.IMAGE_MODEL = "openai/gpt-image-2";
-  process.env.IMAGE_MAIN_MODEL = "test-main-model";
-  const { createHttpImageGenerator } =
-    await import("../src/modules/ai/generators/http.image.js");
-  globalThis.fetch = async () =>
-    new Response(JSON.stringify({ error: { message: "invalid model" } }), {
-      status: 400,
-    });
-  await assert.rejects(
-    () =>
-      createHttpImageGenerator().generate({
-        profileId: "profile-1",
-        prompt: "A portrait",
-        aspectRatio: "1:1",
-        references: [],
-      }),
-    /Image generator HTTP 400: invalid model/,
-  );
+  process.env.IMAGE_MODEL = "black_forest_labs/flux-2-pro";
+
+  const { createHttpImageGenerator } = await import("../src/modules/ai/generators/http.image.js");
+  let requestCount = 0;
+
+  globalThis.fetch = async (input, init) => {
+    requestCount += 1;
+    if (requestCount === 1) {
+      assert.equal(String(input), "https://example.com/v1/images/generations");
+      assert.equal(init?.method, "POST");
+      return new Response(JSON.stringify({ data: [{ url: "https://cdn.example.com/generated.png" }] }), { status: 200, headers: { "content-type": "application/json" } });
+    }
+
+    assert.equal(String(input), "https://cdn.example.com/generated.png");
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 4, 0, 0, 0, 6, 0]);
+    return new Response(png, { status: 200, headers: { "content-type": "image/png" } });
+  };
+
+  const result = await createHttpImageGenerator().generate({ profileId: "profile-1", prompt: "A portrait", aspectRatio: "9:16", references: [] });
+  assert.equal(requestCount, 2);
+  assert.equal(result.width, 1024);
+  assert.equal(result.height, 1536);
+  assert.equal(result.mimeType, "image/png");
+  assert.ok(result.contentBase64);
 });
-test("Responses image generator rejects missing completed image", async () => {
+
+test("Timeweb image generator rejects unsuccessful HTTP response", async () => {
   process.env.IMAGE_MODEL_API_KEY = "test-key";
   process.env.IMAGE_MODEL_BASE_URL = "https://example.com/v1";
-  process.env.IMAGE_MODEL = "openai/gpt-image-2";
-  process.env.IMAGE_MAIN_MODEL = "test-main-model";
-  const { createHttpImageGenerator } =
-    await import("../src/modules/ai/generators/http.image.js");
-  globalThis.fetch = async () =>
-    new Response(
-      JSON.stringify({
-        output: [{ type: "image_generation_call", status: "in_progress" }],
-      }),
-      { status: 200 },
-    );
-  await assert.rejects(
-    () =>
-      createHttpImageGenerator().generate({
-        profileId: "profile-1",
-        prompt: "A portrait",
-        references: [],
-      }),
-    /did not contain a completed image_generation_call/,
-  );
+  process.env.IMAGE_MODEL = "black_forest_labs/flux-2-pro";
+
+  const { createHttpImageGenerator } = await import("../src/modules/ai/generators/http.image.js");
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: { message: "invalid model" } }), { status: 400 });
+
+  await assert.rejects(() => createHttpImageGenerator().generate({ profileId: "profile-1", prompt: "A portrait", aspectRatio: "1:1", references: [] }), /Image generator HTTP 400: invalid model/);
+});
+
+test("Timeweb image generator rejects missing image", async () => {
+  process.env.IMAGE_MODEL_API_KEY = "test-key";
+  process.env.IMAGE_MODEL_BASE_URL = "https://example.com/v1";
+  process.env.IMAGE_MODEL = "black_forest_labs/flux-2-pro";
+
+  const { createHttpImageGenerator } = await import("../src/modules/ai/generators/http.image.js");
+  globalThis.fetch = async () => new Response(JSON.stringify({ data: [] }), { status: 200 });
+
+  await assert.rejects(() => createHttpImageGenerator().generate({ profileId: "profile-1", prompt: "A portrait", references: [] }), /did not contain an image/);
 });
