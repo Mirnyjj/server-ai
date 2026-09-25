@@ -1,10 +1,10 @@
-import { env } from "../../../config/env";
+import { env } from "../../../config/env.js";
 import type {
   ImageGenerator,
   ImageGenerationRequest,
   ImageGenerationResult,
-} from "./types";
-import { createHttpImageGenerator } from "./http.image";
+} from "./types.js";
+import { createHttpImageGenerator } from "./http.image.js";
 
 export function createImageGenerator(): ImageGenerator {
   const provider = (env.IMAGE_GENERATOR_PROVIDER ?? "stub").toLowerCase();
