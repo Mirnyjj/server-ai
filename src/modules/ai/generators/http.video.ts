@@ -1,9 +1,9 @@
-import { env } from "../../../config/env";
+import { env } from "../../../config/env.js";
 import type {
   VideoGenerator,
   VideoGenerationRequest,
   VideoGenerationResult,
-} from "./types";
+} from "./types.js";
 
 /**
  * Generic HTTP video generator.
