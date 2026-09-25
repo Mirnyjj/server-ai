@@ -25,7 +25,9 @@ export function createFfmpegVideoComposer(): VideoComposer {
           const scene = request.scenes[index];
           if (!scene) continue;
 
-          const response = await fetch(scene.url);
+          const response = await fetch(scene.url, {
+            signal: AbortSignal.timeout(120_000),
+          });
           if (!response.ok) {
             throw new Error("Failed to download video scene (" + response.status + ")");
           }
