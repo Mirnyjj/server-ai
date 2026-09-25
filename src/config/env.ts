@@ -27,6 +27,7 @@ const envSchema = z
     TELEGRAM_BOT_TOKEN: z.string().min(1).optional(),
     TELEGRAM_ALLOWED_CHAT_IDS: z.string().optional(),
     TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
+    TELEGRAM_WEBHOOK_SECRET: z.string().regex(/^[A-Za-z0-9_-]{1,256}$/).optional(),
 
     LUNA_API_KEY: z.string().optional(),
     LUNA_BASE_URL: z.string().url().optional(),
@@ -107,6 +108,7 @@ const envSchema = z
         ["TELEGRAM_BOT_TOKEN", data.TELEGRAM_BOT_TOKEN, "Required in production"],
         ["TELEGRAM_ALLOWED_CHAT_IDS", data.TELEGRAM_ALLOWED_CHAT_IDS, "Required in production"],
         ["TELEGRAM_WEBHOOK_URL", data.TELEGRAM_WEBHOOK_URL, "Required in production"],
+        ["TELEGRAM_WEBHOOK_SECRET", data.TELEGRAM_WEBHOOK_SECRET, "Required in production"],
         ["MCP_SERVER_TOKEN", data.MCP_SERVER_TOKEN, "Required in production"],
         ["VIDEO_GENERATOR_PROVIDER", data.VIDEO_GENERATOR_PROVIDER, "Required in production"],
         ["VIDEO_GENERATOR_API_KEY", data.VIDEO_GENERATOR_API_KEY, "Required in production"],
@@ -114,6 +116,10 @@ const envSchema = z
         if (!value) {
           ctx.addIssue({ code: "custom", path: [path], message });
         }
+      }
+
+      if (data.TELEGRAM_WEBHOOK_URL && !data.TELEGRAM_WEBHOOK_URL.startsWith("https://")) {
+        ctx.addIssue({ code: "custom", path: ["TELEGRAM_WEBHOOK_URL"], message: "Production requires TELEGRAM_WEBHOOK_URL with https://" });
       }
 
       if (data.STORAGE_PUBLIC_BASE_URL && !data.STORAGE_PUBLIC_BASE_URL.startsWith("https://")) {
