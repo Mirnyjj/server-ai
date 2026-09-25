@@ -40,7 +40,6 @@ import {
   getTelegramActiveProfileId,
   setTelegramActiveProfile,
 } from "./telegram.chat.js";
-import { AiProfile } from "../../generated/prisma/client.js";
 
 export type TelegramPhotoSize = {
   file_id: string;
