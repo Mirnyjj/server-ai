@@ -1,13 +1,13 @@
 import { Worker, type Job } from "bullmq";
-import { getBullMqConnection } from "../connection";
-import { QUEUE_NAMES, JOB_NAMES } from "../types";
-import type { PublishPostJobData, CreateAndPublishJobData } from "../types";
-import { enqueuePollContainer } from "../queues";
-import { resolveAccessToken } from "../../../modules/instagram/auth/token.resolver";
-import { createInstagramClient } from "../../../modules/instagram/client/instagram.client";
-import { env } from "../../../config/env";
-import { prisma } from "../../../../prisma/prisma";
-import { PostStatus } from "../../../generated/prisma/enums";
+import { getBullMqConnection } from "../connection.js";
+import { QUEUE_NAMES, JOB_NAMES } from "../types.js";
+import type { PublishPostJobData, CreateAndPublishJobData } from "../types.js";
+import { enqueuePollContainer } from "../queues.js";
+import { resolveAccessToken } from "../../../modules/instagram/auth/token.resolver.js";
+import { createInstagramClient } from "../../../modules/instagram/client/instagram.client.js";
+import { env } from "../../../config/env.js";
+import { prisma } from "../../../../prisma/prisma.js";
+import { PostStatus } from "../../../generated/prisma/enums.js";
 
 async function processPublishPost(job: Job<PublishPostJobData>) {
   const { postId, instagramUserId, containerId } = job.data;
