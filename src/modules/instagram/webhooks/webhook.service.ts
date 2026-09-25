@@ -18,7 +18,7 @@ type MetaWebhookPayload = {
 };
 
 export function createInstagramWebhookService(accessToken?: string) {
-  const token = accessToken ?? env.INSTAGRAM_MARKER;
+  const token = accessToken;
 
   const instagramClient = token
     ? createInstagramClient({
