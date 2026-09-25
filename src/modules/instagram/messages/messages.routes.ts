@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
-import { resolveAccessToken } from "../auth/token.resolver";
-import { createInstagramMessagesService } from "./messages.service";
+import { resolveAccessToken } from "../auth/token.resolver.js";
+import { createInstagramMessagesService } from "./messages.service.js";
 
 export async function registerInstagramMessagesRoutes(app: FastifyInstance) {
   app.post("/api/instagram/messages/send", async (request, reply) => {
