@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { createScenarioService } from "./scenario.service";
+import { createScenarioService } from "./scenario.service.js";
 
 export async function registerAiContentRoutes(app: FastifyInstance) {
   const service = createScenarioService();
