@@ -1,4 +1,5 @@
 import { getBrainLlm } from "../ai/llm/provider.js";
+import { prisma } from "../../../prisma/prisma.js";
 import {
   executeAgentTool,
   type AgentToolName,
@@ -10,6 +11,21 @@ import {
   isToolAllowed,
 } from "./agent.registry.js";
 import type { AgentRole, AgentRunResult } from "./agent.types.js";
+
+function toAuditJson(value: unknown): Record<string, unknown> {
+  const serialized = JSON.stringify(value, (_key, currentValue: unknown) =>
+    typeof currentValue === "bigint" ? currentValue.toString() : currentValue,
+  );
+
+  if (!serialized) {
+    return {};
+  }
+
+  const parsed: unknown = JSON.parse(serialized);
+  return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)
+    ? parsed as Record<string, unknown>
+    : { value: parsed };
+}
 
 export async function runSpecializedAgent(input: {
   role: AgentRole;
@@ -73,6 +89,16 @@ export async function runSpecializedAgent(input: {
 
   for (const call of calls) {
     if (!isToolAllowed(input.role, call.tool)) {
+      await prisma.agentAction.create({
+        data: {
+          profileId: input.profileId,
+          action: `agent:${input.role}:${call.tool}`,
+          input: toAuditJson({ request: input.request, arguments: call.arguments ?? {} }),
+          error: `Инструмент ${call.tool} запрещён для роли ${input.role}`,
+          status: "CANCELLED",
+        },
+      });
+
       results.push({
         tool: call.tool,
         ok: false,
@@ -103,8 +129,24 @@ export async function runSpecializedAgent(input: {
       args.autoPublish = false;
     }
 
+    const auditAction = await prisma.agentAction.create({
+      data: {
+        profileId: input.profileId,
+        action: `agent:${input.role}:${call.tool}`,
+        input: toAuditJson({ request: input.request, arguments: args }),
+        status: "RUNNING",
+      },
+    });
+
     try {
       const result = await executeAgentTool(call.tool, args);
+      await prisma.agentAction.update({
+        where: { id: auditAction.id },
+        data: {
+          output: toAuditJson(result),
+          status: "SUCCESS",
+        },
+      });
       results.push({ tool: call.tool, ok: true, result });
 
       if (
@@ -118,10 +160,20 @@ export async function runSpecializedAgent(input: {
         await input.onPostGenerated(result.postId);
       }
     } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      await prisma.agentAction.update({
+        where: { id: auditAction.id },
+        data: {
+          error: message,
+          status: "FAILED",
+        },
+      });
+
       results.push({
         tool: call.tool,
         ok: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: message,
       });
     }
   }
