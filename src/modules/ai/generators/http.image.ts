@@ -96,7 +96,7 @@ export function createHttpImageGenerator(): ImageGenerator {
               type: "image_generation",
               model: imageModel,
               action: "generate",
-              size: aspectToSize(request.aspectRatio),
+              size: aspectToSize(request.aspectRatio).value,
             },
           ],
           tool_choice: {
@@ -134,8 +134,8 @@ export function createHttpImageGenerator(): ImageGenerator {
         provider: "responses",
         model: imageModel,
         mimeType: "image/png",
-        width: request.width,
-        height: request.height,
+        width: aspectToSize(request.aspectRatio).width,
+        height: aspectToSize(request.aspectRatio).height,
         raw: json,
       };
     },
@@ -169,16 +169,22 @@ function buildPrompt(request: ImageGenerationRequest): string {
   return parts.join("\n\n");
 }
 
-function aspectToSize(aspect?: string): string {
+type ImageSize = {
+  value: string;
+  width: number;
+  height: number;
+};
+
+function aspectToSize(aspect?: string): ImageSize {
   switch (aspect) {
     case "9:16":
-      return "1024x1536";
+      return { value: "1024x1536", width: 1024, height: 1536 };
     case "16:9":
-      return "1536x1024";
+      return { value: "1536x1024", width: 1536, height: 1024 };
     case "1:1":
-      return "1024x1024";
+      return { value: "1024x1024", width: 1024, height: 1024 };
     case "4:5":
     default:
-      return "1024x1536";
+      return { value: "1024x1280", width: 1024, height: 1280 };
   }
 }
