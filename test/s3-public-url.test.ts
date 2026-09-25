@@ -66,3 +66,18 @@ test("Leading slash in object key is normalized", () => {
     `https://s3.twcstorage.ru/${bucket}/${key}`,
   );
 });
+
+
+test("Supabase Storage uses its public object URL as an explicit public base", () => {
+  assert.equal(
+    buildS3PublicUrl({
+      key,
+      bucket: "media",
+      endpoint: "https://project-ref.storage.supabase.co/storage/v1/s3",
+      publicBase:
+        "https://project-ref.supabase.co/storage/v1/object/public/media",
+      region: "eu-central-1",
+    }),
+    `https://project-ref.supabase.co/storage/v1/object/public/media/${key}`,
+  );
+});
