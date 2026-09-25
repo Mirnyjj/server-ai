@@ -1,5 +1,5 @@
-import { getLuna } from "./luna.client";
-import type { LlmProvider } from "./types";
+import { getLuna } from "./luna.client.js";
+import type { LlmProvider } from "./types.js";
 
 /**
  * Resolve the brain LLM. Currently always Luna.
@@ -9,4 +9,4 @@ export function getBrainLlm(): LlmProvider {
   return getLuna();
 }
 
-export type { LlmProvider, LlmMessage, LlmJsonRequest, LlmJsonResponse } from "./types";
+export type { LlmProvider, LlmMessage, LlmJsonRequest, LlmJsonResponse } from "./types.js";
