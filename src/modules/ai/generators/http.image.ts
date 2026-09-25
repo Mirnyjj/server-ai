@@ -78,6 +78,7 @@ export function createHttpImageGenerator(): ImageGenerator {
       }
 
       const response = await fetch(endpoint, {
+        signal: AbortSignal.timeout(120_000),
         method: "POST",
         headers: {
           Authorization: `Bearer ${apiKey}`,
