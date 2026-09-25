@@ -1,11 +1,11 @@
-import { env } from "../../config/env";
-import type { ObjectStorage } from "./types";
-import { createS3Storage } from "./s3.storage";
-import { createLocalStorage } from "./local.storage";
+import { env } from "../../config/env.js";
+import type { ObjectStorage } from "./types.js";
+import { createS3Storage } from "./s3.storage.js";
+import { createLocalStorage } from "./local.storage.js";
 
-export type { ObjectStorage, StorageObject, PutObjectInput } from "./types";
-export { buildMediaKey, extensionFromMime, guessMimeFromUrl } from "./key";
-export { resolveLocalStoragePath } from "./local.storage";
+export type { ObjectStorage, StorageObject, PutObjectInput } from "./types.js";
+export { buildMediaKey, extensionFromMime, guessMimeFromUrl } from "./key.js";
+export { resolveLocalStoragePath } from "./local.storage.js";
 
 let singleton: ObjectStorage | null = null;
 
