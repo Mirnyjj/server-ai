@@ -1,10 +1,10 @@
-import { env } from "../../../config/env";
+import { env } from "../../../config/env.js";
 import type {
   VideoGenerator,
   VideoGenerationRequest,
   VideoGenerationResult,
-} from "./types";
-import { createHttpVideoGenerator } from "./http.video";
+} from "./types.js";
+import { createHttpVideoGenerator } from "./http.video.js";
 
 export function createVideoGenerator(): VideoGenerator {
   const provider = (env.VIDEO_GENERATOR_PROVIDER ?? "stub").toLowerCase();
