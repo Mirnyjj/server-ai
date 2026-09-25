@@ -1,4 +1,4 @@
-import type { MessageAgentDecision } from "../types";
+import type { MessageAgentDecision } from "../types.js";
 
 /**
  * Claude DM decision (TZ §22–25).
