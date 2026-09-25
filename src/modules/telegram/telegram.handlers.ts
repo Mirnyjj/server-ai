@@ -1064,7 +1064,7 @@ async function cmdPublish(chatId: number, input: string): Promise<void> {
   const profileId = await getTelegramActiveProfileId(chatId);
 
   if (!profileId) {
-    await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use <profileId>");
+    await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use &lt;profileId&gt;");
     return;
   }
 
@@ -1158,7 +1158,7 @@ async function cmdInsights(chatId: number): Promise<void> {
   const profileId = await getTelegramActiveProfileId(chatId);
 
   if (!profileId) {
-    await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use <profileId>");
+    await sendTelegramMessage(chatId, "Сначала выберите AI-профиль: /use &lt;profileId&gt;");
     return;
   }
 
