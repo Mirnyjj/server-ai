@@ -176,6 +176,10 @@ export async function handleTelegramUpdate(
       await cmdAsk(chatId, text.slice(cmd.length).trim());
       break;
 
+    case "/prompt":
+      await cmdPrompt(chatId, text.slice(cmd.length).trim());
+      break;
+
     default:
       if (command.startsWith("/")) {
         await sendTelegramMessage(
