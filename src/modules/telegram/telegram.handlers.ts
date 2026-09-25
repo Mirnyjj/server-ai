@@ -11,7 +11,9 @@ import { createInstagramClient } from "../instagram/client/instagram.client.js";
 import { createInstagramCommentsService } from "../instagram/comments/comments.service.js";
 import {
   answerCallbackQuery,
+  downloadTelegramFile,
   editMessageText,
+  getTelegramFile,
   sendTelegramMessage,
 } from "./telegram.client.js";
 import {
@@ -21,11 +23,20 @@ import {
 } from "./telegram.chat.js";
 import { AiProfile } from "../../generated/prisma/client.js";
 
+export type TelegramPhotoSize = {
+  file_id: string;
+  file_unique_id: string;
+  width: number;
+  height: number;
+  file_size?: number;
+};
+
 export type TelegramUpdate = {
   update_id: number;
   message?: {
     message_id: number;
     text?: string;
+    caption?: string;
     chat: {
       id: number;
       type: string;
@@ -33,6 +44,41 @@ export type TelegramUpdate = {
     from?: {
       id: number;
       username?: string;
+    };
+    photo?: TelegramPhotoSize[];
+    video?: {
+      file_id: string;
+      file_unique_id: string;
+      width: number;
+      height: number;
+      duration: number;
+      file_size?: number;
+      file_name?: string;
+      mime_type?: string;
+    };
+    document?: {
+      file_id: string;
+      file_unique_id: string;
+      file_name?: string;
+      mime_type?: string;
+      file_size?: number;
+    };
+    voice?: {
+      file_id: string;
+      file_unique_id: string;
+      duration: number;
+      mime_type?: string;
+      file_size?: number;
+    };
+    audio?: {
+      file_id: string;
+      file_unique_id: string;
+      duration: number;
+      performer?: string;
+      title?: string;
+      file_name?: string;
+      mime_type?: string;
+      file_size?: number;
     };
   };
   callback_query?: {
@@ -75,7 +121,7 @@ export async function handleTelegramUpdate(
 
   const msg = update.message;
 
-  if (!msg?.text) return;
+  if (!msg) return;
 
   const chatId = msg.chat.id;
 
@@ -84,7 +130,15 @@ export async function handleTelegramUpdate(
     return;
   }
 
-  const text = msg.text.trim();
+  const text = (msg.text ?? msg.caption ?? "").trim();
+
+  if (!text && hasTelegramMedia(msg)) {
+    await handleTelegramMedia(chatId, msg);
+    return;
+  }
+
+  if (!text) return;
+
   const [cmd, ...args] = text.split(/\s+/);
   const command = cmd.toLowerCase().split("@")[0];
 
@@ -190,6 +244,148 @@ async function cmdAsk(chatId: number, message: string): Promise<void> {
   }
 
   await handlePlainText(chatId, message);
+}
+
+type TelegramMediaKind = "photo" | "video" | "document" | "voice" | "audio";
+
+function hasTelegramMedia(
+  message: NonNullable<TelegramUpdate["message"]>,
+): boolean {
+  return Boolean(
+    message.photo?.length ||
+      message.video ||
+      message.document ||
+      message.voice ||
+      message.audio,
+  );
+}
+
+function getTelegramMedia(
+  message: NonNullable<TelegramUpdate["message"]>,
+): {
+  kind: TelegramMediaKind;
+  fileId: string;
+  fileName?: string;
+  mimeType?: string;
+  caption?: string;
+} {
+  if (message.photo?.length) {
+    const photo = message.photo.at(-1);
+
+    if (!photo) {
+      throw new Error("Photo is empty");
+    }
+
+    return {
+      kind: "photo",
+      fileId: photo.file_id,
+      mimeType: "image/jpeg",
+      caption: message.caption,
+      fileName: `${message.message_id}.jpg`,
+    };
+  }
+
+  if (message.video) {
+    return {
+      kind: "video",
+      fileId: message.video.file_id,
+      mimeType: message.video.mime_type ?? "video/mp4",
+      caption: message.caption,
+      fileName: message.video.file_name,
+    };
+  }
+
+  if (message.document) {
+    return {
+      kind: "document",
+      fileId: message.document.file_id,
+      mimeType: message.document.mime_type,
+      caption: message.caption,
+      fileName: message.document.file_name,
+    };
+  }
+
+  if (message.voice) {
+    return {
+      kind: "voice",
+      fileId: message.voice.file_id,
+      mimeType: message.voice.mime_type ?? "audio/ogg",
+      caption: message.caption,
+      fileName: `${message.message_id}.ogg`,
+    };
+  }
+
+  if (message.audio) {
+    return {
+      kind: "audio",
+      fileId: message.audio.file_id,
+      mimeType: message.audio.mime_type,
+      caption: message.caption,
+      fileName: message.audio.file_name,
+    };
+  }
+
+  throw new Error("Unsupported Telegram media");
+}
+
+async function handleTelegramMedia(
+  chatId: number,
+  message: NonNullable<TelegramUpdate["message"]>,
+): Promise<void> {
+  const media = getTelegramMedia(message);
+  const maxBytes = 20 * 1024 * 1024;
+
+  try {
+    const file = await getTelegramFile(media.fileId);
+
+    if (!file.file_path) {
+      throw new Error("Telegram did not return file_path");
+    }
+
+    const data = await downloadTelegramFile(file.file_path);
+
+    if (data.byteLength > maxBytes) {
+      await sendTelegramMessage(
+        chatId,
+        "❌ Файл больше 20 МБ. Текущий Telegram Bot API не позволяет боту скачать такой файл.",
+      );
+      return;
+    }
+
+    await sendTelegramMessage(
+      chatId,
+      [
+        "✅ Получено.",
+        `Тип: <b>${media.kind}</b>`,
+        `Размер: <b>${formatBytes(data.byteLength)}</b>`,
+        media.fileName
+          ? `Имя: <code>${escape(media.fileName)}</code>`
+          : "",
+        media.caption
+          ? `Подпись: ${escape(media.caption.slice(0, 500))}`
+          : "",
+        "",
+        "Файл скачан. Следующим этапом подключим его к AI-анализу.",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    );
+
+    // Пока только проверяем транспорт. AI-анализ подключим отдельным этапом.
+    void data;
+  } catch (error) {
+    await sendTelegramMessage(
+      chatId,
+      "❌ Не удалось получить файл из Telegram: " +
+        escape(error instanceof Error ? error.message : "неизвестная ошибка"),
+    );
+  }
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 async function handlePlainText(chatId: number, message: string): Promise<void> {
