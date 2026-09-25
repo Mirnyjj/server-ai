@@ -1,6 +1,6 @@
-import { env } from "../../../config/env";
-import { prisma } from "../../../../prisma/prisma";
-import { createInstagramClient } from "./instagram.client";
+import { env } from "../../../config/env.js";
+import { prisma } from "../../../../prisma/prisma.js";
+import { createInstagramClient } from "./instagram.client.js";
 
 export async function syncInstagramAccount(
   profileId: string,
